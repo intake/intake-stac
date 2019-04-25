@@ -1,4 +1,3 @@
 intake
 intake-xarray
-pyyaml
-xarray
+sat-stac

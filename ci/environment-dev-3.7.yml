@@ -1,4 +1,4 @@
-name: intake-esm-dev
+name: intake-stac-dev
 channels:
   - conda-forge
 dependencies:
@@ -30,8 +30,11 @@ dependencies:
   - recommonmark
   - sphinx_rtd_theme
   - sphinx>=1.6
-  - tornado==5.1.1 # Pin version until latest release is stable
-  - tqdm
   - xarray
+  - rasterio
+  - ipywidgets
+  - pyviz
+  - hvplot
   - pip:
     - sphinx_copybutton
+    - sat-stac
