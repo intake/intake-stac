@@ -1,6 +1,7 @@
 name: intake-stac-dev
 channels:
   - conda-forge
+  - defaults
 dependencies:
   - autopep8
   - black
