@@ -1,0 +1,34 @@
+# Based on http://conda.pydata.org/docs/travis.html
+language: minimal
+sudo: false # use container based build
+notifications:
+  email: false
+
+matrix:
+  fast_finish: true
+  include:
+  - env: CONDA_ENV=py36
+  - env: CONDA_ENV=py37
+
+before_install:
+  - wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
+  - bash miniconda.sh -b -p $HOME/miniconda
+  - export PATH="$HOME/miniconda/bin:$PATH"
+  - hash -r
+  - conda config --set always_yes yes --set changeps1 no --set show_channel_urls true
+  - conda info -a
+
+install:
+  - if conda env create -n test_env --file ci/environment-dev-$CONDA_ENV.yml
+  - source activate test_env
+  - conda list
+  - pip install --no-deps -e .
+
+script:
+  - which python
+  - python --version
+  - python -OO -c "import intake_stac"
+  - py.test intake_stac --cov=intake_stac --cov-config ci/.coveragerc --cov-report term-missing
+
+after_success:
+  - coveralls

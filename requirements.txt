@@ -1,3 +1,2 @@
 intake
-intake-xarray
 sat-stac

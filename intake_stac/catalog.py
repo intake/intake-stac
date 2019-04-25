@@ -62,7 +62,6 @@ class STACCatalog(Catalog):
         output = {"metadata": self.metadata, "sources": {}}
         for key, entry in self.items():
             output["sources"][key] = yaml.safe_load(entry.yaml())["sources"]
-        print(output)
         return yaml.dump(output)
 
 
