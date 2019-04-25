@@ -19,7 +19,7 @@ before_install:
   - conda info -a
 
 install:
-  - if conda env create -n test_env --file ci/environment-dev-$CONDA_ENV.yml
+  - conda env create -n test_env --file ci/environment-dev-$CONDA_ENV.yml
   - source activate test_env
   - conda list
   - pip install --no-deps -e .
