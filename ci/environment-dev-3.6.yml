@@ -1,7 +1,6 @@
 name: intake-stac-dev
 channels:
   - conda-forge
-  - defaults
 dependencies:
   - autopep8
   - black
@@ -34,8 +33,6 @@ dependencies:
   - xarray
   - rasterio
   - ipywidgets
-  - pyviz
-  - hvplot
   - pip:
     - sphinx_copybutton
     - sat-stac
