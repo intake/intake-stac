@@ -10,7 +10,7 @@ import versioneer
 with open("requirements.txt") as f:
     INSTALL_REQUIRES = f.read().strip().split("\n")
 
-with open("README.rst") as f:
+with open("README.md") as f:
     LONG_DESCRIPTION = f.read()
 
 needs_pytest = {'pytest', 'test', 'ptr'}.intersection(sys.argv)
