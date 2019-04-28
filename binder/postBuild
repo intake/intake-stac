@@ -2,6 +2,4 @@
 set -euo pipefail
 
 # Install development version of intake-stack
-cd ../
-pip install -e .
-cd -
+pip install .
