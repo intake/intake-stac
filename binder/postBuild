@@ -1,5 +1,9 @@
 #!/bin/bash
 set -euo pipefail
 
+jupyter serverextension enable --py nbserverproxy --sys-prefix
+jupyter labextension install @pyviz/jupyterlab_pyviz \
+                             dask-labextension
+
 # Install development version of intake-stack
 pip install .

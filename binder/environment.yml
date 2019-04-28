@@ -10,7 +10,12 @@ dependencies:
   - intake-xarray
   - rasterio
   - dask>=1.2.0
+  - distributed
+  - netcdf4
+  - rasterio
+  - matplotlib
   - hvplot
+  - datashader
   - pip
   - pip:
     - jupyterlab==1.0.0a3
