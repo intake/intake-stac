@@ -11,6 +11,7 @@ dependencies:
   - rasterio
   - dask>=1.2.0
   - distributed
+  - nbserverproxy
   - netcdf4
   - rasterio
   - matplotlib
