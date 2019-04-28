@@ -4,12 +4,12 @@ channels:
   - informaticslab
 dependencies:
   - python=3
-  - geopandas>=0.5
-  - intake>=0.4.4
-  - intake_geopandas>=0.2.2
+  - geopandas
+  - intake
+  - intake_geopandas
   - intake-xarray
   - rasterio
-  - dask>=1.2.0
+  - dask
   - distributed
   - nbserverproxy
   - netcdf4
@@ -19,5 +19,5 @@ dependencies:
   - datashader
   - pip
   - pip:
-    - jupyterlab==1.0.0a3
+    - jupyterlab
     - sat-stac
