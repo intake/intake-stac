@@ -69,5 +69,5 @@ for entry_id, entry in catalog.search('thumbnail').items():
 Once you have identified a dataset, you can load it into a `xarray.DataArray` using `to_dask()`:
 
 ```python
-df = entry.to_dask()
+da = entry.to_dask()
 ```
