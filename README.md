@@ -61,13 +61,13 @@ for entry_id, entry in catalog.items():
 If the catalog has too many entries to comfortably print all at once,
 you can narrow it by searching for a term (e.g. 'district'):
 ```python
-for entry_id, entry in catalog.search('district').items():
+for entry_id, entry in catalog.search('thumbnail').items():
   display(entry)
 ```
 
 ### Loading a dataset
-Once you have identified a dataset, you can load it into a dataframe using `read()`:
+Once you have identified a dataset, you can load it into a `xarray.DataArray` using `to_dask()`:
 
 ```python
-df = entry.read()
+df = entry.to_dask()
 ```
