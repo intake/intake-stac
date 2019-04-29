@@ -11,7 +11,7 @@ dependencies:
   - rasterio
   - netcdf4
   - rasterio
-  - skimage
+  - scikit-image
   - matplotlib
   - pip
   - pip:
