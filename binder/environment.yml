@@ -1,0 +1,17 @@
+name: intake-stac
+channels:
+  - conda-forge
+  - informaticslab
+dependencies:
+  - python=3
+  - geopandas
+  - intake
+  - intake_geopandas
+  - intake-xarray
+  - rasterio
+  - netcdf4
+  - rasterio
+  - matplotlib
+  - pip
+  - pip:
+    - sat-stac
