@@ -145,6 +145,6 @@ def unpack_items(items):
             metadata=get_item_metadata(item))
 
         for key, value in item.assets.items():
-            entries[item.id][key] = STACEntry(key, value)
+            entries[item.id]._entries[key] = STACEntry(key, value)
 
     return entries

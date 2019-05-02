@@ -1,6 +1,9 @@
 import pytest
 
 import intake
+from intake.catalog import Catalog
+from intake.catalog.local import LocalCatalogEntry
+
 from intake_stac import STACCatalog
 from intake_stac.catalog import STACEntry
 
@@ -24,4 +27,4 @@ def test_serialize(cat):
 
 def test_cat_entries(cat):
     assert list(cat)
-    assert all([isinstance(v, STACEntry) for _, v in cat.items()])
+    assert all([isinstance(v, (LocalCatalogEntry, Catalog)) for _, v in cat.items()])
