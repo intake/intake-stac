@@ -45,12 +45,14 @@ class STACCatalog(Catalog):
         Load the STAC catalog from the remote data source.
         """
         catalog = satstac.Catalog.open(self.url)
-        self._entries = {}
 
-        for item in catalog.items():
-            for key, value in item.assets.items():
-                self._entries[item.id + key] = STACEntry(value)
+        self.metadata.update(get_catalog_metadata(catalog))
 
+        if list(catalog.collections()):
+            for collection in catalog.collections():
+                self._entries[collection.id] = unpack_collection(collection)
+        else:
+            self._entries.update(unpack_items(catalog.items()))
 
     def serialize(self):
         """
@@ -67,20 +69,19 @@ class STACCatalog(Catalog):
 
 class STACEntry(LocalCatalogEntry):
     """
-    A class representign a STAC catalog entry
+    A class representing a STAC catalog entry
     """
 
-    def __init__(self, stac_entry):
+    def __init__(self, key, item):
         """
         Construct an Intake catalog entry from a STAC catalog entry.
         """
-        name = stac_entry.get('title', '')
-        description = stac_entry.get('description', '')
-        driver = get_driver(stac_entry)
-        args = get_args(stac_entry, driver)
-        metadata = {"stac": stac_entry}
-        super().__init__(name, description, driver, True, args=args, metadata=metadata)
-
+        driver = get_driver(item)
+        super().__init__(key, key,
+                         driver,
+                         direct_access=True,
+                         args=get_args(item, driver),
+                         metadata=None)
 
     def _ipython_display_(self):
         # TODO: see https://github.com/CityOfLosAngeles/intake-dcat/blob/master/intake_dcat/catalog.py#L83
@@ -105,3 +106,45 @@ def get_args(entry, driver):
         return {'urlpath': entry.get('href'), 'chunks': {}}
     else:
         return {'urlpath': entry.get('href')}
+
+
+def get_catalog_metadata(cat):
+    return {'description': cat.description, 'stac_version': cat.stac_version}
+
+
+def get_collection_metadata(col):
+    metadata = col.properties.copy()
+    for attr in ['title', 'version', 'keywords', 'license', 'providers', 'extent']:
+        metadata[attr] = getattr(col, attr, None)
+    return metadata
+
+
+def get_item_metadata(item):
+    metadata = item.properties.copy()
+    for attr in ['bbox', 'geometry', 'datetime', 'date']:
+        metadata[attr] = getattr(item, attr, None)
+    return metadata
+
+
+def unpack_collection(collection):
+    entries = {}
+    entries[collection.id] = Catalog(
+        name=collection.id,
+        metadata=get_collection_metadata(collection))
+    
+    entries[collection.id]._entries = unpack_items(collection.items())
+
+    return entries
+
+
+def unpack_items(items):
+    entries = {}
+    for item in items:
+        entries[item.id] = Catalog(
+            name=item.id,
+            metadata=get_item_metadata(item))
+
+        for key, value in item.assets.items():
+            entries[item.id][key] = STACEntry(key, value)
+
+    return entries
