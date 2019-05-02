@@ -6,53 +6,51 @@ from intake.catalog import Catalog
 from intake.catalog.local import LocalCatalogEntry
 
 
-class STACCatalog(Catalog):
-    """
-    A Catalog that references a STAC catalog at some URL
-    and constructs an intake catalog from it, with opinionated
-    choices about the drivers that will be used to load the datasets.
-    In general, the drivers are:
-        netcdf
-        rasterio
-        xarray_image
-        textfiles
-    """
+class AbstractStacCatalog(Catalog):
 
-    name: str
-    url: str
-
-    def __init__(self, url, name, metadata=None, **kwargs):
+    def __init__(self, catalog, **kwargs):
         """
         Initialize the catalog.
         
         Parameters
         ----------
-        url: str
-            A URL pointing to a STAC catalog
-        name : str
-            A name for the catalog
-        metadata : dict
-            Additional information about the catalog
+        catalog: stastac.Thing
+            A satstac.Thing pointing to a STAC object
         kwargs : dict, optional
             Passed to intake.Catolog.__init__
         """
-        self.url = url
-        self.name = name
-        super().__init__(name=name, metadata=metadata, **kwargs)
-
-    def _load(self):
-        """
-        Load the STAC catalog from the remote data source.
-        """
-        catalog = satstac.Catalog.open(self.url)
-
-        self.metadata.update(get_catalog_metadata(catalog))
-
-        if list(catalog.collections()):
-            for collection in catalog.collections():
-                self._entries[collection.id] = unpack_collection(collection)
+        if isinstance(catalog, self._stac_cls):
+            self._stac_obj = catalog
+        elif isinstance(catalog, str):
+            self._stac_obj = self._stac_cls.open(catalog)
         else:
-            self._entries.update(unpack_items(catalog.items()))
+            raise ValueError(
+                'Expected %s instance, got: %s' % (type(self._stac_cls),
+                                                   type(catalog)))
+        
+        metadata = self._get_metadata(**kwargs.pop('metadata', {}))
+
+        self.name = kwargs.pop('name', self._stac_obj.id)
+
+        super().__init__(metadata=metadata, **kwargs)
+
+    @classmethod
+    def from_url(cls, url, **kwargs):
+        """
+        Initialize the catalog from a STAC url.
+        
+        Parameters
+        ----------
+        url: str
+            A URL pointing to a STAC json object
+        kwargs : dict, optional
+            Passed to intake.Catolog.__init__
+        """
+        obj = cls._stac_cls.open(url)
+        return cls(obj, **kwargs)
+
+    def _get_metadata(self, **kwargs):
+        return kwargs
 
     def serialize(self):
         """
@@ -67,7 +65,76 @@ class STACCatalog(Catalog):
         return yaml.dump(output)
 
 
-class STACEntry(LocalCatalogEntry):
+class StacCatalog(AbstractStacCatalog):
+    """
+    A Catalog that references a STAC catalog at some URL
+    and constructs an intake catalog from it, with opinionated
+    choices about the drivers that will be used to load the datasets.
+    In general, the drivers are:
+        netcdf
+        rasterio
+        xarray_image
+        textfiles
+    """
+
+    _stac_cls = satstac.Catalog
+
+    def _load(self):
+        """
+        Load the STAC Catalog.
+        """
+        if list(self._stac_obj.collections()):
+            for collection in self._stac_obj.collections():
+                self._entries[collection.id] = StacCollection(collection)
+        else:
+            for item in self._stac_obj.items():
+                self._entries[item.id] = StacItem(item)
+
+    def _get_metadata(self, **kwargs):
+        return dict(description=self._stac_obj.description,
+                    stac_version=self._stac_obj.stac_version,
+                    **kwargs)
+
+
+class StacCollection(AbstractStacCatalog):
+
+    _stac_cls = satstac.Collection
+
+    def _load(self):
+        """
+        Load the STAC Collection.
+        """
+        for item in self._stac_obj.items():
+            self._entries[item.id] = StacItem(item)
+
+    def _get_metadata(self, **kwargs):
+        metadata = self._stac_obj.properties.copy()
+        for attr in ['title', 'version', 'keywords', 'license', 'providers', 'extent']:
+            metadata[attr] = getattr(self._stac_obj, attr, None)
+        metadata.update(kwargs)
+        return metadata
+
+
+class StacItem(AbstractStacCatalog):
+
+    _stac_cls = satstac.Item
+
+    def _load(self):
+        """
+        Load the STAC Item.
+        """
+        for key, value in self._stac_obj.assets.items():
+            self._entries[key] = StacEntry(key, value)
+
+    def _get_metadata(self, **kwargs):
+        metadata = self._stac_obj.properties.copy()
+        for attr in ['bbox', 'geometry', 'datetime', 'date']:
+            metadata[attr] = getattr(self._stac_obj, attr, None)
+        metadata.update(kwargs)
+        return metadata
+
+
+class StacEntry(LocalCatalogEntry):
     """
     A class representing a STAC catalog entry
     """
@@ -76,75 +143,33 @@ class STACEntry(LocalCatalogEntry):
         """
         Construct an Intake catalog entry from a STAC catalog entry.
         """
-        driver = get_driver(item)
-        super().__init__(key, key,
-                         driver,
+        driver = self._get_driver(item)
+        super().__init__(name=key,
+                         description=key,
+                         driver=driver,
                          direct_access=True,
-                         args=get_args(item, driver),
+                         args=self._get_args(item, driver),
                          metadata=None)
 
     def _ipython_display_(self):
         # TODO: see https://github.com/CityOfLosAngeles/intake-dcat/blob/master/intake_dcat/catalog.py#L83
         pass
 
-
-def get_driver(entry):
-    drivers = {
-        'application/netcdf': 'netcdf',
-        'image/vnd.stac.geotiff': 'rasterio',
-        'image/vnd.stac.geotiff; cloud-optimized=true': 'rasterio',
-        'image/png': "xarray_image",
-        'image/jpg': "xarray_image",
-        'image/jpeg': "xarray_image",
-        'text/xml': 'textfiles',
-    }
-    return drivers.get(entry['type'], entry['type'])
-
-
-def get_args(entry, driver):
-    if driver in ['netcdf', 'rasterio', 'xarray_image']:
-        return {'urlpath': entry.get('href'), 'chunks': {}}
-    else:
-        return {'urlpath': entry.get('href')}
+    def _get_driver(self, entry):
+        drivers = {
+            'application/netcdf': 'netcdf',
+            'image/vnd.stac.geotiff': 'rasterio',
+            'image/vnd.stac.geotiff; cloud-optimized=true': 'rasterio',
+            'image/png': "xarray_image",
+            'image/jpg': "xarray_image",
+            'image/jpeg': "xarray_image",
+            'text/xml': 'textfiles',
+        }
+        return drivers.get(entry['type'], entry['type'])
 
 
-def get_catalog_metadata(cat):
-    return {'description': cat.description, 'stac_version': cat.stac_version}
-
-
-def get_collection_metadata(col):
-    metadata = col.properties.copy()
-    for attr in ['title', 'version', 'keywords', 'license', 'providers', 'extent']:
-        metadata[attr] = getattr(col, attr, None)
-    return metadata
-
-
-def get_item_metadata(item):
-    metadata = item.properties.copy()
-    for attr in ['bbox', 'geometry', 'datetime', 'date']:
-        metadata[attr] = getattr(item, attr, None)
-    return metadata
-
-
-def unpack_collection(collection):
-    entries = {}
-    entries[collection.id] = Catalog(
-        name=collection.id,
-        metadata=get_collection_metadata(collection))
-    
-    entries[collection.id]._entries = unpack_items(collection.items())
-
-    return entries
-
-
-def unpack_items(items):
-    entries = {}
-    for item in items:
-        entries[item.id] = Catalog(
-            name=item.id,
-            metadata=get_item_metadata(item))
-
-        for key, value in item.assets.items():
-            entries[item.id]._entries[key] = STACEntry(key, value)
-
-    return entries
+    def _get_args(self, entry, driver):
+        if driver in ['netcdf', 'rasterio', 'xarray_image']:
+            return {'urlpath': entry.get('href'), 'chunks': {}}
+        else:
+            return {'urlpath': entry.get('href')}
