@@ -41,25 +41,44 @@ You can test the functionality by opening the example notebooks in the `examples
 
 The package can be imported using
 ```python
-from intake_stac import STACCatalog
+from intake_stac import StacCatalog, StacCollection, StacItem
 ```
 
 ### Loading a catalog
 
-You can load data from a DCAT catalog by providing the URL to the `data.json` file:
+You can load data from a STAC catalog by providing the URL to valid STAC catalog entry:
 ```python
-catalog = STACCatalog('https://storage.googleapis.com/pdd-stac/disasters/catalog.json', 'planet-disaster-data')
+catalog = StacCatalog('https://storage.googleapis.com/pdd-stac/disasters/catalog.json', 'planet-disaster-data')
 list(catalog)
 ```
 
-You can display the items in the catalog
+You can also point to STAC Collections or Items. Each constructor returns a Intake Catalog with the top level corresponding to the STAC object used for initialization.
+
+```python
+stac_cat = StacCatalog('https://landsat-stac.s3.amazonaws.com/catalog.json', 'landsat-stac')
+
+collection_cat = StacCollection('https://landsat-stac.s3.amazonaws.com/landsat-8-l1/catalog.json', 'landsat-8')
+
+items_cat = StacItem('https://landsat-stac.s3.amazonaws.com/landsat-8-l1/111/111/2018-11-30/LC81111112018334LGN00.json', 'LC81111112018334LGN00')
+```
+
+Intake-Stac uses [sat-stac](https://github.com/sat-utils/sat-stac) to parse STAC objects. You can also pass `satstac` objects (e.g. `satstac.Collection`) directly to the Intake-Stac constructors: 
+
+```python
+import satstac
+col = Collection.open('https://landsat-stac.s3.amazonaws.com/landsat-8-l1/catalog.json')
+collection_cat = StacCollection('col, 'landsat-8')
+
+
+Once you have a catalog, you can display its entries by iterating through its contents:
+
 ```python
 for entry_id, entry in catalog.items():
     display(entry)
 ```
 
 If the catalog has too many entries to comfortably print all at once,
-you can narrow it by searching for a term (e.g. 'district'):
+you can narrow it by searching for a term (e.g. 'thumbnail'):
 ```python
 for entry_id, entry in catalog.search('thumbnail').items():
   display(entry)
