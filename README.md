@@ -56,9 +56,7 @@ You can also point to STAC Collections or Items. Each constructor returns a Inta
 
 ```python
 stac_cat = StacCatalog('https://landsat-stac.s3.amazonaws.com/catalog.json', 'landsat-stac')
-
 collection_cat = StacCollection('https://landsat-stac.s3.amazonaws.com/landsat-8-l1/catalog.json', 'landsat-8')
-
 items_cat = StacItem('https://landsat-stac.s3.amazonaws.com/landsat-8-l1/111/111/2018-11-30/LC81111112018334LGN00.json', 'LC81111112018334LGN00')
 ```
 
@@ -67,8 +65,10 @@ Intake-Stac uses [sat-stac](https://github.com/sat-utils/sat-stac) to parse STAC
 ```python
 import satstac
 col = Collection.open('https://landsat-stac.s3.amazonaws.com/landsat-8-l1/catalog.json')
-collection_cat = StacCollection('col, 'landsat-8')
+collection_cat = StacCollection(col, 'landsat-8')
+```
 
+### Using the catalog
 
 Once you have a catalog, you can display its entries by iterating through its contents:
 
