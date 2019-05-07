@@ -28,7 +28,7 @@ script:
   - which python
   - python --version
   - python -OO -c "import intake_stac"
-  - py.test intake_stac --cov=intake_stac --cov-config ci/.coveragerc --cov-report term-missing
+  - pytest --verbose --junitxml=test-reports/junit.xml --cov=intake_stac --cov-config ci/.coveragerc --cov-report term-missing
 
 after_success:
-  - coveralls
+  - codecov
