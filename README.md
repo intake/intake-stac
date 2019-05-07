@@ -90,3 +90,7 @@ Once you have identified a dataset, you can load it into a `xarray.DataArray` us
 ```python
 da = entry.to_dask()
 ```
+
+## Roadmap
+
+This project is in its early days. We started with [this](https://hackmd.io/cyJZkjV5TCWTJg1mUAoEVA) design document and have been working from there.
