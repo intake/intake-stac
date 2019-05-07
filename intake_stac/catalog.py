@@ -1,9 +1,12 @@
 import yaml
+import warnings
 
 import satstac
 
 from intake.catalog import Catalog
 from intake.catalog.local import LocalCatalogEntry
+
+NULL_TYPE = 'null'
 
 
 class AbstractStacCatalog(Catalog):
@@ -30,9 +33,9 @@ class AbstractStacCatalog(Catalog):
         
         metadata = self._get_metadata(**kwargs.pop('metadata', {}))
 
-        self.name = kwargs.pop('name', self._stac_obj.id)
+        name = kwargs.pop('name', self._stac_obj.id)
 
-        super().__init__(metadata=metadata, **kwargs)
+        super().__init__(name=name, metadata=metadata, **kwargs)
 
     @classmethod
     def from_url(cls, url, **kwargs):
@@ -145,11 +148,11 @@ class StacEntry(LocalCatalogEntry):
         """
         driver = self._get_driver(item)
         super().__init__(name=key,
-                         description=key,
+                         description=item.get('title', key),
                          driver=driver,
                          direct_access=True,
                          args=self._get_args(item, driver),
-                         metadata=None)
+                         metadata=item)
 
     def _ipython_display_(self):
         # TODO: see https://github.com/CityOfLosAngeles/intake-dcat/blob/master/intake_dcat/catalog.py#L83
@@ -160,12 +163,20 @@ class StacEntry(LocalCatalogEntry):
             'application/netcdf': 'netcdf',
             'image/vnd.stac.geotiff': 'rasterio',
             'image/vnd.stac.geotiff; cloud-optimized=true': 'rasterio',
+            'image/x.geotiff': 'rasterio',
             'image/png': "xarray_image",
             'image/jpg': "xarray_image",
             'image/jpeg': "xarray_image",
             'text/xml': 'textfiles',
+            'text/plain': 'textfiles',
+            'text/html': 'textfiles'
         }
-        return drivers.get(entry['type'], entry['type'])
+        entry_type = entry.get('type', NULL_TYPE)
+
+        if entry_type is NULL_TYPE:
+            warnings.warn(f'TODO: handle case with entry without type field. This entry was: {entry}')
+
+        return drivers.get(entry_type, entry_type)
 
 
     def _get_args(self, entry, driver):

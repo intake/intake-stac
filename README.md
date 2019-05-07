@@ -37,7 +37,7 @@ pip install git+https://github.com/pangeo-data/intake-stac
 
 You can test the functionality by opening the example notebooks in the `examples/` directory:
 
-### Usage
+## Usage
 
 The package can be imported using
 ```python
