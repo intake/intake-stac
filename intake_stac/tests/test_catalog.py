@@ -96,7 +96,8 @@ def test_cat_from_collection(stac_collection_obj):
 
 def test_cat_from_item(stac_item_obj):
     cat = StacItem(stac_item_obj)
-    assert 'B05' in cat
+    # weird, why is this different than the name above?
+    assert 'B5' in cat
 
 
 def test_stac_entry_constructor():
