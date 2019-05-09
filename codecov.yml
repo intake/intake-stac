@@ -19,3 +19,7 @@ coverage:
       default:
         enabled: no
         if_not_found: success
+
+ignore:
+  - "**/tests"
+  - "**/_version.py"

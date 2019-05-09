@@ -36,4 +36,4 @@ dependencies:
   - pip:
     - sphinx_copybutton
     - sat-stac
-    - git+https://github.com/martindurant/intake.git@explicit_driver
+    - git+https://github.com/intake/intake.git
