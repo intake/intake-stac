@@ -6,10 +6,16 @@ import satstac
 from intake.catalog import Catalog
 from intake.catalog.local import LocalCatalogEntry
 
+from . import __version__
+
 NULL_TYPE = 'null'
 
 
 class AbstractStacCatalog(Catalog):
+
+    container = 'python'
+    version = __version__
+    partition_access = False
 
     def __init__(self, stac_obj, **kwargs):
         """
@@ -80,12 +86,14 @@ class StacCatalog(AbstractStacCatalog):
         textfiles
     """
 
+    name = 'stac-catalog'
     _stac_cls = satstac.Catalog
 
     def _load(self):
         """
         Load the STAC Catalog.
         """
+        # should we also iterate over .catalogs() here?
         collections = list(self._stac_obj.collections())
         if collections:
             for collection in collections:
@@ -113,6 +121,7 @@ class StacCatalog(AbstractStacCatalog):
 
 class StacCollection(AbstractStacCatalog):
 
+    name = 'stac-collection'
     _stac_cls = satstac.Collection
 
     def _load(self):
@@ -137,6 +146,7 @@ class StacCollection(AbstractStacCatalog):
 
 class StacItem(AbstractStacCatalog):
 
+    name = 'stac-item'
     _stac_cls = satstac.Item
 
     def _load(self):
@@ -194,7 +204,6 @@ class StacEntry(LocalCatalogEntry):
             warnings.warn(f'TODO: handle case with entry without type field. This entry was: {entry}')
 
         return drivers.get(entry_type, entry_type)
-
 
     def _get_args(self, entry, driver):
         if driver in ['netcdf', 'rasterio', 'xarray_image']:
