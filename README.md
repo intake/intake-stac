@@ -2,8 +2,8 @@ Intake-stac
 ===========
 
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/pangeo-data/intake-stac/master?filepath=examples?urlpath=lab)
+[![Build Status](https://travis-ci.com/pangeo-data/intake-stac.svg?branch=master)](https://travis-ci.com/pangeo-data/intake-stac)
 [![codecov](https://codecov.io/gh/pangeo-data/intake-stac/branch/master/graph/badge.svg)](https://codecov.io/gh/pangeo-data/intake-stac)
-[![Coverage Status](https://coveralls.io/repos/github/pangeo-data/intake-stac/badge.svg?branch=master)](https://coveralls.io/github/pangeo-data/intake-stac?branch=master)
 
 This is an [intake](https://intake.readthedocs.io/en/latest)
 data source for [STAC](https://stacspec.org/) catalogs.
