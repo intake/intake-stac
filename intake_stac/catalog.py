@@ -11,25 +11,25 @@ NULL_TYPE = 'null'
 
 class AbstractStacCatalog(Catalog):
 
-    def __init__(self, catalog, **kwargs):
+    def __init__(self, stac_obj, **kwargs):
         """
         Initialize the catalog.
         
         Parameters
         ----------
-        catalog: stastac.Thing
+        stac_obj: stastac.Thing
             A satstac.Thing pointing to a STAC object
         kwargs : dict, optional
             Passed to intake.Catolog.__init__
         """
-        if isinstance(catalog, self._stac_cls):
-            self._stac_obj = catalog
-        elif isinstance(catalog, str):
-            self._stac_obj = self._stac_cls.open(catalog)
+        if isinstance(stac_obj, self._stac_cls):
+            self._stac_obj = stac_obj
+        elif isinstance(stac_obj, str):
+            self._stac_obj = self._stac_cls.open(stac_obj)
         else:
             raise ValueError(
                 'Expected %s instance, got: %s' % (type(self._stac_cls),
-                                                   type(catalog)))
+                                                   type(stac_obj)))
         
         metadata = self._get_metadata(**kwargs.pop('metadata', {}))
 
@@ -49,8 +49,8 @@ class AbstractStacCatalog(Catalog):
         kwargs : dict, optional
             Passed to intake.Catolog.__init__
         """
-        obj = cls._stac_cls.open(url)
-        return cls(obj, **kwargs)
+        stac_obj = cls._stac_cls.open(url)
+        return cls(stac_obj, **kwargs)
 
     def _get_metadata(self, **kwargs):
         return kwargs
@@ -86,12 +86,24 @@ class StacCatalog(AbstractStacCatalog):
         """
         Load the STAC Catalog.
         """
-        if list(self._stac_obj.collections()):
-            for collection in self._stac_obj.collections():
-                self._entries[collection.id] = StacCollection(collection)
+        collections = list(self._stac_obj.collections())
+        if collections:
+            for collection in collections:
+                self._entries[collection.id] = LocalCatalogEntry(
+                    name=collection.id,
+                    description=collection.title,
+                    driver=StacCollection,
+                    catalog=self,
+                    args={'stac_obj': collection})
         else:
+            # in the future this may go away
             for item in self._stac_obj.items():
-                self._entries[item.id] = StacItem(item)
+                self._entries[item.id] = LocalCatalogEntry(
+                    name=item.id,
+                    description='',
+                    driver=StacItem,
+                    catalog=self,
+                    args={'stac_obj': item})
 
     def _get_metadata(self, **kwargs):
         return dict(description=self._stac_obj.description,
@@ -108,7 +120,12 @@ class StacCollection(AbstractStacCatalog):
         Load the STAC Collection.
         """
         for item in self._stac_obj.items():
-            self._entries[item.id] = StacItem(item)
+            self._entries[item.id] = LocalCatalogEntry(
+                name=item.id,
+                description='',
+                driver=StacItem,
+                catalog=self,
+                args={'stac_obj': item})
 
     def _get_metadata(self, **kwargs):
         metadata = self._stac_obj.properties.copy()
