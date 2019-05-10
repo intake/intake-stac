@@ -13,6 +13,7 @@ NULL_TYPE = 'null'
 
 class AbstractStacCatalog(Catalog):
 
+    container = 'python'
     version = __version__
     partition_access = False
 
