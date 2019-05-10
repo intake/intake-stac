@@ -13,5 +13,7 @@ sphinx:
 conda:
   environment: ci/environment-dev-3.7.yml
 python:
-  version: 3
-  setup_py_install: true
+  version: 3.7
+  install:
+    - method: pip
+      path: .
