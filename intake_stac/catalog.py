@@ -1,8 +1,7 @@
-import yaml
 import warnings
 
 import satstac
-
+import yaml
 from intake.catalog import Catalog
 from intake.catalog.local import LocalCatalogEntry
 
@@ -19,7 +18,7 @@ class AbstractStacCatalog(Catalog):
     def __init__(self, stac_obj, **kwargs):
         """
         Initialize the catalog.
-        
+
         Parameters
         ----------
         stac_obj: stastac.Thing
@@ -35,7 +34,7 @@ class AbstractStacCatalog(Catalog):
             raise ValueError(
                 'Expected %s instance, got: %s' % (type(self._stac_cls),
                                                    type(stac_obj)))
-        
+
         metadata = self._get_metadata(**kwargs.pop('metadata', {}))
 
         name = kwargs.pop('name', self._stac_obj.id)
@@ -46,7 +45,7 @@ class AbstractStacCatalog(Catalog):
     def from_url(cls, url, **kwargs):
         """
         Initialize the catalog from a STAC url.
-        
+
         Parameters
         ----------
         url: str
@@ -181,10 +180,6 @@ class StacEntry(LocalCatalogEntry):
                          args=self._get_args(item, driver),
                          metadata=item)
 
-    def _ipython_display_(self):
-        # TODO: see https://github.com/CityOfLosAngeles/intake-dcat/blob/master/intake_dcat/catalog.py#L83
-        pass
-
     def _get_driver(self, entry):
         drivers = {
             'application/netcdf': 'netcdf',
@@ -202,7 +197,7 @@ class StacEntry(LocalCatalogEntry):
 
         if entry_type is NULL_TYPE:
             warnings.warn(f'TODO: handle case with entry without type field. '
-                           ' This entry was: {entry}')
+                          ' This entry was: {entry}')
 
         return drivers.get(entry_type, entry_type)
 

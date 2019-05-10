@@ -1,6 +1,6 @@
 ===========
 Intake-stac
-==========
+===========
 
 
 Intake-stac provides Intake Drivers for SpatioTemporal Asset Catalogs (STAC). 

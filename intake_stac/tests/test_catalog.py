@@ -1,8 +1,6 @@
-import pytest
-
-import satstac
-
 import intake
+import pytest
+import satstac
 from intake.catalog import Catalog
 from intake.catalog.local import LocalCatalogEntry
 
@@ -12,7 +10,7 @@ from intake_stac.catalog import StacEntry
 
 @pytest.fixture(scope="module")
 def stac_cat_url():
-    return 'https://raw.githubusercontent.com/sat-utils/sat-stac/master/test/catalog/catalog.json'
+    return 'https://raw.githubusercontent.com/sat-utils/sat-stac/master/test/catalog/catalog.json'  # noqa: F501
 
 
 @pytest.fixture(scope="module")
@@ -22,12 +20,12 @@ def stac_cat_obj(stac_cat_url):
 
 @pytest.fixture(scope="module")
 def stac_collection_obj():
-    return satstac.Collection.open('https://raw.githubusercontent.com/sat-utils/sat-stac/master/test/catalog/eo/sentinel-2-l1c/catalog.json')
+    return satstac.Collection.open('https://raw.githubusercontent.com/sat-utils/sat-stac/master/test/catalog/eo/sentinel-2-l1c/catalog.json')  # noqa: F501
 
 
 @pytest.fixture(scope="module")
 def stac_item_obj():
-    return satstac.Item.open('https://raw.githubusercontent.com/sat-utils/sat-stac/master/test/catalog/eo/landsat-8-l1/item.json')
+    return satstac.Item.open('https://raw.githubusercontent.com/sat-utils/sat-stac/master/test/catalog/eo/landsat-8-l1/item.json')  # noqa: F501
 
 
 @pytest.fixture(scope="module")
@@ -81,7 +79,8 @@ def test_serialize(cat):
 
 def test_cat_entries(cat):
     assert list(cat)
-    assert all([isinstance(v, (LocalCatalogEntry, Catalog)) for _, v in cat.items()])
+    assert all([isinstance(v, (LocalCatalogEntry, Catalog))
+                for _, v in cat.items()])
 
 
 def test_cat_name_from_satstac_catalog_id(cat):
@@ -102,8 +101,10 @@ def test_cat_from_item(stac_item_obj):
 
 def test_stac_entry_constructor():
     key = 'B1'
-    item = {'href': 'https://landsat-pds.s3.amazonaws.com/c1/L8/120/046/LC08_L1GT_120046_20181012_20181012_01_RT/LC08_L1GT_120046_20181012_20181012_01_RT_B1.TIF',
-            'type': 'image/x.geotiff', 'eo:bands': [0], 'title': 'Band 1 (coastal)'}
+    item = {'href': 'https://landsat-pds.s3.amazonaws.com/c1/L8/120/046/LC08_L1GT_120046_20181012_20181012_01_RT/LC08_L1GT_120046_20181012_20181012_01_RT_B1.TIF',  # noqa: F501
+            'type': 'image/x.geotiff',
+            'eo:bands': [0],
+            'title': 'Band 1 (coastal)'}
 
     entry = StacEntry(key, item)
 

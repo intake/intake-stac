@@ -18,9 +18,11 @@ PYTHON_REQUIRES = '>=3.5'
 SETUP_REQUIRES = ['pytest-runner >= 4.2'] if needs_pytest else []
 TESTS_REQUIRE = ['pytest >= 2.7.1']
 
+description = ("An intake adapter for building intake catalogs begining "
+               "with SpatioTemporal Asset Catalogs (STAC)")
 setup(
     name="intake_stac",
-    description="An intake adapter for building intake catalogs begining with SpatioTemporal Asset Catalogs (STAC)",
+    description=description,
     long_description=LONG_DESCRIPTION,
     long_description_content_type="text/markdown",
     maintainer="Joe Hamman",

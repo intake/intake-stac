@@ -11,6 +11,7 @@ matrix:
   - env: CONDA_ENV=3.7
 
 before_install:
+  - set -e
   - wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
   - bash miniconda.sh -b -p $HOME/miniconda
   - export PATH="$HOME/miniconda/bin:$PATH"
@@ -20,6 +21,8 @@ before_install:
 
 install:
   - conda env create -n test_env --file ci/environment-dev-$CONDA_ENV.yml
+  # extra test dependencies
+  - conda install -c conda-forge pathlib nbconvert nbformat jupyter_client ipykernel pycodestyle
   - source activate test_env
   - conda list
   - pip install --no-deps -e .
@@ -28,7 +31,12 @@ script:
   - which python
   - python --version
   - python -OO -c "import intake_stac"
+  # run unit tests
   - pytest --verbose --junitxml=test-reports/junit.xml --cov=intake_stac --cov-config ci/.coveragerc --cov-report term-missing
+  # test building docs
+  - sphinx-build -M html docs/source docs/_build -vv
+  # test code style
+  - pycodestyle
 
 after_success:
   - codecov
