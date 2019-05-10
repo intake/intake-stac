@@ -13,7 +13,6 @@ NULL_TYPE = 'null'
 
 class AbstractStacCatalog(Catalog):
 
-    container = 'python'
     version = __version__
     partition_access = False
 
@@ -138,7 +137,8 @@ class StacCollection(AbstractStacCatalog):
 
     def _get_metadata(self, **kwargs):
         metadata = self._stac_obj.properties.copy()
-        for attr in ['title', 'version', 'keywords', 'license', 'providers', 'extent']:
+        for attr in ['title', 'version', 'keywords', 'license',
+                     'providers', 'extent']:
             metadata[attr] = getattr(self._stac_obj, attr, None)
         metadata.update(kwargs)
         return metadata
@@ -201,7 +201,8 @@ class StacEntry(LocalCatalogEntry):
         entry_type = entry.get('type', NULL_TYPE)
 
         if entry_type is NULL_TYPE:
-            warnings.warn(f'TODO: handle case with entry without type field. This entry was: {entry}')
+            warnings.warn(f'TODO: handle case with entry without type field. '
+                           ' This entry was: {entry}')
 
         return drivers.get(entry_type, entry_type)
 
