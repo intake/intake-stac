@@ -1,2 +1,2 @@
-intake
-sat-stac
+intake>=0.5.1
+sat-stac>=0.1.3

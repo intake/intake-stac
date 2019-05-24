@@ -36,4 +36,3 @@ dependencies:
   - pip:
     - sphinx_copybutton
     - sat-stac
-    - git+https://github.com/intake/intake.git

@@ -16,4 +16,3 @@ dependencies:
   - pip
   - pip:
     - sat-stac
-    - git+https://github.com/intake/intake.git
