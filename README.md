@@ -23,9 +23,9 @@ Currently it uses the intake-xarray pluging and support datatypes including GeoT
 
 ## Requirements
 ```
-intake >= 0.4.4
+intake >= 0.5.1
 intake-xarray >= 0.3.0
-sat-stac >= 0.1.2
+sat-stac >= 0.1.3
 ```
 
 ## Installation
