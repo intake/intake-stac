@@ -109,7 +109,9 @@ Once you have identified a dataset, you can load it into a `xarray.DataArray` us
 da = entry.to_dask()
 ```
 
-## Roadmap
+## Development
+
+The `master` branch contains the last versioned release, and the `development` branch contains the latest version of the code. New Pull Requests should be made to the `development` branch. For additional [contributing guidelines](docs/contributing.rst) see the documentation.
 
 ## About
 [intake-stac](https://github.com/pangeo-data/intake-stac) was created as part of the [Pangeo](http://pangeo.io) initiative.  See the initial [design document](https://hackmd.io/cyJZkjV5TCWTJg1mUAoEVA).
