@@ -1,42 +1,59 @@
-Intake-stac
-===========
+# Intake-stac
 
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/pangeo-data/intake-stac/master?filepath=examples?urlpath=lab)
 [![Build Status](https://travis-ci.org/pangeo-data/intake-stac.svg?branch=master)](https://travis-ci.org/pangeo-data/intake-stac)
 [![Documentation Status](https://readthedocs.org/projects/intake-stac/badge/?version=latest)](https://intake-stac.readthedocs.io/en/latest/?badge=latest)
 [![codecov](https://codecov.io/gh/pangeo-data/intake-stac/branch/master/graph/badge.svg)](https://codecov.io/gh/pangeo-data/intake-stac)
 
-This is an [intake](https://intake.readthedocs.io/en/latest)
-data source for [STAC](https://stacspec.org/) catalogs.
+This is an [intake](https://intake.readthedocs.io/en/latest) data source for [SpatioTemporal Asset Catalogs (STAC)](https://stacspec.org/). The STAC specification provides a common metadata specification, API, and catalog format to describe geospatial assets, so they can more easily indexed and discovered. A 'spatiotemporal asset' is any file that represents information about the earth captured in a certain space and time.
 
-The SpatioTemporal Asset Catalog (STAC) specification provides a common language to describe a range of geospatial information, so it can more easily be indexed and discovered. A 'spatiotemporal asset' is any file that represents information about the earth captured in a certain space and time.
-
-Two examples of these catalogs are:
+Two examples of STAC catalogs are:
 
 - https://planet.stac.cloud/?t=catalogs
 - https://landsat-stac.s3.amazonaws.com/catalog.json
 
-Radient Earth keeps track of a more complete listing of STAC implementations [here](https://github.com/radiantearth/stac-spec/blob/master/implementations.md).
+[Radiant Earth](https://radiant.earth) keeps track of a more complete listing of STAC implementations [here](https://github.com/radiantearth/stac-spec/blob/master/implementations.md).
 
-This project provides an opinionated way for users to load datasets from these catalogs into the scientific Python ecosystem.
-Currently it uses the intake-xarray pluging and support datatypes including GeoTIFF, netCDF, GRIB, and OpenDAP. Future formats could include plain shapefile data and more.
+This project provides an opinionated way for users to load datasets from these catalogs into the scientific Python ecosystem. Currently it uses the intake-xarray plugin and supports several file formats including GeoTIFF, netCDF, GRIB, and OpenDAP.
 
-## Requirements
-```
-intake >= 0.5.1
-intake-xarray >= 0.3.0
-sat-stac >= 0.1.3
-```
 
 ## Installation
 
-`intake-stac` will eventually be published on PyPI. For now, you can point to xarray
-You can install it by running the following in your terminal:
+intake-stac has a few [requirements](requirements.txt), such as the Intake library. Intake-stac can be installed from Pip or the source repository. 
+
 ```bash
-pip install git+https://github.com/pangeo-data/intake-stac
+$ pip install intake-stac
 ```
 
-You can test the functionality by opening the example notebooks in the `examples/` directory:
+From source repository:
+
+```bash
+$ git clone https://github.com/pangeo-data/intake-stac.git
+$ cd intake-stac
+$ pip install .
+```
+
+or
+
+```
+$ pip install git+https://github.com/pangeo-data/intake-stac
+```
+
+The [examples/](examples/) directory contains some example Jupyter Notebooks that can be used to test the functionality.
+
+#### Versions
+To install a specific versions of intake-stac, specify the version in the install command
+
+```bash
+pip install intake-stac==0.1.0
+```
+
+The table below shows the corresponding versions between intake-stac and STAC:
+
+| sat-stac | STAC  |
+| -------- | ----  |
+| 0.1.x    | 0.6.x |
+
 
 ## Usage
 
@@ -94,4 +111,5 @@ da = entry.to_dask()
 
 ## Roadmap
 
-This project is in its early days. We started with [this](https://hackmd.io/cyJZkjV5TCWTJg1mUAoEVA) design document and have been working from there.
+## About
+[intake-stac](https://github.com/pangeo-data/intake-stac) was created as part of the [Pangeo](http://pangeo.io) initiative.  See the initial [design document](https://hackmd.io/cyJZkjV5TCWTJg1mUAoEVA).
