@@ -3,6 +3,7 @@ Intake-stac
 
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/pangeo-data/intake-stac/master?filepath=examples?urlpath=lab)
 [![Build Status](https://travis-ci.org/pangeo-data/intake-stac.svg?branch=master)](https://travis-ci.org/pangeo-data/intake-stac)
+[![PyPI version](https://badge.fury.io/py/intake-stac.svg)](https://badge.fury.io/py/intake-stac)
 [![Documentation Status](https://readthedocs.org/projects/intake-stac/badge/?version=latest)](https://intake-stac.readthedocs.io/en/latest/?badge=latest)
 [![codecov](https://codecov.io/gh/pangeo-data/intake-stac/branch/master/graph/badge.svg)](https://codecov.io/gh/pangeo-data/intake-stac)
 
