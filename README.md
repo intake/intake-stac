@@ -113,5 +113,15 @@ da = entry.to_dask()
 
 The `master` branch contains the last versioned release, and the `development` branch contains the latest version of the code. New Pull Requests should be made to the `development` branch. For additional [contributing guidelines](docs/contributing.rst) see the documentation.
 
+### Running the tests
+
+To run the tests some additional packages need to be installed from the `requirements-dev.txt` file.
+
+```
+$ pip install -r requirements-dev.txt
+$ pytest -v -s --cov intake-stac --cov-report term-missing
+```
+
+
 ## About
 [intake-stac](https://github.com/pangeo-data/intake-stac) was created as part of the [Pangeo](http://pangeo.io) initiative.  See the initial [design document](https://hackmd.io/cyJZkjV5TCWTJg1mUAoEVA).
