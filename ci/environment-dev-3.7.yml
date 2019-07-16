@@ -4,6 +4,7 @@ channels:
 dependencies:
   - autopep8
   - black
+  - boto3
   - codecov
   - coverage
   - dask
