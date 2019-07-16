@@ -162,13 +162,53 @@ class StacItem(AbstractStacCatalog):
         metadata.update(kwargs)
         return metadata
 
+    def stack_bands(self, bands):
+        """
+        Stack the listed bands over the ``band`` dimension.
+
+        Parameters
+        ----------
+        bands : list of strings representing the different bands
+        (e.g. ['B1', B2']).
+
+        Returns
+        -------
+        Catalog entry containing listed bands with ``band`` as a dimension
+        and coordinate.
+
+        """
+        item = {'concat_dim': 'band', 'urlpath': []}
+        titles = []
+        for band in bands:
+            value = self._stac_obj.assets[band]
+            href = value.get('href')
+            type = value.get('type')
+            pattern = href.replace(band, '{band}')
+            if bands.index(band) == 0:
+                item['path_as_pattern'] = pattern
+                item['type'] = type
+            else:
+                if item['type'] != type:
+                    raise ValueError(
+                        'Band stacking failed because bands have different '
+                        'types: {}'.format(', '.join([item['type'], type])))
+                if item['path_as_pattern'] != pattern:
+                    raise ValueError(
+                        'Band stacking failed because band url did not '
+                        'generalize')
+            titles.append(value.get('title'))
+            item['urlpath'].append(href)
+
+        item['title'] = ', '.join(titles)
+        return StacEntry('_'.join(bands), item, stacked=True)
+
 
 class StacEntry(LocalCatalogEntry):
     """
     A class representing a STAC catalog entry
     """
 
-    def __init__(self, key, item):
+    def __init__(self, key, item, stacked=False):
         """
         Construct an Intake catalog entry from a STAC catalog entry.
         """
@@ -177,7 +217,7 @@ class StacEntry(LocalCatalogEntry):
                          description=item.get('title', key),
                          driver=driver,
                          direct_access=True,
-                         args=self._get_args(item, driver),
+                         args=self._get_args(item, driver, stacked=stacked),
                          metadata=item)
 
     def _get_driver(self, entry):
@@ -201,8 +241,9 @@ class StacEntry(LocalCatalogEntry):
 
         return drivers.get(entry_type, entry_type)
 
-    def _get_args(self, entry, driver):
+    def _get_args(self, entry, driver, stacked=False):
+        args = entry if stacked else {'urlpath': entry.get('href')}
         if driver in ['netcdf', 'rasterio', 'xarray_image']:
-            return {'urlpath': entry.get('href'), 'chunks': {}}
-        else:
-            return {'urlpath': entry.get('href')}
+            args.update(chunks={})
+
+        return args

@@ -99,6 +99,28 @@ def test_cat_from_item(stac_item_obj):
     assert 'B5' in cat
 
 
+def test_cat_item_stacking(stac_item_obj):
+    items = StacItem(stac_item_obj)
+    list_of_bands = ['B1', 'B2']
+    new_entry = items.stack_bands(list_of_bands)
+    new_da = new_entry.to_dask()
+    assert sorted([dim for dim in new_da.dims]) == ['band', 'x', 'y']
+    assert (new_da.band == list_of_bands).all()
+
+def test_cat_item_stacking_dims_of_different_type_raises_error(stac_item_obj):
+    items = StacItem(stac_item_obj)
+    list_of_bands = ['B1', 'ANG']
+    with pytest.raises(ValueError, match=' bands have different types: image/x.geotiff, text/plain'):
+        new_entry = items.stack_bands(list_of_bands)
+
+def test_cat_item_stacking_dims_of_different_size_regrids(stac_item_obj):
+    items = StacItem(stac_item_obj)
+    list_of_bands = ['B1', 'B10']
+    new_entry = items.stack_bands(list_of_bands)
+    new_da = new_entry.to_dask()
+    assert sorted([dim for dim in new_da.dims]) == ['band', 'x', 'y']
+    assert (new_da.band == list_of_bands).all()
+
 def test_stac_entry_constructor():
     key = 'B1'
     item = {'href': 'https://landsat-pds.s3.amazonaws.com/c1/L8/120/046/LC08_L1GT_120046_20181012_20181012_01_RT/LC08_L1GT_120046_20181012_20181012_01_RT_B1.TIF',  # noqa: F501
