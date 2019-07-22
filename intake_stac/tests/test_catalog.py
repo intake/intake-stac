@@ -116,6 +116,13 @@ def test_cat_item_stacking_dims_of_different_type_raises_error(stac_item_obj):
         new_entry = items.stack_bands(list_of_bands)
 
 
+def test_cat_item_stacking_dims_with_nonexistent_band_raises_error(stac_item_obj):
+    items = StacItem(stac_item_obj)
+    list_of_bands = ['B1', 'foo']
+    with pytest.raises(ValueError, match="'B1', 'B2', 'B3'"):
+        new_entry = items.stack_bands(list_of_bands)
+
+
 def test_cat_item_stacking_dims_of_different_size_regrids(stac_item_obj):
     items = StacItem(stac_item_obj)
     list_of_bands = ['B1', 'B10']
