@@ -177,28 +177,28 @@ class StacItem(AbstractStacCatalog):
         and coordinate.
 
         """
-        item = {'concat_dim': 'band', 'urlpath': []}
+        item = {'concat_dim': 'band', 'urlpath': [], 'type': 'image/x.geotiff'}
         titles = []
         for band in bands:
             value = self._stac_obj.assets.get(band)
             if value is None:
                 raise ValueError(f'{band} not found in bands: '
                                  f'{[k for k in self._stac_obj.assets]}')
+
+            band_type = value.get('type')
+            if band_type != item['type']:
+                raise ValueError(
+                    f'Stacking failed: {band} has type {band_type} and '
+                    f'bands must have type {item["type"]}')
+
             href = value.get('href')
-            dtype = value.get('type')
             pattern = href.replace(band, '{band}')
             if bands.index(band) == 0:
                 item['path_as_pattern'] = pattern
-                item['type'] = dtype
-            else:
-                if item['type'] != dtype:
-                    raise ValueError(
-                        'Band stacking failed because bands have '
-                        f'different types: {item["type"]}, {dtype}')
-                if item['path_as_pattern'] != pattern:
-                    raise ValueError(
-                        'Band stacking failed because band url did not '
-                        'generalize')
+            elif item['path_as_pattern'] != pattern:
+                raise ValueError(
+                    f'Stacking failed: {href} does not contain '
+                    'band info in a fixed section of the url')
             titles.append(value.get('title'))
             item['urlpath'].append(href)
 

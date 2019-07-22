@@ -103,6 +103,8 @@ def test_cat_item_stacking(stac_item_obj):
     items = StacItem(stac_item_obj)
     list_of_bands = ['B1', 'B2']
     new_entry = items.stack_bands(list_of_bands)
+    assert new_entry.description == 'Band 1 (coastal), Band 2 (blue)'
+    assert new_entry.name == 'B1_B2'
     new_da = new_entry.to_dask()
     assert sorted([dim for dim in new_da.dims]) == ['band', 'x', 'y']
     assert (new_da.band == list_of_bands).all()
@@ -111,8 +113,9 @@ def test_cat_item_stacking(stac_item_obj):
 def test_cat_item_stacking_dims_of_different_type_raises_error(stac_item_obj):
     items = StacItem(stac_item_obj)
     list_of_bands = ['B1', 'ANG']
-    with pytest.raises(ValueError, match=(' bands have different types: '
-                                          'image/x.geotiff, text/plain')):
+    with pytest.raises(ValueError, match=(
+            'Stacking failed: ANG has type text/plain and '
+            'bands must have type image/x.geotiff')):
         new_entry = items.stack_bands(list_of_bands)
 
 
