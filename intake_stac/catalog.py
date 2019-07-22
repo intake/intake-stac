@@ -180,18 +180,21 @@ class StacItem(AbstractStacCatalog):
         item = {'concat_dim': 'band', 'urlpath': []}
         titles = []
         for band in bands:
-            value = self._stac_obj.assets[band]
+            value = self._stac_obj.assets.get(band)
+            if value is None:
+                raise ValueError(f'{band} not found in bands: '
+                                 f'{[k for k in self._stac_obj.assets]}')
             href = value.get('href')
-            type = value.get('type')
+            dtype = value.get('type')
             pattern = href.replace(band, '{band}')
             if bands.index(band) == 0:
                 item['path_as_pattern'] = pattern
-                item['type'] = type
+                item['type'] = dtype
             else:
-                if item['type'] != type:
+                if item['type'] != dtype:
                     raise ValueError(
-                        'Band stacking failed because bands have different '
-                        'types: {}'.format(', '.join([item['type'], type])))
+                        'Band stacking failed because bands have '
+                        f'different types: {item["type"]}, {dtype}')
                 if item['path_as_pattern'] != pattern:
                     raise ValueError(
                         'Band stacking failed because band url did not '
