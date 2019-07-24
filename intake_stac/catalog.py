@@ -208,7 +208,7 @@ class StacItem(AbstractStacCatalog):
 
             href = value.get('href')
             pattern = href.replace(band, '{band}')
-            if bands.index(band) == 0:
+            if 'path_as_pattern' not in item:
                 item['path_as_pattern'] = pattern
             elif item['path_as_pattern'] != pattern:
                 raise ValueError(
@@ -217,7 +217,7 @@ class StacItem(AbstractStacCatalog):
 
             if regrid is False:
                 gsd = info.get('gsd')
-                if bands.index(band) == 0:
+                if 'gsd' not in item:
                     item['gsd'] = gsd
                 elif item['gsd'] != gsd:
                     raise ValueError(

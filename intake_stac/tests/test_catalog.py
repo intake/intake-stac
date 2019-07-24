@@ -110,6 +110,17 @@ def test_cat_item_stacking(stac_item_obj):
     assert (new_da.band == list_of_bands).all()
 
 
+def test_cat_item_stacking_using_common_name(stac_item_obj):
+    items = StacItem(stac_item_obj)
+    list_of_bands = ['coastal', 'blue']
+    new_entry = items.stack_bands(list_of_bands)
+    assert new_entry.description == 'Band 1 (coastal), Band 2 (blue)'
+    assert new_entry.name == 'coastal_blue'
+    new_da = new_entry.to_dask()
+    assert sorted([dim for dim in new_da.dims]) == ['band', 'x', 'y']
+    assert (new_da.band == ['B1', 'B2']).all()
+
+
 def test_cat_item_stacking_dims_of_different_type_raises_error(stac_item_obj):
     items = StacItem(stac_item_obj)
     list_of_bands = ['B1', 'ANG']
