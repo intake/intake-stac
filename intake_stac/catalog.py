@@ -185,10 +185,13 @@ class StacItem(AbstractStacCatalog):
         for band in bands:
             # band can be band id, name or common_name
             if band in assets:
-                info = next((b for b in band_info if b.get('id', b.get('name')) == band), None)
+                info = next((b for b in band_info if
+                             b.get('id', b.get('name')) == band), None)
             else:
-                info = next((b for b in band_info if b['common_name'] == band), None)
-                band = info.get('id', info.get('name')) if info is not None else band
+                info = next((b for b in band_info if
+                             b['common_name'] == band), None)
+                if info is not None:
+                    band = info.get('id', info.get('name'))
 
             if band not in assets or (regrid is False and info is None):
                 valid_band_names = []
@@ -221,8 +224,9 @@ class StacItem(AbstractStacCatalog):
                     item['gsd'] = gsd
                 elif item['gsd'] != gsd:
                     raise ValueError(
-                        f'Stacking failed: {band} has different ground sampling '
-                        f'distance ({gsd}) than other bands ({item["gsd"]})')
+                        f'Stacking failed: {band} has different ground '
+                        f'sampling distance ({gsd}) than other bands '
+                        f'({item["gsd"]})')
 
             titles.append(value.get('title'))
             item['urlpath'].append(href)

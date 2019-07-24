@@ -157,7 +157,7 @@ def test_cat_item_stacking_dims_of_different_size_raises_error_by_default(stac_i
     assert B1_da.shape == (1, 7801, 7641)
     B8_da = items.B8.to_dask()
     assert B8_da.shape == (1, 15601, 15281)
-    with pytest.raises(ValueError, match='B8 has different ground sampling distance'):
+    with pytest.raises(ValueError, match='B8 has different ground sampling'):
         items.stack_bands(list_of_bands)
 
 
