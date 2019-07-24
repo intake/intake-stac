@@ -162,7 +162,7 @@ class StacItem(AbstractStacCatalog):
         metadata.update(kwargs)
         return metadata
 
-    def stack_bands(self, bands):
+    def stack_bands(self, bands, regrid=False):
         """
         Stack the listed bands over the ``band`` dimension.
 
@@ -179,12 +179,27 @@ class StacItem(AbstractStacCatalog):
         """
         item = {'concat_dim': 'band', 'urlpath': [], 'type': 'image/x.geotiff'}
         titles = []
-        for band in bands:
-            value = self._stac_obj.assets.get(band)
-            if value is None:
-                raise ValueError(f'{band} not found in bands: '
-                                 f'{[k for k in self._stac_obj.assets]}')
+        assets = self._stac_obj.assets
+        band_info = self._stac_obj.collection().properties.get('eo:bands')
 
+        for band in bands:
+            # band can be band id, name or common_name
+            if band in assets:
+                info = next((b for b in band_info if b.get('id', b.get('name')) == band), None)
+            else:
+                info = next((b for b in band_info if b['common_name'] == band), None)
+                band = info.get('id', info.get('name')) if info is not None else band
+
+            if band not in assets or (regrid is False and info is None):
+                valid_band_names = []
+                for b in band_info:
+                    valid_band_names.append(b.get("id", b.get('name')))
+                    valid_band_names.append(b.get("common_name"))
+                raise ValueError(
+                    f'{band} not found in list of eo:bands in collection.'
+                    f'Valid values: {sorted(list(set(valid_band_names)))}')
+
+            value = assets.get(band)
             band_type = value.get('type')
             if band_type != item['type']:
                 raise ValueError(
@@ -199,6 +214,16 @@ class StacItem(AbstractStacCatalog):
                 raise ValueError(
                     f'Stacking failed: {href} does not contain '
                     'band info in a fixed section of the url')
+
+            if regrid is False:
+                gsd = info.get('gsd')
+                if bands.index(band) == 0:
+                    item['gsd'] = gsd
+                elif item['gsd'] != gsd:
+                    raise ValueError(
+                        f'Stacking failed: {band} has different ground sampling '
+                        f'distance ({gsd}) than other bands ({item["gsd"]})')
+
             titles.append(value.get('title'))
             item['urlpath'].append(href)
 
