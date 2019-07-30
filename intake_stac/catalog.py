@@ -162,13 +162,85 @@ class StacItem(AbstractStacCatalog):
         metadata.update(kwargs)
         return metadata
 
+    def stack_bands(self, bands, regrid=False):
+        """
+        Stack the listed bands over the ``band`` dimension.
+
+        Parameters
+        ----------
+        bands : list of strings representing the different bands
+        (e.g. ['B1', B2']).
+
+        Returns
+        -------
+        Catalog entry containing listed bands with ``band`` as a dimension
+        and coordinate.
+
+        """
+        item = {'concat_dim': 'band', 'urlpath': [], 'type': 'image/x.geotiff'}
+        titles = []
+        assets = self._stac_obj.assets
+        band_info = self._stac_obj.collection().properties.get('eo:bands')
+
+        for band in bands:
+            # band can be band id, name or common_name
+            if band in assets:
+                info = next((b for b in band_info if
+                             b.get('id', b.get('name')) == band), None)
+            else:
+                info = next((b for b in band_info if
+                             b['common_name'] == band), None)
+                if info is not None:
+                    band = info.get('id', info.get('name'))
+
+            if band not in assets or (regrid is False and info is None):
+                valid_band_names = []
+                for b in band_info:
+                    valid_band_names.append(b.get("id", b.get('name')))
+                    valid_band_names.append(b.get("common_name"))
+                raise ValueError(
+                    f'{band} not found in list of eo:bands in collection.'
+                    f'Valid values: {sorted(list(set(valid_band_names)))}')
+
+            value = assets.get(band)
+            band_type = value.get('type')
+            if band_type != item['type']:
+                raise ValueError(
+                    f'Stacking failed: {band} has type {band_type} and '
+                    f'bands must have type {item["type"]}')
+
+            href = value.get('href')
+            pattern = href.replace(band, '{band}')
+            if 'path_as_pattern' not in item:
+                item['path_as_pattern'] = pattern
+            elif item['path_as_pattern'] != pattern:
+                raise ValueError(
+                    f'Stacking failed: {href} does not contain '
+                    'band info in a fixed section of the url')
+
+            if regrid is False:
+                gsd = info.get('gsd')
+                if 'gsd' not in item:
+                    item['gsd'] = gsd
+                elif item['gsd'] != gsd:
+                    raise ValueError(
+                        f'Stacking failed: {band} has different ground '
+                        f'sampling distance ({gsd}) than other bands '
+                        f'({item["gsd"]})')
+
+            titles.append(value.get('title'))
+            item['urlpath'].append(href)
+
+        item['title'] = ', '.join(titles)
+        return StacEntry('_'.join(bands), item, stacked=True)
+
 
 class StacEntry(LocalCatalogEntry):
     """
     A class representing a STAC catalog entry
     """
 
-    def __init__(self, key, item):
+    def __init__(self, key, item, stacked=False):
         """
         Construct an Intake catalog entry from a STAC catalog entry.
         """
@@ -177,7 +249,7 @@ class StacEntry(LocalCatalogEntry):
                          description=item.get('title', key),
                          driver=driver,
                          direct_access=True,
-                         args=self._get_args(item, driver),
+                         args=self._get_args(item, driver, stacked=stacked),
                          metadata=item)
 
     def _get_driver(self, entry):
@@ -201,8 +273,9 @@ class StacEntry(LocalCatalogEntry):
 
         return drivers.get(entry_type, entry_type)
 
-    def _get_args(self, entry, driver):
+    def _get_args(self, entry, driver, stacked=False):
+        args = entry if stacked else {'urlpath': entry.get('href')}
         if driver in ['netcdf', 'rasterio', 'xarray_image']:
-            return {'urlpath': entry.get('href'), 'chunks': {}}
-        else:
-            return {'urlpath': entry.get('href')}
+            args.update(chunks={})
+
+        return args

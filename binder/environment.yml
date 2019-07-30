@@ -4,6 +4,7 @@ channels:
   - informaticslab
 dependencies:
   - python=3
+  - boto3
   - geopandas
   - intake
   - intake_geopandas

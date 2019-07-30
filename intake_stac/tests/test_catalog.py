@@ -99,6 +99,68 @@ def test_cat_from_item(stac_item_obj):
     assert 'B5' in cat
 
 
+def test_cat_item_stacking(stac_item_obj):
+    items = StacItem(stac_item_obj)
+    list_of_bands = ['B1', 'B2']
+    new_entry = items.stack_bands(list_of_bands)
+    assert new_entry.description == 'Band 1 (coastal), Band 2 (blue)'
+    assert new_entry.name == 'B1_B2'
+    new_da = new_entry.to_dask()
+    assert sorted([dim for dim in new_da.dims]) == ['band', 'x', 'y']
+    assert (new_da.band == list_of_bands).all()
+
+
+def test_cat_item_stacking_using_common_name(stac_item_obj):
+    items = StacItem(stac_item_obj)
+    list_of_bands = ['coastal', 'blue']
+    new_entry = items.stack_bands(list_of_bands)
+    assert new_entry.description == 'Band 1 (coastal), Band 2 (blue)'
+    assert new_entry.name == 'coastal_blue'
+    new_da = new_entry.to_dask()
+    assert sorted([dim for dim in new_da.dims]) == ['band', 'x', 'y']
+    assert (new_da.band == ['B1', 'B2']).all()
+
+
+def test_cat_item_stacking_dims_of_different_type_raises_error(stac_item_obj):
+    items = StacItem(stac_item_obj)
+    list_of_bands = ['B1', 'ANG']
+    with pytest.raises(ValueError, match=(
+            'ANG not found in list of eo:bands in collection')):
+        items.stack_bands(list_of_bands)
+
+
+def test_cat_item_stacking_dims_with_nonexistent_band_raises_error(stac_item_obj):  # noqa: F501
+    items = StacItem(stac_item_obj)
+    list_of_bands = ['B1', 'foo']
+    with pytest.raises(ValueError, match="'B8', 'B9', 'blue', 'cirrus'"):
+        items.stack_bands(list_of_bands)
+
+
+def test_cat_item_stacking_dims_of_different_size_regrids(stac_item_obj):
+    items = StacItem(stac_item_obj)
+    list_of_bands = ['B1', 'B8']
+    B1_da = items.B1.to_dask()
+    assert B1_da.shape == (1, 7801, 7641)
+    B8_da = items.B8.to_dask()
+    assert B8_da.shape == (1, 15601, 15281)
+    new_entry = items.stack_bands(list_of_bands, regrid=True)
+    new_da = new_entry.to_dask()
+    assert new_da.shape == (2, 15601, 15281)
+    assert sorted([dim for dim in new_da.dims]) == ['band', 'x', 'y']
+    assert (new_da.band == list_of_bands).all()
+
+
+def test_cat_item_stacking_dims_of_different_size_raises_error_by_default(stac_item_obj):  # noqa: F501
+    items = StacItem(stac_item_obj)
+    list_of_bands = ['B1', 'B8']
+    B1_da = items.B1.to_dask()
+    assert B1_da.shape == (1, 7801, 7641)
+    B8_da = items.B8.to_dask()
+    assert B8_da.shape == (1, 15601, 15281)
+    with pytest.raises(ValueError, match='B8 has different ground sampling'):
+        items.stack_bands(list_of_bands)
+
+
 def test_stac_entry_constructor():
     key = 'B1'
     item = {'href': 'https://landsat-pds.s3.amazonaws.com/c1/L8/120/046/LC08_L1GT_120046_20181012_20181012_01_RT/LC08_L1GT_120046_20181012_20181012_01_RT_B1.TIF',  # noqa: F501
