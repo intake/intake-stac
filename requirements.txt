@@ -1,2 +1,4 @@
 intake>=0.5.1
+intake-xarray~=0.3.0
+scikit-image~=0.15.0
 sat-stac>=0.1.3
