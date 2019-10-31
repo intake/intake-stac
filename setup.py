@@ -22,7 +22,7 @@ ENTRY_POINTS = {
         'stac_catalog = intake_stac.catalog:StacCatalog',
         'stac_collection = intake_stac.catalog:StacCollection',
         'stac_item = intake_stac.catalog:StacItem',
-        ]
+    ]
 }
 
 description = ("An intake adapter for building intake catalogs begining "
