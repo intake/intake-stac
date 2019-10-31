@@ -84,7 +84,7 @@ class StacCatalog(AbstractStacCatalog):
         textfiles
     """
 
-    name = 'stac-catalog'
+    name = 'stac_catalog'
     _stac_cls = satstac.Catalog
 
     def _load(self):
@@ -119,7 +119,7 @@ class StacCatalog(AbstractStacCatalog):
 
 class StacCollection(AbstractStacCatalog):
 
-    name = 'stac-collection'
+    name = 'stac_collection'
     _stac_cls = satstac.Collection
 
     def _load(self):
@@ -145,7 +145,7 @@ class StacCollection(AbstractStacCatalog):
 
 class StacItem(AbstractStacCatalog):
 
-    name = 'stac-item'
+    name = 'stac_item'
     _stac_cls = satstac.Item
 
     def _load(self):
