@@ -37,7 +37,8 @@ script:
   # test building docs
   - sphinx-build -M html docs/source docs/_build -v
   # test code style
-  - pycodestyle
+  - flake8
+  - black --check .
 
 after_success:
   - codecov

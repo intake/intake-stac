@@ -29,6 +29,7 @@ dependencies:
   - pytoml
   - pyyaml
   - recommonmark
+  - sat-stac
   - sphinx_rtd_theme
   - sphinx>=1.6
   - xarray
@@ -36,4 +37,3 @@ dependencies:
   - ipywidgets
   - pip:
     - sphinx_copybutton
-    - sat-stac
