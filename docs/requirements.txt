@@ -1,0 +1,5 @@
+numpydoc
+sphinx_copybutton
+ipykernel
+nbsphinx
+scikit-image
