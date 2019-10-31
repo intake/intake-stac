@@ -7,7 +7,7 @@ from intake.catalog.local import LocalCatalogEntry
 
 from . import __version__
 
-NULL_TYPE = 'null'
+NULL_TYPE = "null"
 
 
 class AbstractStacCatalog(Catalog):
@@ -32,12 +32,13 @@ class AbstractStacCatalog(Catalog):
             self._stac_obj = self._stac_cls.open(stac_obj)
         else:
             raise ValueError(
-                'Expected %s instance, got: %s' % (type(self._stac_cls),
-                                                   type(stac_obj)))
+                "Expected %s instance, got: %s"
+                % (type(self._stac_cls), type(stac_obj))
+            )
 
-        metadata = self._get_metadata(**kwargs.pop('metadata', {}))
+        metadata = self._get_metadata(**kwargs.pop("metadata", {}))
 
-        name = kwargs.pop('name', self._stac_obj.id)
+        name = kwargs.pop("name", self._stac_obj.id)
 
         super().__init__(name=name, metadata=metadata, **kwargs)
 
@@ -84,7 +85,7 @@ class StacCatalog(AbstractStacCatalog):
         textfiles
     """
 
-    name = 'stac_catalog'
+    name = "stac_catalog"
     _stac_cls = satstac.Catalog
 
     def _load(self):
@@ -100,26 +101,30 @@ class StacCatalog(AbstractStacCatalog):
                     description=collection.title,
                     driver=StacCollection,
                     catalog=self,
-                    args={'stac_obj': collection})
+                    args={"stac_obj": collection},
+                )
         else:
             # in the future this may go away
             for item in self._stac_obj.items():
                 self._entries[item.id] = LocalCatalogEntry(
                     name=item.id,
-                    description='',
+                    description="",
                     driver=StacItem,
                     catalog=self,
-                    args={'stac_obj': item})
+                    args={"stac_obj": item},
+                )
 
     def _get_metadata(self, **kwargs):
-        return dict(description=self._stac_obj.description,
-                    stac_version=self._stac_obj.stac_version,
-                    **kwargs)
+        return dict(
+            description=self._stac_obj.description,
+            stac_version=self._stac_obj.stac_version,
+            **kwargs,
+        )
 
 
 class StacCollection(AbstractStacCatalog):
 
-    name = 'stac_collection'
+    name = "stac_collection"
     _stac_cls = satstac.Collection
 
     def _load(self):
@@ -129,15 +134,22 @@ class StacCollection(AbstractStacCatalog):
         for item in self._stac_obj.items():
             self._entries[item.id] = LocalCatalogEntry(
                 name=item.id,
-                description='',
+                description="",
                 driver=StacItem,
                 catalog=self,
-                args={'stac_obj': item})
+                args={"stac_obj": item},
+            )
 
     def _get_metadata(self, **kwargs):
         metadata = self._stac_obj.properties.copy()
-        for attr in ['title', 'version', 'keywords', 'license',
-                     'providers', 'extent']:
+        for attr in [
+            "title",
+            "version",
+            "keywords",
+            "license",
+            "providers",
+            "extent",
+        ]:
             metadata[attr] = getattr(self._stac_obj, attr, None)
         metadata.update(kwargs)
         return metadata
@@ -145,7 +157,7 @@ class StacCollection(AbstractStacCatalog):
 
 class StacItem(AbstractStacCatalog):
 
-    name = 'stac_item'
+    name = "stac_item"
     _stac_cls = satstac.Item
 
     def _load(self):
@@ -157,7 +169,7 @@ class StacItem(AbstractStacCatalog):
 
     def _get_metadata(self, **kwargs):
         metadata = self._stac_obj.properties.copy()
-        for attr in ['bbox', 'geometry', 'datetime', 'date']:
+        for attr in ["bbox", "geometry", "datetime", "date"]:
             metadata[attr] = getattr(self._stac_obj, attr, None)
         metadata.update(kwargs)
         return metadata
@@ -177,62 +189,73 @@ class StacItem(AbstractStacCatalog):
         and coordinate.
 
         """
-        item = {'concat_dim': 'band', 'urlpath': [], 'type': 'image/x.geotiff'}
+        item = {"concat_dim": "band", "urlpath": [], "type": "image/x.geotiff"}
         titles = []
         assets = self._stac_obj.assets
-        band_info = self._stac_obj.collection().properties.get('eo:bands')
+        band_info = self._stac_obj.collection().properties.get("eo:bands")
 
         for band in bands:
             # band can be band id, name or common_name
             if band in assets:
-                info = next((b for b in band_info if
-                             b.get('id', b.get('name')) == band), None)
+                info = next(
+                    (
+                        b
+                        for b in band_info
+                        if b.get("id", b.get("name")) == band
+                    ),
+                    None,
+                )
             else:
-                info = next((b for b in band_info if
-                             b['common_name'] == band), None)
+                info = next(
+                    (b for b in band_info if b["common_name"] == band), None
+                )
                 if info is not None:
-                    band = info.get('id', info.get('name'))
+                    band = info.get("id", info.get("name"))
 
             if band not in assets or (regrid is False and info is None):
                 valid_band_names = []
                 for b in band_info:
-                    valid_band_names.append(b.get("id", b.get('name')))
+                    valid_band_names.append(b.get("id", b.get("name")))
                     valid_band_names.append(b.get("common_name"))
                 raise ValueError(
-                    f'{band} not found in list of eo:bands in collection.'
-                    f'Valid values: {sorted(list(set(valid_band_names)))}')
+                    f"{band} not found in list of eo:bands in collection."
+                    f"Valid values: {sorted(list(set(valid_band_names)))}"
+                )
 
             value = assets.get(band)
-            band_type = value.get('type')
-            if band_type != item['type']:
+            band_type = value.get("type")
+            if band_type != item["type"]:
                 raise ValueError(
-                    f'Stacking failed: {band} has type {band_type} and '
-                    f'bands must have type {item["type"]}')
+                    f"Stacking failed: {band} has type {band_type} and "
+                    f'bands must have type {item["type"]}'
+                )
 
-            href = value.get('href')
-            pattern = href.replace(band, '{band}')
-            if 'path_as_pattern' not in item:
-                item['path_as_pattern'] = pattern
-            elif item['path_as_pattern'] != pattern:
+            href = value.get("href")
+            pattern = href.replace(band, "{band}")
+            if "path_as_pattern" not in item:
+                item["path_as_pattern"] = pattern
+            elif item["path_as_pattern"] != pattern:
                 raise ValueError(
-                    f'Stacking failed: {href} does not contain '
-                    'band info in a fixed section of the url')
+                    f"Stacking failed: {href} does not contain "
+                    "band info in a fixed section of the url"
+                )
 
             if regrid is False:
-                gsd = info.get('gsd')
-                if 'gsd' not in item:
-                    item['gsd'] = gsd
-                elif item['gsd'] != gsd:
+                gsd = info.get("gsd")
+                if "gsd" not in item:
+                    item["gsd"] = gsd
+                elif item["gsd"] != gsd:
                     raise ValueError(
-                        f'Stacking failed: {band} has different ground '
-                        f'sampling distance ({gsd}) than other bands '
-                        f'({item["gsd"]})')
+                        f"Stacking failed: {band} has different ground "
+                        f"sampling distance ({gsd}) than other bands "
+                        f'({item["gsd"]})'
+                    )
 
-            titles.append(value.get('title'))
-            item['urlpath'].append(href)
+            titles.append(value.get("title"))
+            item["urlpath"].append(href)
 
-        item['title'] = ', '.join(titles)
-        return StacEntry('_'.join(bands), item, stacked=True)
+        item["title"] = ", ".join(titles)
+        return StacEntry("_".join(bands), item, stacked=True)
 
 
 class StacEntry(LocalCatalogEntry):
@@ -245,37 +268,41 @@ class StacEntry(LocalCatalogEntry):
         Construct an Intake catalog entry from a STAC catalog entry.
         """
         driver = self._get_driver(item)
-        super().__init__(name=key,
-                         description=item.get('title', key),
-                         driver=driver,
-                         direct_access=True,
-                         args=self._get_args(item, driver, stacked=stacked),
-                         metadata=item)
+        super().__init__(
+            name=key,
+            description=item.get("title", key),
+            driver=driver,
+            direct_access=True,
+            args=self._get_args(item, driver, stacked=stacked),
+            metadata=item,
+        )
 
     def _get_driver(self, entry):
         drivers = {
-            'application/netcdf': 'netcdf',
-            'image/vnd.stac.geotiff': 'rasterio',
-            'image/vnd.stac.geotiff; cloud-optimized=true': 'rasterio',
-            'image/x.geotiff': 'rasterio',
-            'image/png': "xarray_image",
-            'image/jpg': "xarray_image",
-            'image/jpeg': "xarray_image",
-            'text/xml': 'textfiles',
-            'text/plain': 'textfiles',
-            'text/html': 'textfiles'
+            "application/netcdf": "netcdf",
+            "image/vnd.stac.geotiff": "rasterio",
+            "image/vnd.stac.geotiff; cloud-optimized=true": "rasterio",
+            "image/x.geotiff": "rasterio",
+            "image/png": "xarray_image",
+            "image/jpg": "xarray_image",
+            "image/jpeg": "xarray_image",
+            "text/xml": "textfiles",
+            "text/plain": "textfiles",
+            "text/html": "textfiles",
         }
-        entry_type = entry.get('type', NULL_TYPE)
+        entry_type = entry.get("type", NULL_TYPE)
 
         if entry_type is NULL_TYPE:
-            warnings.warn(f'TODO: handle case with entry without type field. '
-                          ' This entry was: {entry}')
+            warnings.warn(
+                f"TODO: handle case with entry without type field. "
+                " This entry was: {entry}"
+            )
 
         return drivers.get(entry_type, entry_type)
 
     def _get_args(self, entry, driver, stacked=False):
-        args = entry if stacked else {'urlpath': entry.get('href')}
-        if driver in ['netcdf', 'rasterio', 'xarray_image']:
+        args = entry if stacked else {"urlpath": entry.get("href")}
+        if driver in ["netcdf", "rasterio", "xarray_image"]:
             args.update(chunks={})
 
         return args
