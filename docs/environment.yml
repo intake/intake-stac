@@ -1,0 +1,25 @@
+name: intake-stac-dev
+channels:
+  - conda-forge
+dependencies:
+  - boto3
+  - dask
+  - intake
+  - intake-xarray
+  - ipykernel
+  - make
+  - nbsphinx
+  - numpydoc
+  - pandoc
+  - pip
+  - python=3.7
+  - pyyaml
+  - recommonmark
+  - sat-stac
+  - sphinx_rtd_theme
+  - sphinx>=1.6
+  - xarray
+  - rasterio
+  - ipywidgets
+  - pip:
+    - sphinx_copybutton
