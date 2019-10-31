@@ -6,6 +6,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [v0.2.1] - 2019-10-31
+
+### Fixed
+- Intake entrypoint warnings
+
+### Added
+- DOC: Setup readthedocs integration
+- DOC: Add basic tutorial to documentation
+- Style: Black code formatting
+
 ## [v0.2.0] - 2019-10-08
 
 ### Fixed
@@ -21,6 +31,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 Initial Release
 
-[Unreleased]: https://github.com/pangeo-data/intake-stac/compare/master...develop
+[v0.2.1]: https://github.com/pangeo-data/intake-stac/compare/0.1.0...v0.2.1
 [v0.2.0]: https://github.com/pangeo-data/intake-stac/compare/0.1.0...v0.2.0
 [v0.1.0]: https://github.com/pangeo-data/intake-stac/tree/0.1.0
