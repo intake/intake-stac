@@ -34,7 +34,7 @@ script:
   # run unit tests
   - pytest --verbose --junitxml=test-reports/junit.xml --cov=intake_stac --cov-config ci/.coveragerc --cov-report term-missing
   # test building docs
-  - sphinx-build -M html docs/source docs/_build -vv
+  - pushd make html
   # test code style
   - pycodestyle
 

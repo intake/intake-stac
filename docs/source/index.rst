@@ -19,7 +19,6 @@ please open an issue at the GitHub `main repository <http://github.com/pangeo-da
    installation
    api
    contributing
-   changelog
 
 Indices and tables
 ==================
