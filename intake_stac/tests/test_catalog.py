@@ -136,7 +136,7 @@ def test_cat_item_stacking_dims_of_different_type_raises_error(stac_item_obj):
 
 
 def test_cat_item_stacking_dims_with_nonexistent_band_raises_error(
-    stac_item_obj
+    stac_item_obj,
 ):  # noqa: E501
     items = StacItem(stac_item_obj)
     list_of_bands = ["B1", "foo"]
@@ -159,7 +159,7 @@ def test_cat_item_stacking_dims_of_different_size_regrids(stac_item_obj):
 
 
 def test_cat_item_stacking_dims_of_different_size_raises_error_by_default(
-    stac_item_obj
+    stac_item_obj,
 ):  # noqa: E501
     items = StacItem(stac_item_obj)
     list_of_bands = ["B1", "B8"]
