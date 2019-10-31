@@ -30,6 +30,7 @@ dependencies:
   - pyyaml
   - recommonmark
   - sat-stac
+  - scikit-image
   - sphinx_rtd_theme
   - sphinx>=1.6
   - xarray
