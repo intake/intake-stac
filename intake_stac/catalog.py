@@ -75,14 +75,17 @@ class AbstractStacCatalog(Catalog):
 
 class StacCatalog(AbstractStacCatalog):
     """
+    Intake Catalog represeting a STAC Catalog
+
     A Catalog that references a STAC catalog at some URL
     and constructs an intake catalog from it, with opinionated
     choices about the drivers that will be used to load the datasets.
     In general, the drivers are:
-        netcdf
-        rasterio
-        xarray_image
-        textfiles
+
+        - netcdf
+        - rasterio
+        - xarray_image
+        - textfiles
     """
 
     name = "stac_catalog"
@@ -123,6 +126,9 @@ class StacCatalog(AbstractStacCatalog):
 
 
 class StacCollection(AbstractStacCatalog):
+    """
+    Intake Catalog represeting a STAC Collection
+    """
 
     name = "stac_collection"
     _stac_cls = satstac.Collection
@@ -156,6 +162,9 @@ class StacCollection(AbstractStacCatalog):
 
 
 class StacItem(AbstractStacCatalog):
+    """
+    Intake Catalog represeting a STAC Item
+    """
 
     name = "stac_item"
     _stac_cls = satstac.Item
@@ -260,12 +269,12 @@ class StacItem(AbstractStacCatalog):
 
 class StacEntry(LocalCatalogEntry):
     """
-    A class representing a STAC catalog entry
+    A class representing a STAC catalog Entry
     """
 
     def __init__(self, key, item, stacked=False):
         """
-        Construct an Intake catalog entry from a STAC catalog entry.
+        Construct an Intake catalog Entry from a STAC catalog Entry.
         """
         driver = self._get_driver(item)
         super().__init__(
