@@ -1,0 +1,39 @@
+name: intake-stac-dev
+channels:
+  - conda-forge
+dependencies:
+  - autopep8
+  - black
+  - boto3
+  - codecov
+  - coverage
+  - dask
+  - distributed
+  - flake8
+  - ipykernel
+  - isort
+  - make
+  - nbsphinx
+  - netcdf4
+  - numpy
+  - numpydoc
+  - pandoc
+  - pip
+  - pre_commit
+  - pytest
+  - pytest-cov
+  - pytest-icdiff
+  - python=3.7
+  - pytoml
+  - pyyaml
+  - recommonmark
+  - sphinx_rtd_theme
+  - sphinx>=1.6
+  - xarray
+  - rasterio
+  - ipywidgets
+  - pip:
+    - sphinx_copybutton
+    - git+https://github.com/sat-utils/sat-stac.git
+    - git+https://github.com/intake/intake.git
+    - git+https://github.com/intake/intake-xarray.git

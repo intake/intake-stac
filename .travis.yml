@@ -9,6 +9,7 @@ matrix:
   include:
   - env: CONDA_ENV=3.6
   - env: CONDA_ENV=3.7
+  - env: CONDA_ENV=3.7-upstream
 
 before_install:
   - set -e
@@ -34,7 +35,7 @@ script:
   # run unit tests
   - pytest --verbose --junitxml=test-reports/junit.xml --cov=intake_stac --cov-config ci/.coveragerc --cov-report term-missing
   # test building docs
-  - sphinx-build -M html docs/source docs/_build -vv
+  - sphinx-build -M html docs/source docs/_build -v
   # test code style
   - pycodestyle
 
