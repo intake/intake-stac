@@ -9,6 +9,7 @@ matrix:
   include:
   - env: CONDA_ENV=3.6
   - env: CONDA_ENV=3.7
+  - env: CONDA_ENV=3.7-upstream
 
 before_install:
   - set -e
@@ -36,7 +37,8 @@ script:
   # test building docs
   - sphinx-build -M html docs/source docs/_build -v
   # test code style
-  - pycodestyle
+  - flake8
+  - black --check .
 
 after_success:
   - codecov
