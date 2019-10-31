@@ -15,28 +15,27 @@ Two examples of STAC catalogs are:
 
 [Radiant Earth](https://radiant.earth) keeps track of a more complete listing of STAC implementations [here](https://github.com/radiantearth/stac-spec/blob/master/implementations.md).
 
-This project provides an opinionated way for users to load datasets from these catalogs into the scientific Python ecosystem. Currently it uses the intake-xarray plugin and supports several file formats including GeoTIFF, netCDF, GRIB, and OpenDAP.
-
+This project provides an opinionated way for users to load datasets from these catalogs into the scientific Python ecosystem. It uses the intake-xarray plugin and supports several file formats including GeoTIFF, netCDF, GRIB, and OpenDAP.
 
 ## Installation
 
-intake-stac has a few [requirements](requirements.txt), such as the Intake library. Intake-stac can be installed from Pip or the source repository. 
+intake-stac has a few [requirements](requirements.txt), such as [Intake](https://intake.readthedocs.io), [intake-xarray](https://intake-xarray.readthedocs.io/) and [sat-stac](https://github.com/sat-utils/sat-stac). Intake-stac can be installed in any of the following ways:
+
+Using conda:
+
+```bash
+$ conda install -c conda-forge intake-stac
+```
+
+Using Pip:
 
 ```bash
 $ pip install intake-stac
 ```
 
-From source repository:
+Or from the source repository:
 
 ```bash
-$ git clone https://github.com/pangeo-data/intake-stac.git
-$ cd intake-stac
-$ pip install .
-```
-
-or
-
-```
 $ pip install git+https://github.com/pangeo-data/intake-stac
 ```
 
@@ -60,31 +59,31 @@ The table below shows the corresponding versions between intake-stac and STAC:
 
 The package can be imported using
 ```python
-from intake_stac import StacCatalog, StacCollection, StacItem
+from intake import open_stac_catalog, open_stac_collection, open_stac_item
 ```
 
 ### Loading a catalog
 
 You can load data from a STAC catalog by providing the URL to valid STAC catalog entry:
 ```python
-catalog = StacCatalog('https://storage.googleapis.com/pdd-stac/disasters/catalog.json', 'planet-disaster-data')
+catalog = open_stac_catalog('https://storage.googleapis.com/pdd-stac/disasters/catalog.json', 'planet-disaster-data')
 list(catalog)
 ```
 
 You can also point to STAC Collections or Items. Each constructor returns a Intake Catalog with the top level corresponding to the STAC object used for initialization.
 
 ```python
-stac_cat = StacCatalog('https://landsat-stac.s3.amazonaws.com/catalog.json', 'landsat-stac')
-collection_cat = StacCollection('https://landsat-stac.s3.amazonaws.com/landsat-8-l1/catalog.json', 'landsat-8')
-items_cat = StacItem('https://landsat-stac.s3.amazonaws.com/landsat-8-l1/111/111/2018-11-30/LC81111112018334LGN00.json', 'LC81111112018334LGN00')
+stac_cat = open_stac_catalog('https://landsat-stac.s3.amazonaws.com/catalog.json', 'landsat-stac')
+collection_cat = open_stac_collection('https://landsat-stac.s3.amazonaws.com/landsat-8-l1/catalog.json', 'landsat-8')
+items_cat = open_stac_item('https://landsat-stac.s3.amazonaws.com/landsat-8-l1/111/111/2018-11-30/LC81111112018334LGN00.json', 'LC81111112018334LGN00')
 ```
 
-Intake-Stac uses [sat-stac](https://github.com/sat-utils/sat-stac) to parse STAC objects. You can also pass `satstac` objects (e.g. `satstac.Collection`) directly to the Intake-Stac constructors: 
+Intake-Stac uses [sat-stac](https://github.com/sat-utils/sat-stac) to parse STAC objects. You can also pass `satstac` objects (e.g. `satstac.Collection`) directly to the Intake-stac constructors: 
 
 ```python
 import satstac
 col = satstac.Collection.open('https://landsat-stac.s3.amazonaws.com/landsat-8-l1/catalog.json')
-collection_cat = StacCollection(col, 'landsat-8')
+collection_cat = open_stac_collection(col, 'landsat-8')
 ```
 
 ### Using the catalog
@@ -110,10 +109,6 @@ Once you have identified a dataset, you can load it into a `xarray.DataArray` us
 da = entry.to_dask()
 ```
 
-## Development
-
-The `master` branch contains the last versioned release, and the `development` branch contains the latest version of the code. New Pull Requests should be made to the `development` branch. For additional [contributing guidelines](docs/contributing.rst) see the documentation.
-
 ### Running the tests
 
 To run the tests some additional packages need to be installed from the `requirements-dev.txt` file.
@@ -123,6 +118,5 @@ $ pip install -r requirements-dev.txt
 $ pytest -v -s --cov intake-stac --cov-report term-missing
 ```
 
-
 ## About
-[intake-stac](https://github.com/pangeo-data/intake-stac) was created as part of the [Pangeo](http://pangeo.io) initiative.  See the initial [design document](https://hackmd.io/cyJZkjV5TCWTJg1mUAoEVA).
+[intake-stac](https://github.com/pangeo-data/intake-stac) was created as part of the [Pangeo](http://pangeo.io) initiative under support from the NASA-ACCESS program.  See the initial [design document](https://hackmd.io/cyJZkjV5TCWTJg1mUAoEVA).
