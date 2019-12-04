@@ -33,12 +33,15 @@ class AbstractStacCatalog(Catalog):
         else:
             raise ValueError(
                 "Expected %s instance, got: %s"
-                % (type(self._stac_cls), type(stac_obj))
+                % (self._stac_cls, type(stac_obj))
             )
 
         metadata = self._get_metadata(**kwargs.pop("metadata", {}))
 
-        name = kwargs.pop("name", self._stac_obj.id)
+        try:
+            name = kwargs.pop("name", self._stac_obj.id)
+        except AttributeError:
+            name = str(type(self._stac_obj))
 
         super().__init__(name=name, metadata=metadata, **kwargs)
 
@@ -123,6 +126,33 @@ class StacCatalog(AbstractStacCatalog):
             stac_version=self._stac_obj.stac_version,
             **kwargs,
         )
+
+
+class StacItemCollection(AbstractStacCatalog):
+    """
+    Intake Catalog represeting a STAC ItemCollection
+    """
+
+    name = "stac_item_collection"
+    _stac_cls = satstac.ItemCollection
+
+    def _load(self):
+        """
+        Load the STAC Item Collection.
+        """
+        print(self._stac_obj)
+        print(list(self._stac_obj))
+        for item in self._stac_obj:
+            self._entries[item.id] = LocalCatalogEntry(
+                name=item.id,
+                description="",
+                driver=StacItem,
+                catalog=self,
+                args={"stac_obj": item},
+            )
+
+    def _get_metadata(self, **kwargs):
+        return kwargs
 
 
 class StacCollection(AbstractStacCatalog):

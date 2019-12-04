@@ -21,6 +21,7 @@ ENTRY_POINTS = {
     "intake.drivers": [
         "stac_catalog = intake_stac.catalog:StacCatalog",
         "stac_collection = intake_stac.catalog:StacCollection",
+        "stac_item_collection = intake_stac.catalog:StacItemCollection",
         "stac_item = intake_stac.catalog:StacItem",
     ]
 }
