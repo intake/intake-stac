@@ -29,6 +29,7 @@ dependencies:
   - pytoml
   - pyyaml
   - recommonmark
+  - sat-search
   - sat-stac
   - scikit-image
   - sphinx_rtd_theme

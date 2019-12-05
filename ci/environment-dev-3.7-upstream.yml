@@ -36,5 +36,6 @@ dependencies:
   - pip:
     - sphinx_copybutton
     - git+https://github.com/sat-utils/sat-stac.git
+    - git+https://github.com/sat-utils/sat-search.git
     - git+https://github.com/intake/intake.git
     - git+https://github.com/intake/intake-xarray.git
