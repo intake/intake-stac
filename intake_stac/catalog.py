@@ -140,8 +140,6 @@ class StacItemCollection(AbstractStacCatalog):
         """
         Load the STAC Item Collection.
         """
-        print(self._stac_obj)
-        print(list(self._stac_obj))
         for item in self._stac_obj:
             self._entries[item.id] = LocalCatalogEntry(
                 name=item.id,
