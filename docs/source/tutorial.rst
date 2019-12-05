@@ -2,6 +2,15 @@
 Tutorial
 ========
 
+.. ipython:: python
+   :suppress:
+    
+    import warnings
+    with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter("ignore")
+        import pandas
+        import xarray
+
 Intake-stac simply provides a thin interface that combines `sat-stac` and
 Intake. It's basic usage is shown below:
 
@@ -85,12 +94,12 @@ Once you have identified a dataset, you can load it into a ``xarray.DataArray``
 using Intake's `to_dask()` method:
 
 .. ipython:: python
-    :okwarning:
+
     da = entry.to_dask()
     display(da)
 
-Combining with `sat-search`
----------------------------
+Working with `sat-search`
+-------------------------
 
 Intake-stac integrates with `sat-search` to faciliate dynamic search and
 discovery of assets through a STAC-API. To begin, construct a search query
