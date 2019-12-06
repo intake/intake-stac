@@ -229,7 +229,13 @@ class StacItem(AbstractStacCatalog):
         item = {"concat_dim": "band", "urlpath": [], "type": "image/x.geotiff"}
         titles = []
         assets = self._stac_obj.assets
-        band_info = self._stac_obj.collection().properties.get("eo:bands")
+
+        try:
+            band_info = self._stac_obj.collection().properties.get("eo:bands")
+        except AttributeError:
+            # TODO: figure out why satstac objects don't always have a collection
+            # This workaround covers the case where `.collection()` returns None
+            band_info = self._stac_obj.properties.get("eo:bands")
 
         for band in bands:
             # band can be band id, name or common_name
