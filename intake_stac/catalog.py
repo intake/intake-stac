@@ -233,8 +233,9 @@ class StacItem(AbstractStacCatalog):
         try:
             band_info = self._stac_obj.collection().properties.get("eo:bands")
         except AttributeError:
-            # TODO: figure out why satstac objects don't always have a collection
-            # This workaround covers the case where `.collection()` returns None
+            # TODO: figure out why satstac objects don't always have a
+            #  collection. This workaround covers the case where
+            # `.collection()` returns None
             band_info = self._stac_obj.properties.get("eo:bands")
 
         for band in bands:
