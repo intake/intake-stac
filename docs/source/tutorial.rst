@@ -2,8 +2,17 @@
 Tutorial
 ========
 
-Intake-stac provides is pretty simple. It provides a thin interface that
-combines `sat-stac` and Intake. It's basic usage is shown below:
+.. ipython:: python
+   :suppress:
+    
+    import warnings
+    with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter("ignore")
+        import pandas
+        import xarray
+
+Intake-stac simply provides a thin interface that combines `sat-stac` and
+Intake. It's basic usage is shown below:
 
 To begin, import intake:
 
@@ -88,3 +97,30 @@ using Intake's `to_dask()` method:
 
     da = entry.to_dask()
     display(da)
+
+Working with `sat-search`
+-------------------------
+
+Intake-stac integrates with `sat-search` to faciliate dynamic search and
+discovery of assets through a STAC-API. To begin, construct a search query
+using `sat-search`:
+
+.. ipython:: python
+
+    import satsearch
+
+    results = satsearch.Search.search(
+        collection='landsat-8-l1',
+        bbox=[43.16, -11.32, 43.54, -11.96],
+        sort=['<datetime'], #earliest scene first
+        property=["landsat:tier=T1"])
+    items = results.items()
+    display(items)
+
+In the code section above, `items` is a `satstac.ItemsCollection` object.
+Intake-stac can turn this object into an Intake catalog:
+
+.. ipython:: python
+
+    catalog = intake.open_stac_item_collection(items)
+    list(catalog)

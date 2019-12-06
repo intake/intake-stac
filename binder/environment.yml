@@ -10,10 +10,10 @@ dependencies:
   - intake_geopandas
   - intake-xarray
   - rasterio
+  - sat-stac
+  - sat-search
   - netcdf4
   - rasterio
   - scikit-image
   - matplotlib
   - pip
-  - pip:
-    - sat-stac

@@ -14,6 +14,7 @@ Top-level functions
 
    open_stac_catalog
    open_stac_collection
+   open_stac_item_collection
    open_stac_item
 
 .. currentmodule:: intake_stac
@@ -26,5 +27,6 @@ Catalog Objects
 
    StacCatalog
    StacCollection
+   StacItemCollection
    StacItem
    catalog.StacEntry

@@ -1,10 +1,17 @@
+import os
+
 import intake
 import pytest
 import satstac
 from intake.catalog import Catalog
 from intake.catalog.local import LocalCatalogEntry
 
-from intake_stac import StacCatalog, StacCollection, StacItem
+from intake_stac import (
+    StacCatalog,
+    StacCollection,
+    StacItem,
+    StacItemCollection,
+)
 from intake_stac.catalog import StacEntry
 
 
@@ -22,6 +29,16 @@ def stac_cat_obj(stac_cat_url):
 def stac_collection_obj():
     return satstac.Collection.open(
         "https://raw.githubusercontent.com/sat-utils/sat-stac/master/test/catalog/eo/sentinel-2-l1c/catalog.json"  # noqa: E501
+    )
+
+
+@pytest.fixture(scope="module")
+def stac_item_collection_obj():
+    # TODO: change load -> open,
+    # see https://github.com/sat-utils/sat-stac/issues/52
+    # use github/sat-utils/sat-stac/master/test/items.json
+    return satstac.ItemCollection.load(
+        os.path.join(os.path.dirname(__file__), "items.json")  # noqa: E501
     )
 
 
@@ -96,6 +113,12 @@ def test_cat_from_collection(stac_collection_obj):
     cat = StacCollection(stac_collection_obj)
     assert "L1C_T53MNQ_A017245_20181011T011722" in cat
     assert "B05" in cat.L1C_T53MNQ_A017245_20181011T011722
+
+
+def test_cat_from_item_collection(stac_item_collection_obj):
+    cat = StacItemCollection(stac_item_collection_obj)
+    assert "LC81920292019008LGN00" in cat
+    assert "B5" in cat.LC81920292019008LGN00
 
 
 def test_cat_from_item(stac_item_obj):
