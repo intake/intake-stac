@@ -4,3 +4,4 @@ ipykernel
 nbsphinx
 scikit-image
 toolz
+sphinx_rtd_theme
