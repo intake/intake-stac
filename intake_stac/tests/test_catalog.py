@@ -215,6 +215,14 @@ def test_stac_entry_constructor():
     assert d["metadata"] == item
 
 
+def test_cat_to_geopandas(stac_item_collection_obj):
+    import geopandas as gpd
+
+    cat = StacItemCollection(stac_item_collection_obj)
+    df = cat.to_geopandas()
+    assert isinstance(df, gpd.GeoDataFrame)
+
+
 # TODO - Add tests for:
 # StacEntry._get_driver()
 # StacEntryy._get_args()

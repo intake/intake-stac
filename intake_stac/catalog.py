@@ -4,6 +4,7 @@ import satstac
 import yaml
 from intake.catalog import Catalog
 from intake.catalog.local import LocalCatalogEntry
+import tempfile
 
 from . import __version__
 
@@ -151,6 +152,25 @@ class StacItemCollection(AbstractStacCatalog):
 
     def _get_metadata(self, **kwargs):
         return kwargs
+
+    def to_geopandas(self):
+        """
+        Load the STAC Item Collection into a geopandas GeoDataFrame
+        """
+        try:
+            import geopandas as gpd
+        except ImportError:
+            raise ImportError(
+                "Using to_geopandas requires the `geopandas` package"
+            )
+
+        with tempfile.NamedTemporaryFile(suffix=".geojson") as f:
+            self._stac_obj.save(f.name)
+            gf = gpd.read_file(f.name)
+        return gf
+
+    def from_geopandas(self):
+        ...
 
 
 class StacCollection(AbstractStacCatalog):

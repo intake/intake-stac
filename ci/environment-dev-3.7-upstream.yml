@@ -33,6 +33,7 @@ dependencies:
   - xarray
   - rasterio
   - ipywidgets
+  - geopandas
   - pip:
     - sphinx_copybutton
     - git+https://github.com/sat-utils/sat-stac.git
