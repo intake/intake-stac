@@ -3,3 +3,4 @@ sphinx_copybutton
 ipykernel
 nbsphinx
 scikit-image
+toolz
