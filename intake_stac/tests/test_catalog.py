@@ -231,7 +231,7 @@ def test_cat_to_missing_geopandas(stac_item_collection_obj, monkeypatch):
     with pytest.raises(ImportError):
         with mock.patch.dict(sys.modules, {"geopandas": None}):
             cat = StacItemCollection(stac_item_collection_obj)
-            df = cat.to_geopandas()
+            _ = cat.to_geopandas()
 
 
 # TODO - Add tests for:
