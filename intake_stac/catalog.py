@@ -170,7 +170,7 @@ class StacItemCollection(AbstractStacCatalog):
         return gf
 
     @classmethod
-    def from_geopandas(cls, df, **kwargs):
+    def from_geopandas(cls):
         ...
 
 
