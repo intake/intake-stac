@@ -3,3 +3,5 @@ sphinx_copybutton
 ipykernel
 nbsphinx
 scikit-image
+sat-search
+geopandas
