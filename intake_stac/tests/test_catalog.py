@@ -1,10 +1,12 @@
 import os
+import sys
 
 import intake
 import pytest
 import satstac
 from intake.catalog import Catalog
 from intake.catalog.local import LocalCatalogEntry
+
 
 from intake_stac import (
     StacCatalog,
@@ -221,6 +223,15 @@ def test_cat_to_geopandas(stac_item_collection_obj):
     cat = StacItemCollection(stac_item_collection_obj)
     df = cat.to_geopandas()
     assert isinstance(df, gpd.GeoDataFrame)
+
+
+def test_cat_to_missing_geopandas(stac_item_collection_obj, monkeypatch):
+    from unittest import mock
+
+    with pytest.raises(ImportError):
+        with mock.patch.dict(sys.modules, {"geopandas": None}):
+            cat = StacItemCollection(stac_item_collection_obj)
+            df = cat.to_geopandas()
 
 
 # TODO - Add tests for:

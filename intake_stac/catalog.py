@@ -169,7 +169,8 @@ class StacItemCollection(AbstractStacCatalog):
             gf = gpd.read_file(f.name)
         return gf
 
-    def from_geopandas(self):
+    @classmethod
+    def from_geopandas(cls, df, **kwargs):
         ...
 
 
