@@ -1,4 +1,3 @@
 intake>=0.5.1
 intake-xarray>=0.3
 sat-stac>=0.1.3
-rasterio
