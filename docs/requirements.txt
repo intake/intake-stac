@@ -3,6 +3,5 @@ sphinx_copybutton
 ipykernel
 nbsphinx
 scikit-image
-toolz
-sphinx_rtd_theme
 sat-search
+geopandas
