@@ -53,7 +53,7 @@ jobs:
       - name: Setup conda environment
         run: |
           export PATH="/usr/share/miniconda/bin:$PATH"
-          conda env create -n test_env --file ci/environment-dev-$CONDA_ENV.yml --quiet
+          conda env create -n test_env --file ci/environment-dev-${{ matrix.CONDA_ENV }}.yml --quiet
           source activate test_env
           python -m pip install --no-deps -e .
           conda list
