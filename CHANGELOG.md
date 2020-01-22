@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [v0.2.3] - 2019-01-21
+
+### Removed
+- Dependency of scikit-image
+
+### Fixed
+- Failed doc builds due to missing satsearch and rasterio dependency
+
 ## [v0.2.2] - 2019-12-06
 
 ### Added
