@@ -7,7 +7,6 @@ import satstac
 from intake.catalog import Catalog
 from intake.catalog.local import LocalCatalogEntry
 
-
 from intake_stac import (
     StacCatalog,
     StacCollection,
