@@ -1,5 +1,6 @@
 # Intake-stac
 
+![CI](https://github.com/pangeo-data/intake-stac/workflows/CI/badge.svg)
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/pangeo-data/intake-stac/master?filepath=examples?urlpath=lab)
 [![Build Status](https://travis-ci.org/pangeo-data/intake-stac.svg?branch=master)](https://travis-ci.org/pangeo-data/intake-stac)
 [![PyPI version](https://badge.fury.io/py/intake-stac.svg)](https://badge.fury.io/py/intake-stac)
