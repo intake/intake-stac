@@ -4,7 +4,6 @@ import satstac
 import yaml
 from intake.catalog import Catalog
 from intake.catalog.local import LocalCatalogEntry
-import tempfile
 
 from . import __version__
 
@@ -164,9 +163,9 @@ class StacItemCollection(AbstractStacCatalog):
                 "Using to_geopandas requires the `geopandas` package"
             )
 
-        with tempfile.NamedTemporaryFile(suffix=".geojson") as f:
-            self._stac_obj.save(f.name)
-            gf = gpd.read_file(f.name)
+        gf = gpd.GeoDataFrame.from_features(
+            self._stac_obj.geojson(), crs={"init": "epsg:4326"}
+        )
         return gf
 
 
