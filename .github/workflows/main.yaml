@@ -113,3 +113,8 @@ jobs:
           export PATH="/usr/share/miniconda/bin:$PATH"
           source activate test_env
           pytest --verbose --junitxml=test-reports/junit.xml --cov=intake_stac --cov-config ci/.coveragerc --cov-report term-missing
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
