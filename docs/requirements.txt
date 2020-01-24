@@ -5,3 +5,6 @@ nbsphinx
 scikit-image
 sat-search
 geopandas
+sphinx_rtd_theme
+rasterio
+toolz
