@@ -217,11 +217,15 @@ def test_stac_entry_constructor():
 
 
 def test_cat_to_geopandas(stac_item_collection_obj):
-    import geopandas as gpd
+    import geopandas
 
     cat = StacItemCollection(stac_item_collection_obj)
     df = cat.to_geopandas()
-    assert isinstance(df, gpd.GeoDataFrame)
+    assert isinstance(df, geopandas.GeoDataFrame)
+    assert len(df) == len(cat._stac_obj)
+    assert isinstance(df.geometry, geopandas.GeoSeries)
+    assert isinstance(df.geometry.values, geopandas.array.GeometryArray)
+    assert isinstance(df.geometry.dtype, geopandas.array.GeometryDtype)
 
 
 def test_cat_to_missing_geopandas(stac_item_collection_obj, monkeypatch):
