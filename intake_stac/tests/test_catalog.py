@@ -226,6 +226,18 @@ def test_cat_to_geopandas(stac_item_collection_obj):
     assert isinstance(df.geometry, geopandas.GeoSeries)
     assert isinstance(df.geometry.values, geopandas.array.GeometryArray)
     assert isinstance(df.geometry.dtype, geopandas.array.GeometryDtype)
+    assert df.crs == {"init": "epsg:4326"}
+
+
+@pytest.mark.parametrize("crs", ["IGNF:ETRS89UTM28", "epsg:26909"])
+def test_cat_to_geopandas_crs(crs, stac_item_collection_obj):
+    import geopandas
+
+    cat = StacItemCollection(stac_item_collection_obj)
+    df = cat.to_geopandas(crs=crs)
+    assert isinstance(df, geopandas.GeoDataFrame)
+    assert len(df) == len(cat._stac_obj)
+    assert df.crs == crs
 
 
 def test_cat_to_missing_geopandas(stac_item_collection_obj, monkeypatch):
