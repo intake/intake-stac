@@ -152,6 +152,33 @@ class StacItemCollection(AbstractStacCatalog):
     def _get_metadata(self, **kwargs):
         return kwargs
 
+    def to_geopandas(self, crs=None):
+        """
+        Load the STAC Item Collection into a geopandas GeoDataFrame
+
+        Parameters
+        ----------
+        crs : str or dict (optional)
+              Coordinate reference system to set on the resulting frame.
+
+        Returns
+        -------
+        GeoDataFrame
+
+        """
+        try:
+            import geopandas as gpd
+        except ImportError:
+            raise ImportError(
+                "Using to_geopandas requires the `geopandas` package."
+                "You can install it via Pip or Conda."
+            )
+
+        if crs is None:
+            crs = {"init": "epsg:4326"}
+        gf = gpd.GeoDataFrame.from_features(self._stac_obj.geojson(), crs=crs)
+        return gf
+
 
 class StacCollection(AbstractStacCatalog):
     """
