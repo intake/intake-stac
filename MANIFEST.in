@@ -5,3 +5,4 @@ include requirements.txt
 include versioneer.py
 
 recursive-include intake_stac *.py
+prune intake_stac/tests
