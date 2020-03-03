@@ -39,7 +39,7 @@ setup(
     maintainer_email="jhamman@ucar.edu",
     url="https://github.com/pangeo-data/intake-stac",
     py_modules=["intake_stac"],
-    packages=find_packages(),
+    packages=find_packages(exclude=["*tests"]),
     package_dir={"intake_stac": "intake_stac"},
     include_package_data=True,
     python_requires=PYTHON_REQUIRES,
