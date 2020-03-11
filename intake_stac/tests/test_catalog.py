@@ -93,7 +93,6 @@ def test_init_catalog_with_bad_url_raises():
         StacCatalog("foo.bar")
 
 
-@pytest.mark.xfail(reason="TODO: work on nested serialization")
 def test_serialize(cat):
     cat_str = cat.serialize()
     assert isinstance(cat_str, str)
@@ -217,7 +216,7 @@ def test_stac_entry_constructor():
 
 
 def test_cat_to_geopandas(stac_item_collection_obj):
-    import geopandas
+    geopandas = pytest.importorskip("geopandas")
 
     cat = StacItemCollection(stac_item_collection_obj)
     df = cat.to_geopandas()
@@ -231,7 +230,7 @@ def test_cat_to_geopandas(stac_item_collection_obj):
 
 @pytest.mark.parametrize("crs", ["IGNF:ETRS89UTM28", "epsg:26909"])
 def test_cat_to_geopandas_crs(crs, stac_item_collection_obj):
-    import geopandas
+    geopandas = pytest.importorskip("geopandas")
 
     cat = StacItemCollection(stac_item_collection_obj)
     df = cat.to_geopandas(crs=crs)
@@ -247,9 +246,3 @@ def test_cat_to_missing_geopandas(stac_item_collection_obj, monkeypatch):
         with mock.patch.dict(sys.modules, {"geopandas": None}):
             cat = StacItemCollection(stac_item_collection_obj)
             _ = cat.to_geopandas()
-
-
-# TODO - Add tests for:
-# StacEntry._get_driver()
-# StacEntryy._get_args()
-# All catalogs ._get_metadata()

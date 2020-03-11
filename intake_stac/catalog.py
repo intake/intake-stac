@@ -61,11 +61,12 @@ class AbstractStacCatalog(Catalog):
         return cls(stac_obj, **kwargs)
 
     def _get_metadata(self, **kwargs):
-        return kwargs
+        return kwargs  # pragma: no cover
 
     def serialize(self):
         """
         Serialize the catalog to yaml.
+
         Returns
         -------
         A string with the yaml-formatted catalog.
@@ -98,27 +99,14 @@ class StacCatalog(AbstractStacCatalog):
         """
         Load the STAC Catalog.
         """
-        # should we also iterate over .catalogs() here?
-        collections = list(self._stac_obj.collections())
-        if collections:
-            for collection in collections:
-                self._entries[collection.id] = LocalCatalogEntry(
-                    name=collection.id,
-                    description=collection.title,
-                    driver=StacCollection,
-                    catalog=self,
-                    args={"stac_obj": collection},
-                )
-        else:
-            # in the future this may go away
-            for item in self._stac_obj.items():
-                self._entries[item.id] = LocalCatalogEntry(
-                    name=item.id,
-                    description="",
-                    driver=StacItem,
-                    catalog=self,
-                    args={"stac_obj": item},
-                )
+        for collection in self._stac_obj.collections():
+            self._entries[collection.id] = LocalCatalogEntry(
+                name=collection.id,
+                description=collection.title,
+                driver=StacCollection,
+                catalog=self,
+                args={"stac_obj": collection},
+            )
 
     def _get_metadata(self, **kwargs):
         return dict(
