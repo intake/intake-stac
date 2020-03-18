@@ -134,7 +134,7 @@ class StacItemCollection(AbstractStacCatalog):
                 description="",
                 driver=StacItem,
                 catalog=self,
-                args={"stac_obj": item.filename},
+                args={"stac_obj": item},
             )
 
     def _get_metadata(self, **kwargs):
