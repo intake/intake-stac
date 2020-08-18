@@ -188,7 +188,10 @@ class StacCollection(AbstractStacCatalog):
             )
 
     def _get_metadata(self, **kwargs):
-        metadata = self._stac_obj.properties.copy()
+        metadata = getattr(self._stac_obj, 'properties', {})
+        if metadata:
+            metadata = metadata.copy()
+
         for attr in [
             'title',
             'version',
