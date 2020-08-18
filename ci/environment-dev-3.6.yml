@@ -39,4 +39,4 @@ dependencies:
   - ipywidgets
   - geopandas
   - pip:
-    - sphinx_copybutton
+      - sphinx_copybutton
