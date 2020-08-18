@@ -39,5 +39,5 @@ dependencies:
   - ipywidgets
   - geopandas
   - pip:
-    - git+https://github.com/sat-utils/sat-search.git 
+    - sat-search==0.3.0rc1
     - sphinx_copybutton
