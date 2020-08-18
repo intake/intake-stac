@@ -354,6 +354,8 @@ class StacEntry(LocalCatalogEntry):
             "image/vnd.stac.geotiff": "rasterio",
             "image/vnd.stac.geotiff; cloud-optimized=true": "rasterio",
             "image/x.geotiff": "rasterio",
+            "image/tiff; application=geotiff": "rasterio",
+            "image/tiff; application=geotiff; profile=cloud-optimized": "rasterio",  # noqa: E501
             "image/png": "xarray_image",
             "image/jpg": "xarray_image",
             "image/jpeg": "xarray_image",
@@ -365,8 +367,8 @@ class StacEntry(LocalCatalogEntry):
 
         if entry_type is NULL_TYPE:
             warnings.warn(
-                f"TODO: handle case with entry without type field. "
-                " This entry was: {entry}"
+                "TODO: handle case with entry without type field. "
+                f" This entry was: {entry}"
             )
 
         return drivers.get(entry_type, entry_type)
