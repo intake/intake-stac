@@ -5,7 +5,10 @@ import yaml
 from intake.catalog import Catalog
 from intake.catalog.local import LocalCatalogEntry
 
-from . import __version__
+try:
+    from intake_stac import __version__
+except Exception:
+    __version__ = '999'
 
 NULL_TYPE = 'null'
 
