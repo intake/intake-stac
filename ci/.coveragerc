@@ -1,6 +1,4 @@
 [report]
 omit =
     intake_stac/tests/*
-    intake_stac/_version.py
     setup.py
-    versioneer.py

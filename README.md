@@ -2,7 +2,6 @@
 
 ![CI](https://github.com/pangeo-data/intake-stac/workflows/CI/badge.svg)
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/pangeo-data/intake-stac/master?filepath=examples?urlpath=lab)
-[![Build Status](https://travis-ci.org/pangeo-data/intake-stac.svg?branch=master)](https://travis-ci.org/pangeo-data/intake-stac)
 [![PyPI version](https://badge.fury.io/py/intake-stac.svg)](https://badge.fury.io/py/intake-stac)
 [![Documentation Status](https://readthedocs.org/projects/intake-stac/badge/?version=latest)](https://intake-stac.readthedocs.io/en/latest/?badge=latest)
 [![codecov](https://codecov.io/gh/pangeo-data/intake-stac/branch/master/graph/badge.svg)](https://codecov.io/gh/pangeo-data/intake-stac)
@@ -16,11 +15,13 @@ Intake-STAC provides an opinionated way for users to load Assets from STAC catal
 Intake-STAC has a few [requirements](requirements.txt), such as [Intake](https://intake.readthedocs.io), [intake-xarray](https://intake-xarray.readthedocs.io/) and [sat-stac](https://github.com/sat-utils/sat-stac). Intake-stac can be installed in any of the following ways:
 
 We recommend installing the latest release with `conda`:
+
 ```bash
 $ conda install -c conda-forge intake-stac
 ```
 
 Or the latest development version with `pip`:
+
 ```bash
 $ pip install git+https://github.com/intake/intake-stac
 ```
@@ -39,6 +40,7 @@ da
 The [examples/](examples/) directory contains some example Jupyter Notebooks that can be used to test the functionality.
 
 #### Versions
+
 To install a specific versions of intake-stac, specify the version in the install command
 
 ```bash
@@ -48,9 +50,10 @@ pip install intake-stac==0.1.0
 The table below shows the corresponding versions between intake-stac and STAC:
 
 | intake-stac | STAC  |
-| -------- | ----  |
-| 0.2.x   | 0.6.x |
-| 0.3.x   | 1.0.x |
+| ----------- | ----- |
+| 0.2.x       | 0.6.x |
+| 0.3.x       | 1.0.x |
 
 ## About
-[intake-stac](https://github.com/intake/intake-stac) was created as part of the [Pangeo](http://pangeo.io) initiative under support from the NASA-ACCESS program.  See the initial [design document](https://hackmd.io/cyJZkjV5TCWTJg1mUAoEVA).
+
+[intake-stac](https://github.com/pangeo-data/intake-stac) was created as part of the [Pangeo](http://pangeo.io) initiative under support from the NASA-ACCESS program. See the initial [design document](https://hackmd.io/cyJZkjV5TCWTJg1mUAoEVA).

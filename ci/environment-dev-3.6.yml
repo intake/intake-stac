@@ -29,7 +29,6 @@ dependencies:
   - pytoml
   - pyyaml
   - recommonmark
-#  - sat-search
   - sat-stac
   - scikit-image
   - sphinx_rtd_theme
@@ -39,5 +38,5 @@ dependencies:
   - ipywidgets
   - geopandas
   - pip:
-    - sat-search==0.3.0rc1
-    - sphinx_copybutton
+      - sat-search==0.3.0rc1
+      - sphinx_copybutton
