@@ -40,3 +40,5 @@ dependencies:
   - geopandas
   - pip:
       - sphinx_copybutton
+      - intake_geopandas
+      - intake_parquet

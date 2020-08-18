@@ -328,6 +328,11 @@ class StacEntry(LocalCatalogEntry):
     def _get_driver(self, entry):
         drivers = {
             'application/netcdf': 'netcdf',
+            'application/x-netcdf': 'netcdf',
+            'application/parquet': 'parquet?',
+            'application/x-parquet': 'parquet?',
+            # 'application/x-hdf5': '',
+            # 'application/x-hdf': '',
             'image/vnd.stac.geotiff': 'rasterio',
             'image/vnd.stac.geotiff; cloud-optimized=true': 'rasterio',
             'image/x.geotiff': 'rasterio',
@@ -339,6 +344,9 @@ class StacEntry(LocalCatalogEntry):
             'text/xml': 'textfiles',
             'text/plain': 'textfiles',
             'text/html': 'textfiles',
+            'application/geo+json': 'geopandas',
+            # 'application/json': '?',
+            'application/geopackage+sqlite3': 'geopandas?',
         }
         entry_type = entry.get('type', NULL_TYPE)
 
@@ -351,7 +359,7 @@ class StacEntry(LocalCatalogEntry):
 
     def _get_args(self, entry, driver, stacked=False):
         args = entry if stacked else {'urlpath': entry.get('href')}
-        if driver in ['netcdf', 'rasterio', 'xarray_image']:
+        if driver in ['netcdf', 'rasterio', 'xarray_image', 'geopandas', 'parquet']:
             args.update(chunks={})
 
         return args
