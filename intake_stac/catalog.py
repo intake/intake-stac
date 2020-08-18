@@ -4,11 +4,9 @@ import satstac
 import yaml
 from intake.catalog import Catalog
 from intake.catalog.local import LocalCatalogEntry
+from pkg_resources import get_distribution
 
-try:
-    from intake_stac import __version__
-except Exception:
-    __version__ = '999'
+__version__ = get_distribution('intake_stac').version
 
 NULL_TYPE = 'null'
 
