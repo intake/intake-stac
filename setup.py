@@ -6,8 +6,6 @@ import sys
 
 from setuptools import find_packages, setup
 
-import versioneer
-
 with open('requirements.txt') as f:
     INSTALL_REQUIRES = f.read().strip().split('\n')
 
@@ -16,7 +14,10 @@ with open('README.md') as f:
 
 needs_pytest = {'pytest', 'test', 'ptr'}.intersection(sys.argv)
 PYTHON_REQUIRES = '>=3.6'
-SETUP_REQUIRES = ['pytest-runner >= 4.2'] if needs_pytest else []
+SETUP_REQUIRES = ['setuptools_scm']
+if needs_pytest:
+    SETUP_REQUIRES.appen('pytest-runner >= 4.2')
+
 TESTS_REQUIRE = ['pytest >= 2.7.1']
 ENTRY_POINTS = {
     'intake.drivers': [
@@ -51,6 +52,5 @@ setup(
     license='BSD 2-Clause',
     zip_safe=False,
     keywords='intake stac',
-    version=versioneer.get_version(),
-    cmdclass=versioneer.get_cmdclass(),
+    use_scm_version={'version_scheme': 'post-release', 'local_scheme': 'dirty-tag'},
 )
