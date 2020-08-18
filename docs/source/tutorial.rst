@@ -4,7 +4,7 @@ Tutorial
 
 .. ipython:: python
    :suppress:
-    
+
     import warnings
     with warnings.catch_warnings(record=True) as w:
         warnings.simplefilter("ignore")
@@ -95,6 +95,7 @@ using Intake's `to_dask()` method:
 
 .. ipython:: python
 
+    entry = catalog['thumbnail']
     da = entry.to_dask()
     display(da)
 

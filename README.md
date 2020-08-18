@@ -2,7 +2,6 @@
 
 ![CI](https://github.com/pangeo-data/intake-stac/workflows/CI/badge.svg)
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/pangeo-data/intake-stac/master?filepath=examples?urlpath=lab)
-[![Build Status](https://travis-ci.org/pangeo-data/intake-stac.svg?branch=master)](https://travis-ci.org/pangeo-data/intake-stac)
 [![PyPI version](https://badge.fury.io/py/intake-stac.svg)](https://badge.fury.io/py/intake-stac)
 [![Documentation Status](https://readthedocs.org/projects/intake-stac/badge/?version=latest)](https://intake-stac.readthedocs.io/en/latest/?badge=latest)
 [![codecov](https://codecov.io/gh/pangeo-data/intake-stac/branch/master/graph/badge.svg)](https://codecov.io/gh/pangeo-data/intake-stac)
@@ -43,6 +42,7 @@ $ pip install git+https://github.com/pangeo-data/intake-stac
 The [examples/](examples/) directory contains some example Jupyter Notebooks that can be used to test the functionality.
 
 #### Versions
+
 To install a specific versions of intake-stac, specify the version in the install command
 
 ```bash
@@ -51,9 +51,9 @@ pip install intake-stac==0.1.0
 
 The table below shows the corresponding versions between intake-stac and STAC:
 
-| sat-stac | STAC  |
-| -------- | ----  |
-| 0.[1,2].x| 0.6.x |
+| sat-stac  | STAC  |
+| --------- | ----- |
+| 0.[1,2].x | 0.6.x |
 
 ### Running the tests
 
@@ -65,4 +65,5 @@ $ pytest -v -s --cov intake-stac --cov-report term-missing
 ```
 
 ## About
-[intake-stac](https://github.com/pangeo-data/intake-stac) was created as part of the [Pangeo](http://pangeo.io) initiative under support from the NASA-ACCESS program.  See the initial [design document](https://hackmd.io/cyJZkjV5TCWTJg1mUAoEVA).
+
+[intake-stac](https://github.com/pangeo-data/intake-stac) was created as part of the [Pangeo](http://pangeo.io) initiative under support from the NASA-ACCESS program. See the initial [design document](https://hackmd.io/cyJZkjV5TCWTJg1mUAoEVA).
