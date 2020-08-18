@@ -42,6 +42,7 @@ $ pip install git+https://github.com/pangeo-data/intake-stac
 The [examples/](examples/) directory contains some example Jupyter Notebooks that can be used to test the functionality.
 
 #### Versions
+
 To install a specific versions of intake-stac, specify the version in the install command
 
 ```bash
@@ -50,9 +51,9 @@ pip install intake-stac==0.1.0
 
 The table below shows the corresponding versions between intake-stac and STAC:
 
-| sat-stac | STAC  |
-| -------- | ----  |
-| 0.[1,2].x| 0.6.x |
+| sat-stac  | STAC  |
+| --------- | ----- |
+| 0.[1,2].x | 0.6.x |
 
 ### Running the tests
 
@@ -64,4 +65,5 @@ $ pytest -v -s --cov intake-stac --cov-report term-missing
 ```
 
 ## About
-[intake-stac](https://github.com/pangeo-data/intake-stac) was created as part of the [Pangeo](http://pangeo.io) initiative under support from the NASA-ACCESS program.  See the initial [design document](https://hackmd.io/cyJZkjV5TCWTJg1mUAoEVA).
+
+[intake-stac](https://github.com/pangeo-data/intake-stac) was created as part of the [Pangeo](http://pangeo.io) initiative under support from the NASA-ACCESS program. See the initial [design document](https://hackmd.io/cyJZkjV5TCWTJg1mUAoEVA).
