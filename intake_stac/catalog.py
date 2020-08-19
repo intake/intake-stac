@@ -362,7 +362,7 @@ class StacEntry(LocalCatalogEntry):
 
     def _get_args(self, entry, driver, stacked=False):
         args = entry if stacked else {'urlpath': entry.get('href')}
-        if driver in ['netcdf', 'rasterio', 'xarray_image', 'geopandas', 'parquet']:
+        if driver in ['netcdf', 'rasterio', 'xarray_image']:
             args.update(chunks={})
 
         return args
