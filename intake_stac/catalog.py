@@ -245,29 +245,43 @@ class StacItem(AbstractStacCatalog):
         """
         Stack the listed bands over the ``band`` dimension.
 
+        This method only works for STAC Items using the 'eo' Extension
+        https://github.com/radiantearth/stac-spec/tree/master/extensions/eo
+
         Parameters
         ----------
         bands : list of strings representing the different bands
-        (e.g. ['B1', B2']).
+        (e.g. ['B4', B5'], ['red', 'nir']).
 
         Returns
         -------
-        Catalog entry containing listed bands with ``band`` as a dimension
-        and coordinate.
+        StacEntry with mapping of Asset names to Xarray bands
 
+        Example
+        -------
+        stack = item.stack_bands(['nir','red'])
+        da = stack(chunks=dict(band=1, x=2048, y=2048)).to_dask()
         """
-        item = {'concat_dim': 'band', 'urlpath': [], 'type': 'image/x.geotiff'}
-        titles = []
-        assets = self._stac_obj.assets
-
+        # User-facing error messages if band information not found
+        if 'eo' not in self._stac_obj._data['stac_extensions']:
+            raise AttributeError('STAC Item must implement "eo" extension to use this method')
         try:
-            band_info = self._stac_obj.collection().properties.get('eo:bands')
-        except AttributeError:
-            # TODO: figure out why satstac objects don't always have a
-            #  collection. This workaround covers the case where
-            # `.collection()` returns None
-            band_info = self._stac_obj.properties.get('eo:bands')
+            band_info = self._stac_obj.collection().summaries['eo:bands']
+        except Exception:
+            band_info = []
+            for key, val in self._stac_obj.assets.items():
+                if 'eo:bands' in val:
+                    band_info.append(val.get('eo:bands')[0])
+        finally:
+            if not band_info:
+                raise AttributeError(
+                    'Unable to parse "eo:bands" information from STAC Collection or Item Assets'
+                )
 
+        item = {'concat_dim': 'band', 'urlpath': []}
+        titles = []
+        types = []
+        assets = self._stac_obj.assets
         for band in bands:
             # band can be band id, name or common_name
             if band in assets:
@@ -289,11 +303,7 @@ class StacItem(AbstractStacCatalog):
 
             value = assets.get(band)
             band_type = value.get('type')
-            if band_type != item['type']:
-                raise ValueError(
-                    f'Stacking failed: {band} has type {band_type} and '
-                    f'bands must have type {item["type"]}'
-                )
+            types.append(band_type)
 
             href = value.get('href')
             pattern = href.replace(band, '{band}')
@@ -316,8 +326,16 @@ class StacItem(AbstractStacCatalog):
                         f'({item["gsd"]})'
                     )
 
-            titles.append(value.get('title'))
+            titles.append(band)
             item['urlpath'].append(href)
+
+        unique_types = set(types)
+        if len(unique_types) != 1:
+            raise ValueError(
+                f'Stacking failed: bands must have type, multiple found: {unique_types}'
+            )
+        else:
+            item['type'] = types[0]
 
         item['title'] = ', '.join(titles)
         return StacEntry('_'.join(bands), item, stacked=True)
