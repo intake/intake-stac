@@ -27,7 +27,7 @@ class AbstractStacCatalog(Catalog):
         stac_obj: stastac.Thing
             A satstac.Thing pointing to a STAC object
         kwargs : dict, optional
-            Passed to intake.Catolog.__init__
+            Passed to intake.Catalog.__init__
         """
         if isinstance(stac_obj, self._stac_cls):
             self._stac_obj = stac_obj
@@ -80,6 +80,7 @@ class AbstractStacCatalog(Catalog):
 class StacCatalog(AbstractStacCatalog):
     """
     Intake Catalog represeting a STAC Catalog
+    https://github.com/radiantearth/stac-spec/blob/master/catalog-spec/catalog-spec.md
 
     A Catalog that references a STAC catalog at some URL
     and constructs an intake catalog from it, with opinionated
@@ -99,21 +100,37 @@ class StacCatalog(AbstractStacCatalog):
         """
         Load the STAC Catalog.
         """
-        for collection in self._stac_obj.collections():
-            self._entries[collection.id] = LocalCatalogEntry(
-                name=collection.id,
-                description=collection.title,
-                driver=StacCollection,
+        # NOTE: quick fix, logic/syntax likely could be improved!
+        lastCat = True
+
+        for subcatalog in self._stac_obj.children():
+            lastCat = False
+            self._entries[subcatalog.id] = LocalCatalogEntry(
+                name=subcatalog.id,
+                description=subcatalog.description,
+                driver=StacCatalog,
                 catalog=self,
-                args={'stac_obj': collection.filename},
+                args={'stac_obj': subcatalog.filename},
             )
 
+        # Ultimately we get to a Collection of Catalog of Items
+        if lastCat:
+            for item in self._stac_obj.items():
+                self._entries[item.id] = LocalCatalogEntry(
+                    name=item.id,
+                    description='',
+                    driver=StacItem,
+                    catalog=self,
+                    args={'stac_obj': item},
+                )
+
     def _get_metadata(self, **kwargs):
-        return dict(
-            description=self._stac_obj.description,
-            stac_version=self._stac_obj.stac_version,
-            **kwargs,
-        )
+        """
+        Keep copy of all STAC JSON except for links
+        """
+        metadata = self._stac_obj._data.copy()
+        del metadata['links']
+        return metadata
 
 
 class StacItemCollection(AbstractStacCatalog):
@@ -171,6 +188,7 @@ class StacItemCollection(AbstractStacCatalog):
 class StacCollection(AbstractStacCatalog):
     """
     Intake Catalog represeting a STAC Collection
+    https://github.com/radiantearth/stac-spec/blob/master/collection-spec/collection-spec.md
     """
 
     name = 'stac_collection'
@@ -190,7 +208,7 @@ class StacCollection(AbstractStacCatalog):
             )
 
     def _get_metadata(self, **kwargs):
-        metadata = self._stac_obj.properties.copy()
+        metadata = {}
         for attr in [
             'title',
             'version',
@@ -207,6 +225,7 @@ class StacCollection(AbstractStacCatalog):
 class StacItem(AbstractStacCatalog):
     """
     Intake Catalog represeting a STAC Item
+    https://github.com/radiantearth/stac-spec/blob/master/item-spec/item-spec.md
     """
 
     name = 'stac_item'
