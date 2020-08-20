@@ -100,11 +100,9 @@ class StacCatalog(AbstractStacCatalog):
         """
         Load the STAC Catalog.
         """
-        # NOTE: quick fix, logic/syntax likely could be improved!
-        lastCat = True
-
+        subcatalog = None
+        # load first sublevel catalog(s)
         for subcatalog in self._stac_obj.children():
-            lastCat = False
             self._entries[subcatalog.id] = LocalCatalogEntry(
                 name=subcatalog.id,
                 description=subcatalog.description,
@@ -113,8 +111,8 @@ class StacCatalog(AbstractStacCatalog):
                 args={'stac_obj': subcatalog.filename},
             )
 
-        # Ultimately we get to a Collection of Catalog of Items
-        if lastCat:
+        if subcatalog is None:
+            # load items under last catalog
             for item in self._stac_obj.items():
                 self._entries[item.id] = LocalCatalogEntry(
                     name=item.id,
@@ -352,6 +350,8 @@ class StacEntry(LocalCatalogEntry):
             'image/vnd.stac.geotiff': 'rasterio',
             'image/vnd.stac.geotiff; cloud-optimized=true': 'rasterio',
             'image/x.geotiff': 'rasterio',
+            'image/tiff; application=geotiff': 'rasterio',
+            'image/tiff; application=geotiff; profile=cloud-optimized': 'rasterio',  # noqa: E501
             'image/png': 'xarray_image',
             'image/jpg': 'xarray_image',
             'image/jpeg': 'xarray_image',
