@@ -267,7 +267,7 @@ class StacItem(AbstractStacCatalog):
             raise AttributeError('STAC Item must implement "eo" extension to use this method')
         try:
             band_info = self._stac_obj.collection().summaries['eo:bands']
-        except Exception:
+        except KeyError:
             band_info = []
             for key, val in self._stac_obj.assets.items():
                 if 'eo:bands' in val:
