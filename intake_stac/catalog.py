@@ -363,9 +363,14 @@ class StacEntry(LocalCatalogEntry):
 
     def __init__(self, key, item, stacked=False):
         """
-        Construct an Intake catalog Entry from a STAC catalog Entry.
+        Construct an Intake catalog 'Source' from a STAC Item Asset.
         """
         driver = self._get_driver(item)
+
+        default_plot = self._get_plot(item)
+        if default_plot:
+            item['plots'] = default_plot
+
         super().__init__(
             name=key,
             description=item.get('title', key),
@@ -374,6 +379,43 @@ class StacEntry(LocalCatalogEntry):
             args=self._get_args(item, driver, stacked=stacked),
             metadata=item,
         )
+
+    def _get_plot(self, item):
+        """
+        Default hvplot plot based on Asset mimetype
+        """
+        # NOTE: consider geojson, parquet, hdf defaults in future
+        if item['type'] in ['image/jpeg', 'image/jpg', 'image/png']:
+            default_plot = dict(
+                thumbnail=dict(
+                    kind='rgb',
+                    x='x',
+                    y='y',
+                    bands='channel',
+                    data_aspect=1,
+                    flip_yaxis=True,
+                    xaxis=False,
+                    yaxis=False,
+                )
+            )
+
+        elif 'tiff' in item['type']:
+            default_plot = dict(
+                geotiff=dict(
+                    kind='image',
+                    x='x',
+                    y='y',
+                    frame_width=500,
+                    data_aspect=1,
+                    rasterize=True,
+                    dynamic=True,
+                    cmap='viridis',
+                )
+            )
+        else:
+            default_plot = None
+
+        return default_plot
 
     def _get_driver(self, entry):
         drivers = {
