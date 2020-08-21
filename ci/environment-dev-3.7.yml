@@ -38,5 +38,7 @@ dependencies:
   - rasterio
   - ipywidgets
   - geopandas
+  - intake-geopandas
+  - intake-parquet
   - pip:
       - sphinx_copybutton
