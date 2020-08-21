@@ -17,7 +17,7 @@ Feature requests and feedback
 Do you like intake-stac?  Share some love on Twitter or in your blog posts!
 
 We'd also like to hear about your propositions and suggestions.  Feel free to
-`submit them as issues <https://github.com/pangeo-data/intake-stac>`_ and:
+`submit them as issues <https://github.com/intake/intake-stac>`_ and:
 
 * Explain in detail how they should work.
 * Keep the scope as narrow as possible.  This will make it easier to implement.
@@ -28,7 +28,7 @@ We'd also like to hear about your propositions and suggestions.  Feel free to
 Report bugs
 -----------
 
-Report bugs for intake-stac in the `issue tracker <https://github.com/pangeo-data/intake-stac>`_.
+Report bugs for intake-stac in the `issue tracker <https://github.com/intake/intake-stac>`_.
 
 If you are reporting a bug, please include:
 
@@ -48,7 +48,7 @@ fix the bug itself.
 Fix bugs
 --------
 
-Look through the `GitHub issues for bugs <https://github.com/pangeo-data/intake-stac/labels/type:%20bug>`_.
+Look through the `GitHub issues for bugs <https://github.com/intake/intake-stac/labels/type:%20bug>`_.
 
 Talk to developers to find out how you can fix specific bugs.
 
@@ -70,7 +70,7 @@ without using a local copy.  This can be convenient for small fixes.
 
     .. code:: bash
 
-        $ conda env update -f ci/environment-dev-3.7.yml
+        $ conda env create -f ci/environment-dev-3.7.yml
         $ cd docs
         $ make html
 
@@ -86,9 +86,10 @@ Preparing Pull Requests
 
 
 #. Fork the
-   `intake-stac GitHub repository <https://github.com/pangeo-data/intake-stac>`__.  It's
+   `intake-stac GitHub repository <https://github.com/intake/intake-stac>`__.  It's
    fine to use ``intake-stac`` as your fork repository name because it will live
    under your user.
+
 
 #. Clone your fork locally using `git <https://git-scm.com/>`_ and create a branch::
 
@@ -100,6 +101,13 @@ Preparing Pull Requests
     $ git checkout -b your-bugfix-feature-branch-name master
 
 
+#. Install development version in a conda environment::
+
+    $ conda env create -f ci/environment-dev-3.7.yml
+    $ conda activate intake-stac-dev
+    $ pip install . -e
+
+
 #. Install `pre-commit <https://pre-commit.com>`_ and its hook on the intake-stac repo::
 
      $ pip install --user pre-commit
@@ -109,24 +117,22 @@ Preparing Pull Requests
 
    https://pre-commit.com/ is a framework for managing and maintaining multi-language pre-commit hooks
    to ensure code-style and code formatting is consistent.
-#. Install dependencies into a new conda environment::
-
-    $ conda env update -f ci/environment-dev-3.7.yml
 
 
 #. Run all the tests
 
    Now running tests is as simple as issuing this command::
 
-    $ conda activate intake-stac-dev
     $ pytest --junitxml=test-reports/junit.xml --cov=./ --verbose
 
 
    This command will run tests via the "pytest" tool against Python 3.7.
 
+
 #. You can now edit your local working copy and run the tests again as necessary. Please follow PEP-8 for naming.
 
    When committing, ``pre-commit`` will re-format the files if necessary.
+
 
 #. Commit and push once your tests pass and you are happy with your change(s)::
 
@@ -139,5 +145,5 @@ Preparing Pull Requests
     head-fork: YOUR_GITHUB_USERNAME/intake-stac
     compare: your-branch-name
 
-    base-fork: pangeo-data/intake-stac
+    base-fork: intake/intake-stac
     base: master

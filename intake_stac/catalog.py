@@ -25,7 +25,7 @@ class AbstractStacCatalog(Catalog):
         stac_obj: stastac.Thing
             A satstac.Thing pointing to a STAC object
         kwargs : dict, optional
-            Passed to intake.Catolog.__init__
+            Passed to intake.Catalog.__init__
         """
         if isinstance(stac_obj, self._stac_cls):
             self._stac_obj = stac_obj
@@ -78,6 +78,7 @@ class AbstractStacCatalog(Catalog):
 class StacCatalog(AbstractStacCatalog):
     """
     Intake Catalog represeting a STAC Catalog
+    https://github.com/radiantearth/stac-spec/blob/master/catalog-spec/catalog-spec.md
 
     A Catalog that references a STAC catalog at some URL
     and constructs an intake catalog from it, with opinionated
@@ -97,21 +98,35 @@ class StacCatalog(AbstractStacCatalog):
         """
         Load the STAC Catalog.
         """
-        for collection in self._stac_obj.collections():
-            self._entries[collection.id] = LocalCatalogEntry(
-                name=collection.id,
-                description=collection.title,
-                driver=StacCollection,
+        subcatalog = None
+        # load first sublevel catalog(s)
+        for subcatalog in self._stac_obj.children():
+            self._entries[subcatalog.id] = LocalCatalogEntry(
+                name=subcatalog.id,
+                description=subcatalog.description,
+                driver=StacCatalog,
                 catalog=self,
-                args={'stac_obj': collection.filename},
+                args={'stac_obj': subcatalog.filename},
             )
 
+        if subcatalog is None:
+            # load items under last catalog
+            for item in self._stac_obj.items():
+                self._entries[item.id] = LocalCatalogEntry(
+                    name=item.id,
+                    description='',
+                    driver=StacItem,
+                    catalog=self,
+                    args={'stac_obj': item},
+                )
+
     def _get_metadata(self, **kwargs):
-        return dict(
-            description=self._stac_obj.description,
-            stac_version=self._stac_obj.stac_version,
-            **kwargs,
-        )
+        """
+        Keep copy of all STAC JSON except for links
+        """
+        metadata = self._stac_obj._data.copy()
+        del metadata['links']
+        return metadata
 
 
 class StacItemCollection(AbstractStacCatalog):
@@ -169,6 +184,7 @@ class StacItemCollection(AbstractStacCatalog):
 class StacCollection(AbstractStacCatalog):
     """
     Intake Catalog represeting a STAC Collection
+    https://github.com/radiantearth/stac-spec/blob/master/collection-spec/collection-spec.md
     """
 
     name = 'stac_collection'
@@ -188,10 +204,7 @@ class StacCollection(AbstractStacCatalog):
             )
 
     def _get_metadata(self, **kwargs):
-        metadata = getattr(self._stac_obj, 'properties', {})
-        if metadata:
-            metadata = metadata.copy()
-
+        metadata = {}
         for attr in [
             'title',
             'version',
@@ -208,6 +221,7 @@ class StacCollection(AbstractStacCatalog):
 class StacItem(AbstractStacCatalog):
     """
     Intake Catalog represeting a STAC Item
+    https://github.com/radiantearth/stac-spec/blob/master/item-spec/item-spec.md
     """
 
     name = 'stac_item'
@@ -227,39 +241,68 @@ class StacItem(AbstractStacCatalog):
         metadata.update(kwargs)
         return metadata
 
+    def _get_band_info(self):
+        """
+        helper function for stack_bands
+        """
+        # Try to get band-info at Collection then Item level
+        band_info = []
+        try:
+            collection = self._stac_obj.collection()
+            if 'item-assets' in collection._data.get('stac_extensions'):
+                for val in collection._data['item_assets'].values():
+                    if 'eo:bands' in val:
+                        band_info.append(val.get('eo:bands')[0])
+            else:
+                band_info = collection.summaries['eo:bands']
+
+        except KeyError:
+            for val in self._stac_obj.assets.values():
+                if 'eo:bands' in val:
+                    band_info.append(val.get('eo:bands')[0])
+        finally:
+            if not band_info:
+                raise AttributeError(
+                    'Unable to parse "eo:bands" information from STAC Collection or Item Assets'
+                )
+        return band_info
+
     def stack_bands(self, bands, regrid=False):
         """
         Stack the listed bands over the ``band`` dimension.
 
+        This method only works for STAC Items using the 'eo' Extension
+        https://github.com/radiantearth/stac-spec/tree/master/extensions/eo
+
         Parameters
         ----------
         bands : list of strings representing the different bands
-        (e.g. ['B1', B2']).
+        (e.g. ['B4', B5'], ['red', 'nir']).
 
         Returns
         -------
-        Catalog entry containing listed bands with ``band`` as a dimension
-        and coordinate.
+        StacEntry with mapping of Asset names to Xarray bands
 
+        Example
+        -------
+        stack = item.stack_bands(['nir','red'])
+        da = stack(chunks=dict(band=1, x=2048, y=2048)).to_dask()
         """
-        item = {'concat_dim': 'band', 'urlpath': [], 'type': 'image/x.geotiff'}
+
+        if 'eo' not in self._stac_obj._data['stac_extensions']:
+            raise AttributeError('STAC Item must implement "eo" extension to use this method')
+
+        band_info = self._get_band_info()
+        item = {'concat_dim': 'band', 'urlpath': []}
         titles = []
+        types = []
         assets = self._stac_obj.assets
-
-        try:
-            band_info = self._stac_obj.collection().properties.get('eo:bands')
-        except AttributeError:
-            # TODO: figure out why satstac objects don't always have a
-            #  collection. This workaround covers the case where
-            # `.collection()` returns None
-            band_info = self._stac_obj.properties.get('eo:bands')
-
         for band in bands:
             # band can be band id, name or common_name
             if band in assets:
                 info = next((b for b in band_info if b.get('id', b.get('name')) == band), None,)
             else:
-                info = next((b for b in band_info if b['common_name'] == band), None)
+                info = next((b for b in band_info if b.get('common_name') == band), None)
                 if info is not None:
                     band = info.get('id', info.get('name'))
 
@@ -275,11 +318,7 @@ class StacItem(AbstractStacCatalog):
 
             value = assets.get(band)
             band_type = value.get('type')
-            if band_type != item['type']:
-                raise ValueError(
-                    f'Stacking failed: {band} has type {band_type} and '
-                    f'bands must have type {item["type"]}'
-                )
+            types.append(band_type)
 
             href = value.get('href')
             pattern = href.replace(band, '{band}')
@@ -302,8 +341,16 @@ class StacItem(AbstractStacCatalog):
                         f'({item["gsd"]})'
                     )
 
-            titles.append(value.get('title'))
+            titles.append(band)
             item['urlpath'].append(href)
+
+        unique_types = set(types)
+        if len(unique_types) != 1:
+            raise ValueError(
+                f'Stacking failed: bands must have type, multiple found: {unique_types}'
+            )
+        else:
+            item['type'] = types[0]
 
         item['title'] = ', '.join(titles)
         return StacEntry('_'.join(bands), item, stacked=True)

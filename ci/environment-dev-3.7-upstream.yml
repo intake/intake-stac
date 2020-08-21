@@ -2,6 +2,7 @@ name: intake-stac-dev
 channels:
   - conda-forge
 dependencies:
+  - aiohttp
   - autopep8
   - black
   - boto3
@@ -10,7 +11,9 @@ dependencies:
   - dask
   - distributed
   - flake8
+  - geopandas
   - ipykernel
+  - ipywidgets
   - isort
   - make
   - nbsphinx
@@ -26,14 +29,13 @@ dependencies:
   - python=3.7
   - pytoml
   - pyyaml
+  - rasterio
   - recommonmark
+  - requests
   - scikit-image
   - sphinx_rtd_theme
   - sphinx>=1.6
   - xarray
-  - rasterio
-  - ipywidgets
-  - geopandas
   - pip:
       - sphinx_copybutton
       - git+https://github.com/sat-utils/sat-stac.git
