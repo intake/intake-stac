@@ -241,6 +241,32 @@ class StacItem(AbstractStacCatalog):
         metadata.update(kwargs)
         return metadata
 
+    def _get_band_info(self):
+        """
+        helper function for stack_bands
+        """
+        # Try to get band-info at Collection then Item level
+        band_info = []
+        try:
+            collection = self._stac_obj.collection()
+            if 'item-assets' in collection._data.get('stac_extensions'):
+                for val in collection._data['item_assets'].values():
+                    if 'eo:bands' in val:
+                        band_info.append(val.get('eo:bands')[0])
+            else:
+                band_info = collection.summaries['eo:bands']
+
+        except KeyError:
+            for val in self._stac_obj.assets.values():
+                if 'eo:bands' in val:
+                    band_info.append(val.get('eo:bands')[0])
+        finally:
+            if not band_info:
+                raise AttributeError(
+                    'Unable to parse "eo:bands" information from STAC Collection or Item Assets'
+                )
+        return band_info
+
     def stack_bands(self, bands, regrid=False):
         """
         Stack the listed bands over the ``band`` dimension.
@@ -262,22 +288,11 @@ class StacItem(AbstractStacCatalog):
         stack = item.stack_bands(['nir','red'])
         da = stack(chunks=dict(band=1, x=2048, y=2048)).to_dask()
         """
-        # User-facing error messages if band information not found
+
         if 'eo' not in self._stac_obj._data['stac_extensions']:
             raise AttributeError('STAC Item must implement "eo" extension to use this method')
-        try:
-            band_info = self._stac_obj.collection().summaries['eo:bands']
-        except KeyError:
-            band_info = []
-            for key, val in self._stac_obj.assets.items():
-                if 'eo:bands' in val:
-                    band_info.append(val.get('eo:bands')[0])
-        finally:
-            if not band_info:
-                raise AttributeError(
-                    'Unable to parse "eo:bands" information from STAC Collection or Item Assets'
-                )
 
+        band_info = self._get_band_info()
         item = {'concat_dim': 'band', 'urlpath': []}
         titles = []
         types = []
@@ -287,7 +302,7 @@ class StacItem(AbstractStacCatalog):
             if band in assets:
                 info = next((b for b in band_info if b.get('id', b.get('name')) == band), None,)
             else:
-                info = next((b for b in band_info if b['common_name'] == band), None)
+                info = next((b for b in band_info if b.get('common_name') == band), None)
                 if info is not None:
                     band = info.get('id', info.get('name'))
 
