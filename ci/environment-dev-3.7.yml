@@ -13,6 +13,8 @@ dependencies:
   - flake8
   - geopandas
   - intake
+  - intake-geopandas
+  - intake-parquet
   - intake-xarray
   - ipykernel
   - ipywidgets

@@ -378,6 +378,11 @@ class StacEntry(LocalCatalogEntry):
     def _get_driver(self, entry):
         drivers = {
             'application/netcdf': 'netcdf',
+            'application/x-netcdf': 'netcdf',
+            'application/parquet': 'parquet',
+            'application/x-parquet': 'parquet',
+            'application/x-hdf5': 'netcdf',
+            # 'application/x-hdf': '',
             'image/vnd.stac.geotiff': 'rasterio',
             'image/vnd.stac.geotiff; cloud-optimized=true': 'rasterio',
             'image/x.geotiff': 'rasterio',
@@ -389,6 +394,9 @@ class StacEntry(LocalCatalogEntry):
             'text/xml': 'textfiles',
             'text/plain': 'textfiles',
             'text/html': 'textfiles',
+            'application/json': 'textfiles',
+            # 'application/geopackage+sqlite3': 'geopandas',
+            'application/geo+json': 'geopandas',
         }
         entry_type = entry.get('type', NULL_TYPE)
 
