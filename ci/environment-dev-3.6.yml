@@ -42,5 +42,5 @@ dependencies:
   - sphinx>=1.6
   - xarray
   - pip:
-      - sat-search==0.3.0rc1
+      - sat-search>=0.3
       - sphinx_copybutton

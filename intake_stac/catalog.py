@@ -1,10 +1,13 @@
-import warnings
+import os.path
 
 import satstac
 import yaml
 from intake.catalog import Catalog
 from intake.catalog.local import LocalCatalogEntry
 from pkg_resources import get_distribution
+
+# import warnings
+
 
 __version__ = get_distribution('intake_stac').version
 
@@ -385,35 +388,36 @@ class StacEntry(LocalCatalogEntry):
         Default hvplot plot based on Asset mimetype
         """
         # NOTE: consider geojson, parquet, hdf defaults in future
-        if item['type'] in ['image/jpeg', 'image/jpg', 'image/png']:
-            default_plot = dict(
-                thumbnail=dict(
-                    kind='rgb',
-                    x='x',
-                    y='y',
-                    bands='channel',
-                    data_aspect=1,
-                    flip_yaxis=True,
-                    xaxis=False,
-                    yaxis=False,
+        default_plot = None
+        type = item.get('type', None)  # also some assets do not have 'type'
+        if type:
+            if type in ['image/jpeg', 'image/jpg', 'image/png']:
+                default_plot = dict(
+                    thumbnail=dict(
+                        kind='rgb',
+                        x='x',
+                        y='y',
+                        bands='channel',
+                        data_aspect=1,
+                        flip_yaxis=True,
+                        xaxis=False,
+                        yaxis=False,
+                    )
                 )
-            )
 
-        elif 'tiff' in item['type']:
-            default_plot = dict(
-                geotiff=dict(
-                    kind='image',
-                    x='x',
-                    y='y',
-                    frame_width=500,
-                    data_aspect=1,
-                    rasterize=True,
-                    dynamic=True,
-                    cmap='viridis',
+            elif 'tiff' in type:
+                default_plot = dict(
+                    geotiff=dict(
+                        kind='image',
+                        x='x',
+                        y='y',
+                        frame_width=500,
+                        data_aspect=1,
+                        rasterize=True,
+                        dynamic=True,
+                        cmap='viridis',
+                    )
                 )
-            )
-        else:
-            default_plot = None
 
         return default_plot
 
@@ -440,12 +444,18 @@ class StacEntry(LocalCatalogEntry):
             # 'application/geopackage+sqlite3': 'geopandas',
             'application/geo+json': 'geopandas',
         }
+
         entry_type = entry.get('type', NULL_TYPE)
 
         if entry_type is NULL_TYPE:
-            warnings.warn(
-                f'TODO: handle case with entry without type field. This entry was: {entry}'
-            )
+            # Fallback to common file suffix mappings
+            suffix = os.path.splitext(entry['href'])[-1]
+            if suffix in ['.nc', '.h5', '.hdf']:
+                entry_type = 'application/netcdf'
+            # produces excess output for large catalogs
+            #    warnings.warn(
+            #        f'TODO: handle case with entry without type field. This entry was: {entry}'
+            #    )
 
         return drivers.get(entry_type, entry_type)
 
