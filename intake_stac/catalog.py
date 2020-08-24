@@ -2,7 +2,6 @@ import os.path
 import warnings
 
 import satstac
-import yaml
 from intake.catalog import Catalog
 from intake.catalog.local import LocalCatalogEntry
 from pkg_resources import get_distribution
@@ -68,12 +67,9 @@ class AbstractStacCatalog(Catalog):
 
         Returns
         -------
-        A string with the yaml-formatted catalog.
+        A string with the yaml-formatted catalog (just top-level).
         """
-        output = {'metadata': self.metadata, 'sources': {}}
-        for key, entry in self.items():
-            output['sources'][key] = yaml.safe_load(entry.yaml())['sources']
-        return yaml.dump(output)
+        return self.yaml()
 
 
 class StacCatalog(AbstractStacCatalog):
@@ -268,12 +264,19 @@ class StacItem(AbstractStacCatalog):
                 )
         return band_info
 
-    def stack_bands(self, bands, regrid=False):
+    def stack_bands(self, bands):
         """
         Stack the listed bands over the ``band`` dimension.
 
         This method only works for STAC Items using the 'eo' Extension
         https://github.com/radiantearth/stac-spec/tree/master/extensions/eo
+
+        NOTE: This method is not aware of geotransform information. It *assumes*
+        bands for a given STAC Item have the same coordinate reference system (CRS).
+        This is usually the case for a given multi-band satellite acquisition.
+        Coordinate alignment is performed automatically upon calling the
+        `to_dask()` method to load into an Xarray DataArray if bands have diffent
+        ground sample distance (gsd) or array shapes.
 
         Parameters
         ----------
@@ -307,7 +310,7 @@ class StacItem(AbstractStacCatalog):
                 if info is not None:
                     band = info.get('id', info.get('name'))
 
-            if band not in assets or (regrid is False and info is None):
+            if band not in assets or info is None:
                 valid_band_names = []
                 for b in band_info:
                     valid_band_names.append(b.get('id', b.get('name')))
@@ -330,17 +333,6 @@ class StacItem(AbstractStacCatalog):
                     f'Stacking failed: {href} does not contain '
                     'band info in a fixed section of the url'
                 )
-
-            if regrid is False:
-                gsd = info.get('gsd')
-                if 'gsd' not in item:
-                    item['gsd'] = gsd
-                elif item['gsd'] != gsd:
-                    raise ValueError(
-                        f'Stacking failed: {band} has different ground '
-                        f'sampling distance ({gsd}) than other bands '
-                        f'({item["gsd"]})'
-                    )
 
             titles.append(band)
             item['urlpath'].append(href)
