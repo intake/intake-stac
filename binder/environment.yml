@@ -26,6 +26,7 @@ dependencies:
   - isort
   - jupyterlab
   - make
+  - matplotlib
   - nbsphinx
   - netcdf4
   - nodejs >=10.0.0
@@ -44,6 +45,7 @@ dependencies:
   - rasterio
   - recommonmark
   - requests
+  - sat-search>=0.3
   - sat-stac
   - scikit-image
   - sphinx_rtd_theme
@@ -51,5 +53,4 @@ dependencies:
   - xarray
   - pip:
       - git+https://github.com/intake/intake-stac@master
-      - sat-search>=0.3
       - sphinx_copybutton

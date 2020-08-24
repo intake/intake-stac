@@ -1,13 +1,11 @@
 import os.path
+import warnings
 
 import satstac
 import yaml
 from intake.catalog import Catalog
 from intake.catalog.local import LocalCatalogEntry
 from pkg_resources import get_distribution
-
-# import warnings
-
 
 __version__ = get_distribution('intake_stac').version
 
@@ -452,10 +450,10 @@ class StacEntry(LocalCatalogEntry):
             suffix = os.path.splitext(entry['href'])[-1]
             if suffix in ['.nc', '.h5', '.hdf']:
                 entry_type = 'application/netcdf'
-            # produces excess output for large catalogs
-            #    warnings.warn(
-            #        f'TODO: handle case with entry without type field. This entry was: {entry}'
-            #    )
+            else:
+                warnings.warn(
+                    f'TODO: handle case with entry without type field. This entry was: {entry}'
+                )
 
         return drivers.get(entry_type, entry_type)
 
