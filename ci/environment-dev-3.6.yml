@@ -36,11 +36,11 @@ dependencies:
   - rasterio
   - recommonmark
   - requests
+  - sat-search>=0.3
   - sat-stac
   - scikit-image
   - sphinx_rtd_theme
   - sphinx>=1.6
   - xarray
   - pip:
-      - sat-search==0.3.0rc1
       - sphinx_copybutton

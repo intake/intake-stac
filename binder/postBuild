@@ -1,5 +1,8 @@
 #!/bin/bash
-set -euo pipefail
 
-# Install development version of intake-stack
-pip install .
+jupyter labextension install --clean \
+                             @jupyter-widgets/jupyterlab-manager \
+                             @jupyterlab/geojson-extension \
+                             @pyviz/jupyterlab_pyviz
+
+#EOF

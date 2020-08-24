@@ -1,4 +1,9 @@
-name: intake-stac-dev
+# Intake GUI also requires jupyterlab extensions installed
+# conda env create -f ci/environment-gui-3.7.yml
+# conda activate intake-stac-gui
+# pip install -e .
+# jupyter labextension install @pyviz/jupyterlab_pyviz
+name: intake-stac-gui
 channels:
   - conda-forge
 dependencies:
@@ -9,9 +14,12 @@ dependencies:
   - codecov
   - coverage
   - dask
+  - datashader
   - distributed
   - flake8
   - geopandas
+  - geoviews
+  - hvplot
   - intake
   - intake-geopandas
   - intake-parquet
@@ -19,18 +27,22 @@ dependencies:
   - ipykernel
   - ipywidgets
   - isort
+  - jupyterlab
   - make
+  - matplotlib
   - nbsphinx
   - netcdf4
+  - nodejs >=10.0.0
   - numpy
   - numpydoc
   - pandoc
+  - panel
   - pip
   - pre_commit
   - pytest
   - pytest-cov
   - pytest-icdiff
-  - python=3.7
+  - python =3.7
   - pytoml
   - pyyaml
   - rasterio
@@ -40,7 +52,7 @@ dependencies:
   - sat-stac
   - scikit-image
   - sphinx_rtd_theme
-  - sphinx>=1.6
+  - sphinx >=1.6
   - xarray
   - pip:
       - sphinx_copybutton

@@ -1,19 +1,56 @@
-name: intake-stac
+# Intake GUI also requires jupyterlab extensions installed
+# jupyter labextension install @pyviz/jupyterlab_pyviz
+name: intake-stac-gui
 channels:
   - conda-forge
-  - informaticslab
 dependencies:
-  - python=3
+  - aiohttp
+  - autopep8
+  - black
   - boto3
+  - codecov
+  - coverage
+  - dask
+  - datashader
+  - distributed
+  - flake8
   - geopandas
+  - geoviews
+  - hvplot
   - intake
-  - intake_geopandas
+  - intake-geopandas
+  - intake-parquet
   - intake-xarray
-  - rasterio
-  - sat-stac
-  - sat-search
-  - netcdf4
-  - rasterio
-  - scikit-image
+  - ipykernel
+  - ipywidgets
+  - isort
+  - jupyterlab
+  - make
   - matplotlib
+  - nbsphinx
+  - netcdf4
+  - nodejs >=10.0.0
+  - numpy
+  - numpydoc
+  - pandoc
+  - panel
   - pip
+  - pre_commit
+  - pytest
+  - pytest-cov
+  - pytest-icdiff
+  - python =3.7
+  - pytoml
+  - pyyaml
+  - rasterio
+  - recommonmark
+  - requests
+  - sat-search>=0.3
+  - sat-stac
+  - scikit-image
+  - sphinx_rtd_theme
+  - sphinx >=1.6
+  - xarray
+  - pip:
+      - git+https://github.com/intake/intake-stac@master
+      - sphinx_copybutton

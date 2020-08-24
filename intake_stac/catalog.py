@@ -1,3 +1,4 @@
+import os.path
 import warnings
 
 import satstac
@@ -363,9 +364,14 @@ class StacEntry(LocalCatalogEntry):
 
     def __init__(self, key, item, stacked=False):
         """
-        Construct an Intake catalog Entry from a STAC catalog Entry.
+        Construct an Intake catalog 'Source' from a STAC Item Asset.
         """
         driver = self._get_driver(item)
+
+        default_plot = self._get_plot(item)
+        if default_plot:
+            item['plots'] = default_plot
+
         super().__init__(
             name=key,
             description=item.get('title', key),
@@ -374,6 +380,44 @@ class StacEntry(LocalCatalogEntry):
             args=self._get_args(item, driver, stacked=stacked),
             metadata=item,
         )
+
+    def _get_plot(self, item):
+        """
+        Default hvplot plot based on Asset mimetype
+        """
+        # NOTE: consider geojson, parquet, hdf defaults in future
+        default_plot = None
+        type = item.get('type', None)  # also some assets do not have 'type'
+        if type:
+            if type in ['image/jpeg', 'image/jpg', 'image/png']:
+                default_plot = dict(
+                    thumbnail=dict(
+                        kind='rgb',
+                        x='x',
+                        y='y',
+                        bands='channel',
+                        data_aspect=1,
+                        flip_yaxis=True,
+                        xaxis=False,
+                        yaxis=False,
+                    )
+                )
+
+            elif 'tiff' in type:
+                default_plot = dict(
+                    geotiff=dict(
+                        kind='image',
+                        x='x',
+                        y='y',
+                        frame_width=500,
+                        data_aspect=1,
+                        rasterize=True,
+                        dynamic=True,
+                        cmap='viridis',
+                    )
+                )
+
+        return default_plot
 
     def _get_driver(self, entry):
         drivers = {
@@ -398,12 +442,18 @@ class StacEntry(LocalCatalogEntry):
             # 'application/geopackage+sqlite3': 'geopandas',
             'application/geo+json': 'geopandas',
         }
+
         entry_type = entry.get('type', NULL_TYPE)
 
         if entry_type is NULL_TYPE:
-            warnings.warn(
-                f'TODO: handle case with entry without type field. This entry was: {entry}'
-            )
+            # Fallback to common file suffix mappings
+            suffix = os.path.splitext(entry['href'])[-1]
+            if suffix in ['.nc', '.h5', '.hdf']:
+                entry_type = 'application/netcdf'
+            else:
+                warnings.warn(
+                    f'TODO: handle case with entry without type field. This entry was: {entry}'
+                )
 
         return drivers.get(entry_type, entry_type)
 
