@@ -30,7 +30,7 @@ dependencies:
   - pytest
   - pytest-cov
   - pytest-icdiff
-  - python=3.6
+  - python=3.8
   - pytoml
   - pyyaml
   - rasterio

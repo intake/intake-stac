@@ -10,8 +10,8 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2.3.2
-      - uses: actions/setup-python@v2.1.2
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
       - uses: pre-commit/action@v2.0.0
 
   test:
@@ -19,9 +19,9 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        CONDA_ENV: [3.6, 3.7, 3.7-upstream]
+        CONDA_ENV: [3.6, 3.7, 3.7-upstream, 3.8]
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2
 
       - name: Setup conda environment
         run: |

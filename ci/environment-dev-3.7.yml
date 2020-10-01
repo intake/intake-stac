@@ -39,8 +39,7 @@ dependencies:
   - sat-search>=0.3
   - sat-stac
   - scikit-image
+  - sphinx-copybutton
   - sphinx_rtd_theme
   - sphinx>=1.6
   - xarray
-  - pip:
-      - sphinx_copybutton
