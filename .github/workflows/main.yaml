@@ -18,6 +18,7 @@ jobs:
     name: ${{ matrix.CONDA_ENV }}-build
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         CONDA_ENV: [3.6, 3.7, 3.7-upstream, 3.8]
     steps:
