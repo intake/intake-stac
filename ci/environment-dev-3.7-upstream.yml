@@ -33,11 +33,11 @@ dependencies:
   - recommonmark
   - requests
   - scikit-image
+  - sphinx-copybutton
   - sphinx_rtd_theme
   - sphinx>=1.6
   - xarray
   - pip:
-      - sphinx_copybutton
       - git+https://github.com/sat-utils/sat-stac.git
       - git+https://github.com/sat-utils/sat-search.git
       - git+https://github.com/intake/intake.git
