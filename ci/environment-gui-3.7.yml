@@ -23,7 +23,7 @@ dependencies:
   - intake
   - intake-geopandas
   - intake-parquet
-  - intake-xarray
+  - intake-xarray=0.3.1
   - ipykernel
   - ipywidgets
   - isort
