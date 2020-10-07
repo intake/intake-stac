@@ -44,3 +44,4 @@ dependencies:
       - git+https://github.com/intake/intake-xarray.git
       - git+https://github.com/intake/intake_geopandas.git
       - git+https://github.com/intake/intake-parquet.git
+      - git+https://github.com/intake/filesystem_spec.git
