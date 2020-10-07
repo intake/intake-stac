@@ -1,4 +1,4 @@
 aiohttp
 intake>=0.5.1
-intake-xarray>=0.3
+intake-xarray==0.3.1
 sat-stac==0.4.*
