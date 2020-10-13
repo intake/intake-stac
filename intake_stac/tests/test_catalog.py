@@ -195,6 +195,40 @@ def test_stac_entry_constructor():
     assert d['metadata'] == item
 
 
+def test_missing_type():
+    key = 'B1'
+    item = {
+        'href': 'https://landsat-pds.s3.amazonaws.com/c1/L8/120/046/LC08_L1GT_120046_20181012_20181012_01_RT/LC08_L1GT_120046_20181012_20181012_01_RT_B1.TIF',  # noqa: E501
+        'type': '',
+    }
+
+    entry = StacEntry(key, item)
+
+    d = entry.describe()
+    print(d)
+    assert d['name'] == key
+    assert d['metadata']['type'] == 'application/rasterio'  # default_type
+    assert d['container'] == 'xarray'
+    assert d['plugin'] == ['rasterio']
+
+
+def test_unknown_type():
+    key = 'B1'
+    item = {
+        'href': 'https://landsat-pds.s3.amazonaws.com/c1/L8/120/046/LC08_L1GT_120046_20181012_20181012_01_RT/LC08_L1GT_120046_20181012_20181012_01_RT_B1.TIF',  # noqa: E501
+        'type': 'unrecognized',
+    }
+
+    entry = StacEntry(key, item)
+
+    d = entry.describe()
+    print(d)
+    assert d['name'] == key
+    assert d['metadata']['type'] == 'unrecognized'
+    assert d['container'] == 'xarray'
+    assert d['plugin'] == ['rasterio']
+
+
 def test_cat_to_geopandas(stac_item_collection_obj):
     geopandas = pytest.importorskip('geopandas')
 

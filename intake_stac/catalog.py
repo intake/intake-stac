@@ -8,7 +8,32 @@ from pkg_resources import get_distribution
 
 __version__ = get_distribution('intake_stac').version
 
-NULL_TYPE = 'null'
+# STAC catalog asset 'type' determines intake driver:
+default_type = 'application/rasterio'
+default_driver = 'rasterio'
+
+drivers = {
+    'application/netcdf': 'netcdf',
+    'application/x-netcdf': 'netcdf',
+    'application/parquet': 'parquet',
+    'application/x-parquet': 'parquet',
+    'application/x-hdf5': 'netcdf',
+    'application/rasterio': 'rasterio',
+    'image/vnd.stac.geotiff': 'rasterio',
+    'image/vnd.stac.geotiff; cloud-optimized=true': 'rasterio',
+    'image/x.geotiff': 'rasterio',
+    'image/tiff; application=geotiff': 'rasterio',
+    'image/tiff; application=geotiff; profile=cloud-optimized': 'rasterio',  # noqa: E501
+    'image/jp2': 'rasterio',
+    'image/png': 'xarray_image',
+    'image/jpg': 'xarray_image',
+    'image/jpeg': 'xarray_image',
+    'text/xml': 'textfiles',
+    'text/plain': 'textfiles',
+    'text/html': 'textfiles',
+    'application/json': 'textfiles',
+    'application/geo+json': 'geopandas',
+}
 
 
 class AbstractStacCatalog(Catalog):
@@ -412,42 +437,29 @@ class StacEntry(LocalCatalogEntry):
         return default_plot
 
     def _get_driver(self, entry):
-        drivers = {
-            'application/netcdf': 'netcdf',
-            'application/x-netcdf': 'netcdf',
-            'application/parquet': 'parquet',
-            'application/x-parquet': 'parquet',
-            'application/x-hdf5': 'netcdf',
-            # 'application/x-hdf': '',
-            'image/vnd.stac.geotiff': 'rasterio',
-            'image/vnd.stac.geotiff; cloud-optimized=true': 'rasterio',
-            'image/x.geotiff': 'rasterio',
-            'image/tiff; application=geotiff': 'rasterio',
-            'image/tiff; application=geotiff; profile=cloud-optimized': 'rasterio',  # noqa: E501
-            'image/png': 'xarray_image',
-            'image/jpg': 'xarray_image',
-            'image/jpeg': 'xarray_image',
-            'text/xml': 'textfiles',
-            'text/plain': 'textfiles',
-            'text/html': 'textfiles',
-            'application/json': 'textfiles',
-            # 'application/geopackage+sqlite3': 'geopandas',
-            'application/geo+json': 'geopandas',
-        }
 
-        entry_type = entry.get('type', NULL_TYPE)
+        entry_type = entry.get('type')
 
-        if entry_type is NULL_TYPE:
-            # Fallback to common file suffix mappings
+        if entry_type in ['', 'null', None]:
+
             suffix = os.path.splitext(entry['href'])[-1]
             if suffix in ['.nc', '.h5', '.hdf']:
-                entry_type = 'application/netcdf'
-            else:
+                entry['type'] = 'application/netcdf'
                 warnings.warn(
-                    f'TODO: handle case with entry without type field. This entry was: {entry}'
+                    f'STAC Asset "type" missing, assigning {entry_type} based on href suffix {suffix}:\n{entry}'  # noqa: E501
                 )
+            else:
+                entry['type'] = default_type
+                warnings.warn(
+                    f'STAC Asset "type" missing, assuming default type={default_type}:\n{entry}'
+                )
+            entry_type = entry.get('type')
+            print(entry_type)
 
-        return drivers.get(entry_type, entry_type)
+        # if mimetype not registered try rasterio driver
+        driver = drivers.get(entry_type, default_driver)
+
+        return driver
 
     def _get_args(self, entry, driver, stacked=False):
         args = entry if stacked else {'urlpath': entry.get('href')}
