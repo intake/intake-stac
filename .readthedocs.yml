@@ -11,4 +11,4 @@ sphinx:
 
 # Optionally set the version of Python and requirements required to build your docs
 conda:
-  environment: ci/environment-dev.yml
+  environment: ci/environment-docs.yml

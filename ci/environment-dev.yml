@@ -1,3 +1,4 @@
+# everything except jupyterlab and plotting libraries
 name: intake-stac-dev
 channels:
   - conda-forge

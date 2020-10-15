@@ -1,0 +1,18 @@
+#readthedocs uses defaults rather than conda-forge
+name: intake-stac
+channels:
+  - defaults
+dependencies:
+  - python=3.7
+  - fsspec
+  - geopandas
+  - intake
+  - intake-xarray
+  - mock
+  - pillow
+  - pytest-cov
+  - rasterio
+  - sat-stac
+  - sphinx
+  - sphinx_rtd_theme
+  - xarray
