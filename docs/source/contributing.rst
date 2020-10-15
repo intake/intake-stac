@@ -70,7 +70,7 @@ without using a local copy.  This can be convenient for small fixes.
 
     .. code:: bash
 
-        $ conda env create -f ci/environment-dev-3.7.yml
+        $ conda env create -f ci/environment-dev.yml
         $ cd docs
         $ make html
 
@@ -103,7 +103,7 @@ Preparing Pull Requests
 
 #. Install development version in a conda environment::
 
-    $ conda env create -f ci/environment-dev-3.7.yml
+    $ conda env create -f ci/environment-dev.yml
     $ conda activate intake-stac-dev
     $ pip install . -e
 

@@ -9,6 +9,7 @@ from pkg_resources import get_distribution
 __version__ = get_distribution('intake_stac').version
 
 # STAC catalog asset 'type' determines intake driver:
+# https://github.com/radiantearth/stac-spec/blob/master/item-spec/item-spec.md#media-types
 default_type = 'application/rasterio'
 default_driver = 'rasterio'
 
@@ -17,6 +18,7 @@ drivers = {
     'application/x-netcdf': 'netcdf',
     'application/parquet': 'parquet',
     'application/x-parquet': 'parquet',
+    'application/x-hdf': 'netcdf',
     'application/x-hdf5': 'netcdf',
     'application/rasterio': 'rasterio',
     'image/vnd.stac.geotiff': 'rasterio',
@@ -33,6 +35,7 @@ drivers = {
     'text/html': 'textfiles',
     'application/json': 'textfiles',
     'application/geo+json': 'geopandas',
+    'application/geopackage+sqlite3': 'geopandas',
 }
 
 

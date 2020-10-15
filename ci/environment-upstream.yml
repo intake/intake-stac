@@ -1,0 +1,15 @@
+name: intake-stac
+channels:
+  - conda-forge
+dependencies:
+  - python
+  - pip
+  - pytest
+  - pip:
+      - git+https://github.com/intake/filesystem_spec.git
+      - git+https://github.com/sat-utils/sat-stac.git
+      - git+https://github.com/sat-utils/sat-search.git
+      - git+https://github.com/intake/intake.git
+      - git+https://github.com/intake/intake-xarray.git
+      - git+https://github.com/intake/intake_geopandas.git
+      - git+https://github.com/intake/intake-parquet.git

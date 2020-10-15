@@ -1,0 +1,13 @@
+name: intake-stac
+channels:
+  - conda-forge
+dependencies:
+  - python=3.9
+  - fsspec
+  - geopandas
+  - intake
+  - intake-xarray
+  - pytest-cov
+  - rasterio
+  - sat-stac
+  - xarray
