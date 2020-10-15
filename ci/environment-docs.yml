@@ -18,3 +18,4 @@ dependencies:
   - xarray
   - pip:
       - sat-stac
+      - .. #installs intake-stac from root folder
