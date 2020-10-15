@@ -28,9 +28,7 @@ dependencies:
   - pandoc
   - pip
   - pre_commit
-  - pytest
   - pytest-cov
-  - pytest-icdiff
   - pytoml
   - pyyaml
   - rasterio
@@ -38,7 +36,6 @@ dependencies:
   - requests
   - sat-search>=0.3
   - sat-stac
-  - scikit-image
   - sphinx-copybutton
   - sphinx_rtd_theme
   - sphinx>=1.6
