@@ -16,6 +16,7 @@ dependencies:
   - pip
   - pytest-cov
   - rasterio
+  - scikit-image
   - sphinx
   - sphinx_rtd_theme
   - xarray
