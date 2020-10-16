@@ -22,5 +22,6 @@ dependencies:
   - xarray
   - pip:
       - nbsphinx
+      - sat-search
       - sat-stac
       - .. #installs intake-stac from root folder
