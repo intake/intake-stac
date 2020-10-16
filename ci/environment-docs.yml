@@ -1,0 +1,27 @@
+#readthedocs uses defaults rather than conda-forge
+name: intake-stac
+channels:
+  - defaults
+dependencies:
+  - python=3.7
+  - aiohttp
+  - fsspec
+  - geopandas
+  - intake
+  - intake-xarray
+  - ipython
+  - mock
+  - numpydoc
+  - pillow
+  - pip
+  - pytest-cov
+  - rasterio
+  - scikit-image
+  - sphinx
+  - sphinx_rtd_theme
+  - xarray
+  - pip:
+      - nbsphinx
+      - sat-search
+      - sat-stac
+      - .. #installs intake-stac from root folder

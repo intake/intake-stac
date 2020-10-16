@@ -44,7 +44,7 @@ The [examples/](examples/) directory contains some example Jupyter Notebooks tha
 To install a specific versions of intake-stac, specify the version in the install command
 
 ```bash
-pip install intake-stac==0.1.0
+pip install intake-stac==0.3.0
 ```
 
 The table below shows the corresponding versions between intake-stac and STAC:

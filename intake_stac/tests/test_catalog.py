@@ -55,11 +55,13 @@ def test_init_catalog_from_url(stac_cat_url):
     assert isinstance(cat, intake.catalog.Catalog)
     assert cat.name == 'stac-catalog'
     assert cat.discover()['container'] == 'catalog'
+    assert int(cat.metadata['stac_version'][0]) >= 1
 
     cat = StacCatalog.from_url(stac_cat_url)
     assert isinstance(cat, intake.catalog.Catalog)
     assert cat.name == 'stac-catalog'
     assert cat.discover()['container'] == 'catalog'
+    assert int(cat.metadata['stac_version'][0]) >= 1
 
     # test kwargs are passed through
     cat = StacCatalog.from_url(stac_cat_url, name='intake-stac-test')
@@ -88,7 +90,6 @@ def test_init_catalog_with_bad_url_raises():
         StacCatalog('foo.bar')
 
 
-@pytest.mark.xfail(reason='need to fix serialization')
 def test_serialize(cat):
     cat_str = cat.serialize()
     assert isinstance(cat_str, str)
@@ -121,73 +122,56 @@ def test_cat_from_item(stac_item_obj):
     assert 'B5' in cat
 
 
-@pytest.mark.xfail(reason='need to fix stack bands')
 def test_cat_item_stacking(stac_item_obj):
-    items = StacItem(stac_item_obj)
+    item = StacItem(stac_item_obj)
     list_of_bands = ['B1', 'B2']
-    new_entry = items.stack_bands(list_of_bands)
-    assert new_entry.description == 'Band 1 (coastal), Band 2 (blue)'
+    new_entry = item.stack_bands(list_of_bands)
+    assert isinstance(new_entry, StacEntry)
+    assert new_entry._description == 'B1, B2'
     assert new_entry.name == 'B1_B2'
-    new_da = new_entry.to_dask()
+    new_da = new_entry().to_dask()
     assert sorted([dim for dim in new_da.dims]) == ['band', 'x', 'y']
     assert (new_da.band == list_of_bands).all()
 
 
-@pytest.mark.xfail(reason='need to fix stack bands')
 def test_cat_item_stacking_using_common_name(stac_item_obj):
-    items = StacItem(stac_item_obj)
+    item = StacItem(stac_item_obj)
     list_of_bands = ['coastal', 'blue']
-    new_entry = items.stack_bands(list_of_bands)
-    assert new_entry.description == 'Band 1 (coastal), Band 2 (blue)'
+    new_entry = item.stack_bands(list_of_bands)
+    assert isinstance(new_entry, StacEntry)
+    assert new_entry._description == 'B1, B2'
     assert new_entry.name == 'coastal_blue'
-    new_da = new_entry.to_dask()
+    new_da = new_entry().to_dask()
     assert sorted([dim for dim in new_da.dims]) == ['band', 'x', 'y']
     assert (new_da.band == ['B1', 'B2']).all()
 
 
-@pytest.mark.xfail(reason='need to fix stack bands')
 def test_cat_item_stacking_dims_of_different_type_raises_error(stac_item_obj):
-    items = StacItem(stac_item_obj)
+    item = StacItem(stac_item_obj)
     list_of_bands = ['B1', 'ANG']
     with pytest.raises(ValueError, match=('ANG not found in list of eo:bands in collection')):
-        items.stack_bands(list_of_bands)
+        item.stack_bands(list_of_bands)
 
 
-@pytest.mark.xfail(reason='need to fix stack bands')
 def test_cat_item_stacking_dims_with_nonexistent_band_raises_error(stac_item_obj,):  # noqa: E501
-    items = StacItem(stac_item_obj)
+    item = StacItem(stac_item_obj)
     list_of_bands = ['B1', 'foo']
     with pytest.raises(ValueError, match="'B8', 'B9', 'blue', 'cirrus'"):
-        items.stack_bands(list_of_bands)
+        item.stack_bands(list_of_bands)
 
 
-@pytest.mark.xfail(reason='need to fix stack bands')
 def test_cat_item_stacking_dims_of_different_size_regrids(stac_item_obj):
-    items = StacItem(stac_item_obj)
+    item = StacItem(stac_item_obj)
     list_of_bands = ['B1', 'B8']
-    B1_da = items.B1.to_dask()
-    assert B1_da.shape == (1, 7801, 7641)
-    B8_da = items.B8.to_dask()
-    assert B8_da.shape == (1, 15601, 15281)
-    new_entry = items.stack_bands(list_of_bands, regrid=True)
-    new_da = new_entry.to_dask()
-    assert new_da.shape == (2, 15601, 15281)
+    B1_da = item.B1.to_dask()
+    assert B1_da.shape == (1, 7791, 7651)
+    B8_da = item.B8.to_dask()
+    assert B8_da.shape == (1, 15581, 15301)
+    new_entry = item.stack_bands(list_of_bands)
+    new_da = new_entry().to_dask()
+    assert new_da.shape == (2, 15581, 15301)
     assert sorted([dim for dim in new_da.dims]) == ['band', 'x', 'y']
     assert (new_da.band == list_of_bands).all()
-
-
-@pytest.mark.xfail(reason='need to fix stack bands')
-def test_cat_item_stacking_dims_of_different_size_raises_error_by_default(
-    stac_item_obj,
-):  # noqa: E501
-    items = StacItem(stac_item_obj)
-    list_of_bands = ['B1', 'B8']
-    B1_da = items.B1.to_dask()
-    assert B1_da.shape == (1, 7801, 7641)
-    B8_da = items.B8.to_dask()
-    assert B8_da.shape == (1, 15601, 15281)
-    with pytest.raises(ValueError, match='B8 has different ground sampling'):
-        items.stack_bands(list_of_bands)
 
 
 def test_stac_entry_constructor():
@@ -209,6 +193,40 @@ def test_stac_entry_constructor():
     assert d['args']['urlpath'] == item['href']
     assert d['description'] == item['title']
     assert d['metadata'] == item
+
+
+def test_missing_type():
+    key = 'B1'
+    item = {
+        'href': 'https://landsat-pds.s3.amazonaws.com/c1/L8/120/046/LC08_L1GT_120046_20181012_20181012_01_RT/LC08_L1GT_120046_20181012_20181012_01_RT_B1.TIF',  # noqa: E501
+        'type': '',
+    }
+
+    entry = StacEntry(key, item)
+
+    d = entry.describe()
+    print(d)
+    assert d['name'] == key
+    assert d['metadata']['type'] == 'application/rasterio'  # default_type
+    assert d['container'] == 'xarray'
+    assert d['plugin'] == ['rasterio']
+
+
+def test_unknown_type():
+    key = 'B1'
+    item = {
+        'href': 'https://landsat-pds.s3.amazonaws.com/c1/L8/120/046/LC08_L1GT_120046_20181012_20181012_01_RT/LC08_L1GT_120046_20181012_20181012_01_RT_B1.TIF',  # noqa: E501
+        'type': 'unrecognized',
+    }
+
+    entry = StacEntry(key, item)
+
+    d = entry.describe()
+    print(d)
+    assert d['name'] == key
+    assert d['metadata']['type'] == 'unrecognized'
+    assert d['container'] == 'xarray'
+    assert d['plugin'] == ['rasterio']
 
 
 def test_cat_to_geopandas(stac_item_collection_obj):

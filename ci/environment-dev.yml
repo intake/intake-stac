@@ -1,7 +1,9 @@
+# everything except jupyterlab and plotting libraries
 name: intake-stac-dev
 channels:
   - conda-forge
 dependencies:
+  - python=3.7
   - aiohttp
   - autopep8
   - black
@@ -27,10 +29,7 @@ dependencies:
   - pandoc
   - pip
   - pre_commit
-  - pytest
   - pytest-cov
-  - pytest-icdiff
-  - python=3.7
   - pytoml
   - pyyaml
   - rasterio
@@ -38,7 +37,6 @@ dependencies:
   - requests
   - sat-search>=0.3
   - sat-stac
-  - scikit-image
   - sphinx-copybutton
   - sphinx_rtd_theme
   - sphinx>=1.6

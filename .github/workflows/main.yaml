@@ -15,26 +15,33 @@ jobs:
       - uses: pre-commit/action@v2.0.0
 
   test:
-    name: ${{ matrix.CONDA_ENV }}-build
+    name: ${{ matrix.CONDA_ENV }}-test
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
-        CONDA_ENV: [3.6, 3.7, 3.7-upstream, 3.8]
+        CONDA_ENV: [3.6, 3.7, 3.8, 3.9, upstream]
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout
+        uses: actions/checkout@v2
 
-      - name: Setup conda environment
+      - name: Setup Miniconda
+        uses: conda-incubator/setup-miniconda@v1
+        with:
+          auto-update-conda: true
+          auto-activate-base: false
+          activate-environment: intake-stac
+          environment-file: ci/environment-${{ matrix.CONDA_ENV }}.yml
+
+      - name: Development Install Intake-STAC
+        shell: bash -l {0}
         run: |
-          export PATH="/usr/share/miniconda/bin:$PATH"
-          conda env create -n test_env --file ci/environment-dev-${{ matrix.CONDA_ENV }}.yml --quiet
-          source activate test_env
           python -m pip install --no-deps -e .
           conda list
 
-      - name: Running Tests
+      - name: Run Tests
+        shell: bash -l {0}
         run: |
-          export PATH="/usr/share/miniconda/bin:$PATH"
-          source activate test_env
           pytest --verbose --junitxml=test-reports/junit.xml --cov=intake_stac --cov-config ci/.coveragerc --cov-report term-missing
 
       - name: Upload coverage to Codecov
