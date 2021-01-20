@@ -1,26 +1,12 @@
-name: CI
+# Run a nightly test against unpinned conda environment
+name: Cron
 
 on:
-  push:
-    branches: "*"
-  pull_request:
-    branches: master
+  schedule:
+    - cron: "0 0 * * *"
 
 jobs:
-  lint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
-      - uses: pre-commit/action@v2.0.0
-
   test:
-    name: ${{ matrix.CONDA_ENV }}-test
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        CONDA_ENV: [3.7, 3.8, 3.9, upstream]
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -31,7 +17,7 @@ jobs:
           auto-update-conda: true
           auto-activate-base: false
           activate-environment: intake-stac
-          environment-file: ci/environment-${{ matrix.CONDA_ENV }}.yml
+          environment-file: ci/environment-unpinned.yml
 
       - name: Development Install Intake-STAC
         shell: bash -l {0}
