@@ -1,8 +1,0 @@
-#!/bin/bash
-
-jupyter labextension install --clean \
-                             @jupyter-widgets/jupyterlab-manager \
-                             @jupyterlab/geojson-extension \
-                             @pyviz/jupyterlab_pyviz
-
-#EOF
