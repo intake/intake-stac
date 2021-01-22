@@ -1,107 +1,100 @@
-import os
 import sys
 
 import intake
+import pystac
 import pytest
-import satstac
 from intake.catalog import Catalog
 from intake.catalog.local import LocalCatalogEntry
 
 from intake_stac import StacCatalog, StacCollection, StacItem, StacItemCollection
 from intake_stac.catalog import StacEntry
 
-
-@pytest.fixture(scope='module')
-def stac_cat_url():
-    return 'https://raw.githubusercontent.com/sat-utils/sat-stac/master/test/catalog/catalog.json'  # noqa: E501
-
-
-@pytest.fixture(scope='module')
-def stac_cat_obj(stac_cat_url):
-    return satstac.Catalog.open(stac_cat_url)
+# Global Testing URLs
+examples_repo = 'https://raw.githubusercontent.com/sat-utils/sat-stac/master'
+cat_url = f'{examples_repo}/test/catalog/catalog.json'
+col_url = f'{examples_repo}/test/catalog/eo/sentinel-2-l1c/catalog.json'
+item_url = f'{examples_repo}/test/catalog/eo/landsat-8-l1/item.json'
 
 
 @pytest.fixture(scope='module')
-def stac_collection_obj():
-    return satstac.Collection.open(
-        'https://raw.githubusercontent.com/sat-utils/sat-stac/master/test/catalog/eo/sentinel-2-l1c/catalog.json'  # noqa: E501
-    )
+def pystac_cat():
+    return pystac.Catalog.from_file(cat_url)
 
 
 @pytest.fixture(scope='module')
-def stac_item_collection_obj():
-    # TODO: change load -> open,
-    # see https://github.com/sat-utils/sat-stac/issues/52
-    # use github/sat-utils/sat-stac/master/test/items.json
-    return satstac.ItemCollection.load(
-        os.path.join(os.path.dirname(__file__), 'items.json')  # noqa: E501
-    )
+def pystac_col():
+    return pystac.Collection.from_file(col_url)
+
+
+# @pytest.fixture(scope='module')
+# def stac_item_collection_obj():
+#    return pystac.Collection.from_file()
 
 
 @pytest.fixture(scope='module')
-def stac_item_obj():
-    return satstac.Item.open(
-        'https://raw.githubusercontent.com/sat-utils/sat-stac/master/test/catalog/eo/landsat-8-l1/item.json'  # noqa: E501
-    )
+def pystac_item():
+    return pystac.Item.from_file(item_url)
 
 
 @pytest.fixture(scope='module')
-def cat(stac_cat_url):
-    return StacCatalog.from_url(stac_cat_url)
+def intake_stac_cat():
+    return StacCatalog.from_url(cat_url)
 
 
-def test_init_catalog_from_url(stac_cat_url):
-    cat = StacCatalog(stac_cat_url)
+def test_init_catalog_from_url():
+    cat = StacCatalog(cat_url)
     assert isinstance(cat, intake.catalog.Catalog)
     assert cat.name == 'stac-catalog'
     assert cat.discover()['container'] == 'catalog'
     assert int(cat.metadata['stac_version'][0]) >= 1
 
-    cat = StacCatalog.from_url(stac_cat_url)
+    cat = StacCatalog.from_url(cat_url)
     assert isinstance(cat, intake.catalog.Catalog)
     assert cat.name == 'stac-catalog'
     assert cat.discover()['container'] == 'catalog'
     assert int(cat.metadata['stac_version'][0]) >= 1
 
     # test kwargs are passed through
-    cat = StacCatalog.from_url(stac_cat_url, name='intake-stac-test')
+    cat = StacCatalog.from_url(cat_url, name='intake-stac-test')
     assert 'intake-stac-test' == cat.name
 
 
-def test_init_catalog_from_satstac_obj(stac_cat_obj):
-    cat = StacCatalog(stac_cat_obj)
+def test_init_catalog_from_pystac_obj(pystac_cat):
+    cat = StacCatalog(pystac_cat)
     assert isinstance(cat, intake.catalog.Catalog)
     assert cat.discover()['container'] == 'catalog'
     assert cat.name == 'stac-catalog'
-    assert cat.name == stac_cat_obj.id
+    assert cat.name == pystac_cat.id
 
     # test kwargs are passed through
-    cat = StacCatalog(stac_cat_obj, name='intake-stac-test')
+    cat = StacCatalog(pystac_cat, name='intake-stac-test')
     assert 'intake-stac-test' == cat.name
 
 
-def test_init_catalog_with_wrong_type_raises(stac_cat_obj):
+def test_init_catalog_with_wrong_type_raises(pystac_cat):
     with pytest.raises(ValueError):
-        StacCollection(stac_cat_obj)
+        StacCollection(pystac_cat)
 
 
 def test_init_catalog_with_bad_url_raises():
-    with pytest.raises(satstac.STACError):
+    with pytest.raises(pystac.STACError):
         StacCatalog('foo.bar')
 
 
-def test_serialize(cat):
-    cat_str = cat.serialize()
+def test_serialize(intake_stac_cat_obj):
+    cat_str = intake_stac_cat_obj.serialize()
     assert isinstance(cat_str, str)
 
 
-def test_cat_entries(cat):
-    assert list(cat)
-    assert all([isinstance(v, (LocalCatalogEntry, Catalog)) for _, v in cat.items()])
+def test_cat_entries(intake_stac_cat_obj):
+    assert list(intake_stac_cat_obj)
+    assert all(
+        [isinstance(v, (LocalCatalogEntry, Catalog)) for _, v in intake_stac_cat_obj.items()]
+    )
 
 
-def test_cat_name_from_satstac_catalog_id(cat):
-    assert cat.name == 'stac-catalog'
+def test_cat_name_from_pystac_catalog_id(intake_stac_cat_obj):
+    assert intake_stac_cat_obj.name == 'stac-catalog'
 
 
 def test_cat_from_collection(stac_collection_obj):

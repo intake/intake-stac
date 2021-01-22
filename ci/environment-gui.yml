@@ -40,6 +40,7 @@ dependencies:
   - panel
   - pip
   - pre_commit
+  - pystac
   - pytest
   - pytest-cov
   - pytest-icdiff
@@ -49,7 +50,6 @@ dependencies:
   - recommonmark
   - requests
   - sat-search>=0.3
-  - sat-stac
   - scikit-image
   - sphinx-copybutton
   - sphinx_rtd_theme

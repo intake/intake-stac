@@ -12,7 +12,7 @@ Intake-STAC provides an opinionated way for users to load Assets from STAC catal
 
 ## Installation
 
-Intake-STAC has a few [requirements](requirements.txt), such as [Intake](https://intake.readthedocs.io), [intake-xarray](https://intake-xarray.readthedocs.io/) and [sat-stac](https://github.com/sat-utils/sat-stac). Intake-stac can be installed in any of the following ways:
+Intake-STAC has a few [requirements](requirements.txt), such as [Intake](https://intake.readthedocs.io), [intake-xarray](https://intake-xarray.readthedocs.io/) and [pystac](https://github.com/stac-utils/pystac). Intake-stac can be installed in any of the following ways:
 
 We recommend installing the latest release with `conda`:
 
@@ -44,15 +44,16 @@ The [examples/](examples/) directory contains some example Jupyter Notebooks tha
 To install a specific versions of intake-stac, specify the version in the install command
 
 ```bash
-pip install intake-stac==0.3.0
+pip install intake-stac==0.4.0
 ```
 
 The table below shows the corresponding versions between intake-stac and STAC:
 
-| intake-stac | STAC  |
-| ----------- | ----- |
-| 0.2.x       | 0.6.x |
-| 0.3.x       | 1.0.x |
+| intake-stac | STAC      |
+| ----------- | --------- |
+| 0.2.x       | 0.6.x     |
+| 0.3.x       | 1.0-betas |
+| 0.4.x       | 1.0.0-rc1 |
 
 ## About
 

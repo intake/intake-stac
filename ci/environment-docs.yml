@@ -11,17 +11,17 @@ dependencies:
   - intake-xarray
   - ipython
   - mock
+  - nbsphinx
   - numpydoc
   - pillow
   - pip
+  - pystac
   - pytest-cov
   - rasterio
+  - sat-search
   - scikit-image
   - sphinx
   - sphinx_rtd_theme
   - xarray
   - pip:
-      - nbsphinx
-      - sat-search
-      - sat-stac
       - .. #installs intake-stac from root folder

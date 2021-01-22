@@ -29,6 +29,7 @@ dependencies:
   - pandoc
   - pip
   - pre_commit
+  - pystac
   - pytest-cov
   - pytoml
   - pyyaml
@@ -36,7 +37,6 @@ dependencies:
   - recommonmark
   - requests
   - sat-search>=0.3
-  - sat-stac
   - sphinx-copybutton
   - sphinx_rtd_theme
   - sphinx>=1.6

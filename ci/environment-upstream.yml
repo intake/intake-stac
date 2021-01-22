@@ -8,13 +8,13 @@ dependencies:
   - intake
   - intake-xarray
   - pip
+  - pystac
   - pytest-cov
   - rasterio
-  - sat-stac
   - xarray
   - pip:
       - git+https://github.com/intake/filesystem_spec.git
-      - git+https://github.com/sat-utils/sat-stac.git
+      - git+https://github.com/stac-utils/pystac.git
       - git+https://github.com/sat-utils/sat-search.git
       - git+https://github.com/intake/intake.git
       - git+https://github.com/intake/intake-xarray.git

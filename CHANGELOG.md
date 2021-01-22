@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [v0.4.0] - 2021-XX-XX
+
+- Switched from sat-stac to pystac dependency ()
+- Added .stack_items() method ()
+- CI nightly test against py36 to py39 (#71)
+
+### Added
+
+- Tests against python3.8 (#63)
+
 ## [v0.3.0] - 2020-10-01
 
 ### Added

@@ -1,7 +1,7 @@
 import os.path
 import warnings
 
-import satstac
+import pystac
 from intake.catalog import Catalog
 from intake.catalog.local import LocalCatalogEntry
 from pkg_resources import get_distribution
@@ -51,14 +51,14 @@ class AbstractStacCatalog(Catalog):
         Parameters
         ----------
         stac_obj: stastac.Thing
-            A satstac.Thing pointing to a STAC object
+            A pystac.Thing pointing to a STAC object
         kwargs : dict, optional
             Passed to intake.Catalog.__init__
         """
         if isinstance(stac_obj, self._stac_cls):
             self._stac_obj = stac_obj
         elif isinstance(stac_obj, str):
-            self._stac_obj = self._stac_cls.open(stac_obj)
+            self._stac_obj = self._stac_cls.from_file(stac_obj)
         else:
             raise ValueError('Expected %s instance, got: %s' % (self._stac_cls, type(stac_obj)))
 
@@ -83,7 +83,7 @@ class AbstractStacCatalog(Catalog):
         kwargs : dict, optional
             Passed to intake.Catolog.__init__
         """
-        stac_obj = cls._stac_cls.open(url)
+        stac_obj = cls._stac_cls.from_file(url)
         return cls(stac_obj, **kwargs)
 
     def _get_metadata(self, **kwargs):
@@ -117,7 +117,7 @@ class StacCatalog(AbstractStacCatalog):
     """
 
     name = 'stac_catalog'
-    _stac_cls = satstac.Catalog
+    _stac_cls = pystac.Catalog
 
     def _load(self):
         """
@@ -149,7 +149,7 @@ class StacCatalog(AbstractStacCatalog):
         """
         Keep copy of all STAC JSON except for links
         """
-        metadata = self._stac_obj._data.copy()
+        metadata = self._stac_obj.to_dict()
         del metadata['links']
         return metadata
 
@@ -160,7 +160,7 @@ class StacItemCollection(AbstractStacCatalog):
     """
 
     name = 'stac_item_collection'
-    _stac_cls = satstac.ItemCollection
+    _stac_cls = pystac.Collection
 
     def _load(self):
         """
@@ -213,7 +213,7 @@ class StacCollection(AbstractStacCatalog):
     """
 
     name = 'stac_collection'
-    _stac_cls = satstac.Collection
+    _stac_cls = pystac.Collection
 
     def _load(self):
         """
@@ -250,7 +250,7 @@ class StacItem(AbstractStacCatalog):
     """
 
     name = 'stac_item'
-    _stac_cls = satstac.Item
+    _stac_cls = pystac.Item
 
     def _load(self):
         """
