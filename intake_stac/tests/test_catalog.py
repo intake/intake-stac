@@ -9,11 +9,22 @@ from intake.catalog.local import LocalCatalogEntry
 from intake_stac import StacCatalog, StacCollection, StacItem, StacItemCollection
 from intake_stac.catalog import StacEntry
 
-# Global Testing URLs
-examples_repo = 'https://raw.githubusercontent.com/sat-utils/sat-stac/master'
-cat_url = f'{examples_repo}/test/catalog/catalog.json'
-col_url = f'{examples_repo}/test/catalog/eo/sentinel-2-l1c/catalog.json'
-item_url = f'{examples_repo}/test/catalog/eo/landsat-8-l1/item.json'
+# NOTE: reconfig tests to not require network?
+# sat-stac examples URLs
+sat_stac_repo = 'https://raw.githubusercontent.com/sat-utils/sat-stac/master'
+cat_url = f'{sat_stac_repo}/test/catalog/catalog.json'
+col_url = f'{sat_stac_repo}/test/catalog/eo/sentinel-2-l1c/catalog.json'
+item_url = f'{sat_stac_repo}/test/catalog/eo/landsat-8-l1/item.json'
+
+# pystac examples
+pystac_repo = 'https://raw.githubusercontent.com/stac-utils/pystac/develop/tests/data-files'
+# or /1.0.0-beta.2/catalog-spec/examples
+# cat_url = f'{pystac_repo}/catalogs/planet-example-1.0.0-beta.2/collection.json'
+# col_url = f'{pystac_repo}/data-files/item/sample-item.json'
+# item_url = f'{pystac_repo}/data-files/item/sample-item.json'
+itemcol_url = (
+    f'{pystac_repo}/examples/1.0.0-beta.2/extensions/single-file-stac/examples/example-search.json'
+)
 
 
 @pytest.fixture(scope='module')
@@ -26,14 +37,14 @@ def pystac_col():
     return pystac.Collection.from_file(col_url)
 
 
-# @pytest.fixture(scope='module')
-# def stac_item_collection_obj():
-#    return pystac.Collection.from_file()
-
-
 @pytest.fixture(scope='module')
 def pystac_item():
     return pystac.Item.from_file(item_url)
+
+
+@pytest.fixture(scope='module')
+def pystac_itemcol():
+    return pystac.read_file(itemcol_url)
 
 
 @pytest.fixture(scope='module')
@@ -77,40 +88,42 @@ def test_init_catalog_with_wrong_type_raises(pystac_cat):
 
 
 def test_init_catalog_with_bad_url_raises():
-    with pytest.raises(pystac.STACError):
-        StacCatalog('foo.bar')
+    # json.decoder.JSONDecodeError or FileNotFoundError
+    with pytest.raises(Exception):
+        StacCatalog('https://raw.githubusercontent.com/')
 
 
-def test_serialize(intake_stac_cat_obj):
-    cat_str = intake_stac_cat_obj.serialize()
+def test_serialize(intake_stac_cat):
+    cat_str = intake_stac_cat.serialize()
     assert isinstance(cat_str, str)
 
 
-def test_cat_entries(intake_stac_cat_obj):
-    assert list(intake_stac_cat_obj)
-    assert all(
-        [isinstance(v, (LocalCatalogEntry, Catalog)) for _, v in intake_stac_cat_obj.items()]
-    )
+def test_cat_entries(intake_stac_cat):
+    assert list(intake_stac_cat)
+    assert all([isinstance(v, (LocalCatalogEntry, Catalog)) for _, v in intake_stac_cat.items()])
 
 
-def test_cat_name_from_pystac_catalog_id(intake_stac_cat_obj):
-    assert intake_stac_cat_obj.name == 'stac-catalog'
+def test_cat_name_from_pystac_catalog_id(intake_stac_cat):
+    assert intake_stac_cat.name == 'stac-catalog'
 
 
-def test_cat_from_collection(stac_collection_obj):
-    cat = StacCollection(stac_collection_obj)
+@pytest.mark.skip(reason='no need for separate Collection type?')
+def test_cat_from_collection(pystac_col):
+    cat = StacCollection(pystac_col)
     assert 'S2B_25WFU_20200610_0_L1C' in cat
     assert 'B05' in cat.S2B_25WFU_20200610_0_L1C
 
 
-def test_cat_from_item_collection(stac_item_collection_obj):
-    cat = StacItemCollection(stac_item_collection_obj)
+# @pytest.mark.skip(reason="revist this after figuring out items")
+def test_cat_from_item_collection(pystac_itemcol):
+    print(pystac_itemcol.ext)
+    cat = StacItemCollection(pystac_itemcol)
     assert 'LC81920292019008LGN00' in cat
     assert 'B5' in cat.LC81920292019008LGN00
 
 
-def test_cat_from_item(stac_item_obj):
-    cat = StacItem(stac_item_obj)
+def test_cat_from_item(pystac_item):
+    cat = StacItem(pystac_item)
     # weird, why is this different than the name above?
     assert 'B5' in cat
 

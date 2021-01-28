@@ -125,13 +125,13 @@ class StacCatalog(AbstractStacCatalog):
         """
         subcatalog = None
         # load first sublevel catalog(s)
-        for subcatalog in self._stac_obj.children():
+        for subcatalog in self._stac_obj.get_children():
             self._entries[subcatalog.id] = LocalCatalogEntry(
                 name=subcatalog.id,
                 description=subcatalog.description,
                 driver=StacCatalog,
                 catalog=self,
-                args={'stac_obj': subcatalog.filename},
+                args={'stac_obj': subcatalog.get_self_href()},
             )
 
         if subcatalog is None:
@@ -154,19 +154,31 @@ class StacCatalog(AbstractStacCatalog):
         return metadata
 
 
-class StacItemCollection(AbstractStacCatalog):
+class StacCollection(AbstractStacCatalog):
     """
-    Intake Catalog represeting a STAC ItemCollection
+    Dummy class
     """
 
-    name = 'stac_item_collection'
-    _stac_cls = pystac.Collection
+    name = 'catalog'
+
+
+class StacItemCollection(AbstractStacCatalog):
+    """
+    Item Collection returned from stac-api
+    https://github.com/radiantearth/stac-spec/blob/master/extensions/single-file-stac/README.md
+    """
+
+    name = 'single-file-stac'
+    _stac_cls = pystac.Catalog
 
     def _load(self):
         """
         Load the STAC Item Collection.
         """
-        for item in self._stac_obj:
+        print(dir(self))
+        if not self.ext.implements('single-file-stac'):
+            raise AttributeError(" StacItemCollection requires 'single-file-stac' extension")
+        for item in self.ext['single-file-stac'].features:
             self._entries[item.id] = LocalCatalogEntry(
                 name=item.id,
                 description='',
@@ -204,43 +216,6 @@ class StacItemCollection(AbstractStacCatalog):
             crs = {'init': 'epsg:4326'}
         gf = gpd.GeoDataFrame.from_features(self._stac_obj.geojson(), crs=crs)
         return gf
-
-
-class StacCollection(AbstractStacCatalog):
-    """
-    Intake Catalog represeting a STAC Collection
-    https://github.com/radiantearth/stac-spec/blob/master/collection-spec/collection-spec.md
-    """
-
-    name = 'stac_collection'
-    _stac_cls = pystac.Collection
-
-    def _load(self):
-        """
-        Load the STAC Collection.
-        """
-        for item in self._stac_obj.items():
-            self._entries[item.id] = LocalCatalogEntry(
-                name=item.id,
-                description='',
-                driver=StacItem,
-                catalog=self,
-                args={'stac_obj': item.filename},
-            )
-
-    def _get_metadata(self, **kwargs):
-        metadata = {}
-        for attr in [
-            'title',
-            'version',
-            'keywords',
-            'license',
-            'providers',
-            'extent',
-        ]:
-            metadata[attr] = getattr(self._stac_obj, attr, None)
-        metadata.update(kwargs)
-        return metadata
 
 
 class StacItem(AbstractStacCatalog):
@@ -382,32 +357,33 @@ class StacEntry(LocalCatalogEntry):
     A class representing a STAC catalog Entry
     """
 
-    def __init__(self, key, item, stacked=False):
+    def __init__(self, key, asset, stacked=False):
         """
         Construct an Intake catalog 'Source' from a STAC Item Asset.
         """
-        driver = self._get_driver(item)
+        driver = self._get_driver(asset)
 
-        default_plot = self._get_plot(item)
-        if default_plot:
-            item['plots'] = default_plot
+        # skip for now
+        # default_plot = self._get_plot(asset)
+        # if default_plot:
+        #    self['plots'] = default_plot
 
         super().__init__(
             name=key,
-            description=item.get('title', key),
+            description=asset.title,
             driver=driver,
             direct_access=True,
-            args=self._get_args(item, driver, stacked=stacked),
-            metadata=item,
+            args=self._get_args(asset, driver, stacked=stacked),
+            metadata=asset,
         )
 
-    def _get_plot(self, item):
+    def _get_plot(self, asset):
         """
         Default hvplot plot based on Asset mimetype
         """
         # NOTE: consider geojson, parquet, hdf defaults in future
         default_plot = None
-        type = item.get('type', None)  # also some assets do not have 'type'
+        type = asset.media_type
         if type:
             if type in ['image/jpeg', 'image/jpg', 'image/png']:
                 default_plot = dict(
@@ -439,24 +415,24 @@ class StacEntry(LocalCatalogEntry):
 
         return default_plot
 
-    def _get_driver(self, entry):
+    def _get_driver(self, asset):
 
-        entry_type = entry.get('type')
+        entry_type = asset.media_type
 
         if entry_type in ['', 'null', None]:
 
-            suffix = os.path.splitext(entry['href'])[-1]
+            suffix = os.path.splitext(asset.media_type)[-1]
             if suffix in ['.nc', '.h5', '.hdf']:
-                entry['type'] = 'application/netcdf'
+                asset.media_type = 'application/netcdf'
                 warnings.warn(
-                    f'STAC Asset "type" missing, assigning {entry_type} based on href suffix {suffix}:\n{entry}'  # noqa: E501
+                    f'STAC Asset "type" missing, assigning {entry_type} based on href suffix {suffix}:\n{asset.media_type}'  # noqa: E501
                 )
             else:
-                entry['type'] = default_type
+                asset.media_type = default_type
                 warnings.warn(
-                    f'STAC Asset "type" missing, assuming default type={default_type}:\n{entry}'
+                    f'STAC Asset "type" missing, assuming default type={default_type}:\n{asset}'
                 )
-            entry_type = entry.get('type')
+            entry_type = asset.media_type
             print(entry_type)
 
         # if mimetype not registered try rasterio driver
@@ -464,8 +440,8 @@ class StacEntry(LocalCatalogEntry):
 
         return driver
 
-    def _get_args(self, entry, driver, stacked=False):
-        args = entry if stacked else {'urlpath': entry.get('href')}
+    def _get_args(self, asset, driver, stacked=False):
+        args = asset if stacked else {'urlpath': asset.href}
         if driver in ['netcdf', 'rasterio', 'xarray_image']:
             args.update(chunks={})
 
