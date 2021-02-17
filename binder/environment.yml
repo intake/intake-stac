@@ -24,6 +24,7 @@ dependencies:
   - ipywidgets
   - jupyterlab>=3
   - matplotlib
+  - nbgitpuller
   - nbsphinx
   - netcdf4
   - numpy
