@@ -1,0 +1,44 @@
+# binder development environment
+name: intake-stac-dev
+channels:
+  - conda-forge
+dependencies:
+  - aiohttp
+  - bokeh=2.2
+  - coverage
+  - dask
+  - dask-labextension
+  - datashader
+  - distributed
+  - gcsfs
+  - geopandas
+  - geoviews
+  - h5netcdf
+  - hvplot
+  - intake
+  - intake-geopandas
+  - intake-parquet
+  - intake-xarray
+  - ipywidgets
+  - ipyleaflet
+  - jupyterlab>=3
+  - matplotlib-base
+  - netcdf4
+  - numpy
+  - panel
+  - pip
+  - pyproj
+  - python=3.8
+  - pyyaml
+  - pystac
+  - pytest
+  - rasterio
+  - rioxarray
+  - requests
+  - s3fs
+  - sat-search
+  - sat-stac
+  - scikit-image
+  - xarray
+  - pip:
+      - -e ../
