@@ -96,9 +96,9 @@ Preparing Pull Requests
     $ git clone git@github.com:YOUR_GITHUB_USERNAME/intake-stac.git
     $ cd intake-stac
 
-    # now, to fix a bug or add feature create your own branch off "master":
+    # now, to fix a bug or add feature create your own branch off "main":
 
-    $ git checkout -b your-bugfix-feature-branch-name master
+    $ git checkout -b your-bugfix-feature-branch-name main
 
 
 #. Install development version in a conda environment::
@@ -146,4 +146,4 @@ Preparing Pull Requests
     compare: your-branch-name
 
     base-fork: intake/intake-stac
-    base: master
+    base: main
