@@ -9,26 +9,6 @@ from intake.catalog.local import LocalCatalogEntry
 from intake_stac import StacCatalog, StacCollection, StacItem, StacItemCollection
 from intake_stac.catalog import CombinedAssets, StacAsset
 
-# NOTE: mirror test examples in this repo to not require network?
-# git submodule?
-# lots of existing public catalogs to test against: # https://stacindex.org/catalogs
-
-# Full static catalog
-# example_dir = './data/1.0.0beta2'
-# example = 'planet_disaster_data'
-# col_path = f'{example_dir}/{example}/collection.json'
-# cat_path = f'{example_dir}/{example}/hurrican-harvey/catalog.json'
-# item_path = f'{example_dir}/{example}/hurricane-harvey/hurricane-harvey-0831/Houston-East-20170831-103f-100d-0f4f-RGB/Houston-East-20170831-103f-100d-0f4f-RGB.json' # noqa: E501
-# example = 'earthsearch'
-# itemcol_path = f'{example_dir}/{example}/single-file-stac.json'
-
-# Examples taken from dynamic STAC API endpoints
-# example_dir = './data/1.0.0beta1'
-# example = 'harmonized_l8_s2'
-# col_path = f'{example_dir}/{example}/collection.json'
-# cat_path = f'{example_dir}/{example}/catalog.json'
-# item_path = f'{example_dir}/{example}/item.json'
-
 # sat-stac examples
 # -----
 sat_stac_repo = 'https://raw.githubusercontent.com/sat-utils/sat-stac/master'
@@ -39,19 +19,9 @@ item_url = f'{sat_stac_repo}/test/catalog/eo/landsat-8-l1/item.json'
 # pystac examples
 # -----
 pystac_repo = 'https://raw.githubusercontent.com/stac-utils/pystac/develop/tests/data-files'
-# or /1.0.0-beta.2/catalog-spec/examples
-# cat_url = f'{pystac_repo}/catalogs/planet-example-1.0.0-beta.2/collection.json'
-# col_url = f'{pystac_repo}/data-files/item/sample-item.json'
-# item_url = f'{pystac_repo}/data-files/item/sample-item.json'
 itemcol_url = (
     f'{pystac_repo}/examples/1.0.0-beta.2/extensions/single-file-stac/examples/example-search.json'
 )
-
-# stac-spec examples
-# -----
-# would like to use these after https://github.com/radiantearth/stac-spec/pull/955 is sorted
-# stac_spec_repo = 'https://raw.githubusercontent.com/radiantearth/stac-spec/master'
-# item_url = f'{stac_spec_repo}/item-spec/examples/sentinel2-sample.json'
 
 
 @pytest.fixture(scope='module')
