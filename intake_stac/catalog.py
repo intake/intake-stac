@@ -102,18 +102,8 @@ class AbstractStacCatalog(Catalog):
 
 class StacCatalog(AbstractStacCatalog):
     """
-    Intake Catalog represeting a STAC Catalog
-    https://github.com/radiantearth/stac-spec/blob/master/catalog-spec/catalog-spec.md
-
-    A Catalog that references a STAC catalog at some URL
-    and constructs an intake catalog from it, with opinionated
-    choices about the drivers that will be used to load the datasets.
-    In general, the drivers are:
-
-        - netcdf
-        - rasterio
-        - xarray_image
-        - textfiles
+    Maps Intake Catalog to a STAC Catalog
+    https://pystac.readthedocs.io/en/latest/api.html?#catalog-spec
     """
 
     name = 'stac_catalog'
@@ -123,62 +113,21 @@ class StacCatalog(AbstractStacCatalog):
         """
         Load the STAC Catalog.
         """
-        subcatalog = None
-        # load first sublevel catalog(s)
         for subcatalog in self._stac_obj.get_children():
+            if isinstance(subcatalog, pystac.Catalog):
+                driver = StacCatalog
+            elif isinstance(subcatalog, pystac.Collection):
+                driver = StacCollection
+
             self._entries[subcatalog.id] = LocalCatalogEntry(
                 name=subcatalog.id,
                 description=subcatalog.description,
-                driver=StacCatalog,
+                driver=driver,  # recursive
                 catalog=self,
                 args={'stac_obj': subcatalog.get_self_href()},
             )
 
-        if subcatalog is None:
-            # load items under last catalog
-            for item in self._stac_obj.items():
-                self._entries[item.id] = LocalCatalogEntry(
-                    name=item.id,
-                    description='',
-                    driver=StacItem,
-                    catalog=self,
-                    args={'stac_obj': item},
-                )
-
-    def _get_metadata(self, **kwargs):
-        """
-        Keep copy of all STAC JSON except for links
-        """
-        metadata = self._stac_obj.to_dict()
-        del metadata['links']
-        return metadata
-
-
-class StacCollection(AbstractStacCatalog):
-    """
-    Dummy class
-    """
-
-    name = 'catalog'
-
-
-class StacItemCollection(AbstractStacCatalog):
-    """
-    Item Collection returned from stac-api
-    https://github.com/radiantearth/stac-spec/blob/master/extensions/single-file-stac/README.md
-    """
-
-    name = 'single-file-stac'
-    _stac_cls = pystac.Catalog
-
-    def _load(self):
-        """
-        Load the STAC Item Collection.
-        """
-        print(dir(self))
-        if not self.ext.implements('single-file-stac'):
-            raise AttributeError(" StacItemCollection requires 'single-file-stac' extension")
-        for item in self.ext['single-file-stac'].features:
+        for item in self._stac_obj.get_items():
             self._entries[item.id] = LocalCatalogEntry(
                 name=item.id,
                 description='',
@@ -188,7 +137,55 @@ class StacItemCollection(AbstractStacCatalog):
             )
 
     def _get_metadata(self, **kwargs):
-        return kwargs
+        """
+        Keep copy of all STAC JSON except for links
+        """
+        # NOTE: why not links?
+        metadata = self._stac_obj.to_dict()
+        del metadata['links']
+        return metadata
+
+
+# NOTE: not sure we need a standalone collection?
+# what methods would be here that couldn't just be in StacCatalog?
+class StacCollection(StacCatalog):
+    """
+    Maps Intake Catalog to a STAC Collection
+    https://pystac.readthedocs.io/en/latest/api.html#collection-spec
+
+    A Collection extends the Catalog spec with additional metadata that helps enable discovery.
+    """
+
+    name = 'stac_catalog'
+    _stac_cls = pystac.Collection
+
+
+class StacItemCollection(AbstractStacCatalog):
+    """
+    Maps ItemCollection returned from a STAC API to Intake (Sub)Catalog
+    https://github.com/radiantearth/stac-api-spec/tree/master/fragments/itemcollection
+
+    Note search results often use the single file stac extension:
+    https://pystac.readthedocs.io/en/latest/api.html?#single-file-stac-extension
+    """
+
+    name = 'stac_itemcollection'
+    _stac_cls = pystac.Catalog
+
+    def _load(self):
+        """
+        Load the STAC Item Collection.
+        """
+        if not self._stac_obj.ext.implements('single-file-stac'):
+            raise AttributeError(" StacItemCollection requires 'single-file-stac' extension")
+        for feature in self._stac_obj.ext['single-file-stac'].features:
+            self._entries[feature.id] = LocalCatalogEntry(
+                name=feature.id,
+                description='',
+                driver=StacItem,
+                catalog=self,
+                args={'stac_obj': feature},
+            )
 
     def to_geopandas(self, crs=None):
         """
@@ -213,15 +210,15 @@ class StacItemCollection(AbstractStacCatalog):
             )
 
         if crs is None:
-            crs = {'init': 'epsg:4326'}
-        gf = gpd.GeoDataFrame.from_features(self._stac_obj.geojson(), crs=crs)
+            crs = 'epsg:4326'
+        gf = gpd.GeoDataFrame.from_features(self._stac_obj.to_dict(), crs=crs)
         return gf
 
 
 class StacItem(AbstractStacCatalog):
     """
-    Intake Catalog represeting a STAC Item
-    https://github.com/radiantearth/stac-spec/blob/master/item-spec/item-spec.md
+    Maps STAC Item to Intake (Sub)Catalog
+    https://pystac.readthedocs.io/en/latest/api.html#item-spec
     """
 
     name = 'stac_item'
@@ -232,7 +229,7 @@ class StacItem(AbstractStacCatalog):
         Load the STAC Item.
         """
         for key, value in self._stac_obj.assets.items():
-            self._entries[key] = StacEntry(key, value)
+            self._entries[key] = StacAsset(key, value)
 
     def _get_metadata(self, **kwargs):
         metadata = self._stac_obj.properties.copy()
@@ -243,23 +240,23 @@ class StacItem(AbstractStacCatalog):
 
     def _get_band_info(self):
         """
-        helper function for stack_bands
+        Return list of band info dictionaries (name, common_name, etc.)...
         """
-        # Try to get band-info at Collection then Item level
         band_info = []
         try:
-            collection = self._stac_obj.collection()
-            if 'item-assets' in collection._data.get('stac_extensions'):
-                for val in collection._data['item_assets'].values():
+            # NOTE: ensure we test these scenarios
+            # FileNotFoundError: [Errno 2] No such file or directory: '/catalog.json'
+            collection = self._stac_obj.get_collection()
+            if 'item-assets' in collection.stac_extensions:
+                for val in collection.ext['item_assets']:
                     if 'eo:bands' in val:
                         band_info.append(val.get('eo:bands')[0])
             else:
                 band_info = collection.summaries['eo:bands']
 
-        except KeyError:
-            for val in self._stac_obj.assets.values():
-                if 'eo:bands' in val:
-                    band_info.append(val.get('eo:bands')[0])
+        except Exception:
+            for band in self._stac_obj.ext['eo'].get_bands():
+                band_info.append(band.to_dict())
         finally:
             if not band_info:
                 raise AttributeError(
@@ -288,7 +285,7 @@ class StacItem(AbstractStacCatalog):
 
         Returns
         -------
-        StacEntry with mapping of Asset names to Xarray bands
+        StacAsset with mapping of Asset names to Xarray bands
 
         Example
         -------
@@ -296,12 +293,13 @@ class StacItem(AbstractStacCatalog):
         da = stack(chunks=dict(band=1, x=2048, y=2048)).to_dask()
         """
 
-        if 'eo' not in self._stac_obj._data['stac_extensions']:
+        if 'eo' not in self._stac_obj.stac_extensions:
             raise AttributeError('STAC Item must implement "eo" extension to use this method')
 
         band_info = self._get_band_info()
-        item = {'concat_dim': 'band', 'urlpath': []}
+        configDict = {}
         titles = []
+        hrefs = []
         types = []
         assets = self._stac_obj.assets
         for band in bands:
@@ -322,66 +320,67 @@ class StacItem(AbstractStacCatalog):
                     f'{band} not found in list of eo:bands in collection.'
                     f'Valid values: {sorted(list(set(valid_band_names)))}'
                 )
-
-            value = assets.get(band)
-            band_type = value.get('type')
-            types.append(band_type)
-
-            href = value.get('href')
-            pattern = href.replace(band, '{band}')
-            if 'path_as_pattern' not in item:
-                item['path_as_pattern'] = pattern
-            elif item['path_as_pattern'] != pattern:
-                raise ValueError(
-                    f'Stacking failed: {href} does not contain '
-                    'band info in a fixed section of the url'
-                )
-
+            asset = assets.get(band)
             titles.append(band)
-            item['urlpath'].append(href)
+            types.append(asset.media_type)
+            hrefs.append(asset.href)
+            # metadata.update(asset.to_dict())
 
         unique_types = set(types)
         if len(unique_types) != 1:
             raise ValueError(
                 f'Stacking failed: bands must have type, multiple found: {unique_types}'
             )
-        else:
-            item['type'] = types[0]
 
-        item['title'] = ', '.join(titles)
-        return StacEntry('_'.join(bands), item, stacked=True)
+        configDict['name'] = '_'.join(bands)
+        configDict['description'] = ', '.join(titles)
+        configDict['args'] = dict(chunks={}, concat_dim='band', urlpath=hrefs)  # path_as_pattern?
+        configDict['metadata'] = {}  # blank for now, combine each asset instead?
+
+        return CombinedAssets(configDict)
 
 
-class StacEntry(LocalCatalogEntry):
+class StacAsset(LocalCatalogEntry):
     """
-    A class representing a STAC catalog Entry
+    Maps 1 STAC Item Asset to 1 Intake Catalog Entry
+    https://pystac.readthedocs.io/en/latest/api.html#asset
     """
 
-    def __init__(self, key, asset, stacked=False):
+    name = 'stac_asset'
+    _stac_cls = pystac.item.Asset
+
+    def __init__(self, key, asset):
         """
         Construct an Intake catalog 'Source' from a STAC Item Asset.
+        asset = pystac.item.Asset
         """
         driver = self._get_driver(asset)
-
-        # skip for now
-        # default_plot = self._get_plot(asset)
-        # if default_plot:
-        #    self['plots'] = default_plot
 
         super().__init__(
             name=key,
             description=asset.title,
             driver=driver,
             direct_access=True,
-            args=self._get_args(asset, driver, stacked=stacked),
-            metadata=asset,
+            args=self._get_args(asset, driver),
+            metadata=self._get_metadata(asset),
         )
+
+    def _get_metadata(self, asset):
+        """
+        Copy STAC Asset Metadata and setup default plot
+        """
+        metadata = asset.to_dict()
+        default_plot = self._get_plot(asset)
+        if default_plot:
+            metadata['plots'] = default_plot
+
+        return metadata
 
     def _get_plot(self, asset):
         """
         Default hvplot plot based on Asset mimetype
         """
-        # NOTE: consider geojson, parquet, hdf defaults in future
+        # NOTE: consider geojson, parquet, hdf defaults in future...
         default_plot = None
         type = asset.media_type
         if type:
@@ -416,7 +415,9 @@ class StacEntry(LocalCatalogEntry):
         return default_plot
 
     def _get_driver(self, asset):
-
+        """
+        Assign intake driver for data I/O
+        """
         entry_type = asset.media_type
 
         if entry_type in ['', 'null', None]:
@@ -430,7 +431,7 @@ class StacEntry(LocalCatalogEntry):
             else:
                 asset.media_type = default_type
                 warnings.warn(
-                    f'STAC Asset "type" missing, assuming default type={default_type}:\n{asset}'
+                    f'STAC Asset "type" missing, assuming default type={default_type}:\n{asset}'  # noqa: E501
                 )
             entry_type = asset.media_type
             print(entry_type)
@@ -440,9 +441,32 @@ class StacEntry(LocalCatalogEntry):
 
         return driver
 
-    def _get_args(self, asset, driver, stacked=False):
-        args = asset if stacked else {'urlpath': asset.href}
+    def _get_args(self, asset, driver):
+        """
+        Optional keyword arguments to pass to intake driver
+        """
+        args = {'urlpath': asset.href}
         if driver in ['netcdf', 'rasterio', 'xarray_image']:
+            # NOTE: why force using dask?
             args.update(chunks={})
 
         return args
+
+
+class CombinedAssets(LocalCatalogEntry):
+    """
+    Maps multiple STAC Item Assets to 1 Intake Catalog Entry
+    """
+
+    def __init__(self, configDict):
+        """
+        configDict = intake Entry dictionary from stack_bands() method
+        """
+        super().__init__(
+            name=configDict['name'],
+            description=configDict['description'],
+            driver='rasterio',  #
+            direct_access=True,
+            args=configDict['args'],
+            metadata=configDict['metadata'],
+        )
