@@ -7,8 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [v0.4.0] - 2021-XX-XX
 
-- Switched from sat-stac to pystac dependency ()
-- Added .stack_items() method ()
+- Switched from sat-stac to pystac dependency (#72)
 - CI nightly test against py36 to py39 (#71)
 
 ### Added

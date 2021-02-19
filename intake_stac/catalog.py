@@ -264,7 +264,7 @@ class StacItem(AbstractStacCatalog):
                 )
         return band_info
 
-    def stack_bands(self, bands):
+    def stack_bands(self, bands, path_as_pattern=None):
         """
         Stack the listed bands over the ``band`` dimension.
 
@@ -287,9 +287,12 @@ class StacItem(AbstractStacCatalog):
         -------
         StacAsset with mapping of Asset names to Xarray bands
 
-        Example
+        Examples
         -------
         stack = item.stack_bands(['nir','red'])
+        da = stack(chunks=dict(band=1, x=2048, y=2048)).to_dask()
+
+        stack = item.stack_bands(['B4','B5'], path_as_pattern='{band}.TIF')
         da = stack(chunks=dict(band=1, x=2048, y=2048)).to_dask()
         """
 
@@ -334,8 +337,10 @@ class StacItem(AbstractStacCatalog):
 
         configDict['name'] = '_'.join(bands)
         configDict['description'] = ', '.join(titles)
-        configDict['args'] = dict(chunks={}, concat_dim='band', urlpath=hrefs)  # path_as_pattern?
-        configDict['metadata'] = {}  # blank for now, combine each asset instead?
+        configDict['args'] = dict(
+            chunks={}, concat_dim='band', path_as_pattern=path_as_pattern, urlpath=hrefs
+        )
+        configDict['metadata'] = {}  # blank for now, make union of assets ?
 
         return CombinedAssets(configDict)
 
@@ -447,7 +452,7 @@ class StacAsset(LocalCatalogEntry):
         """
         args = {'urlpath': asset.href}
         if driver in ['netcdf', 'rasterio', 'xarray_image']:
-            # NOTE: why force using dask?
+            # NOTE: force using dask?
             args.update(chunks={})
 
         return args
@@ -465,7 +470,7 @@ class CombinedAssets(LocalCatalogEntry):
         super().__init__(
             name=configDict['name'],
             description=configDict['description'],
-            driver='rasterio',  #
+            driver='rasterio',  # stack_bands only relevant to rasterio driver?
             direct_access=True,
             args=configDict['args'],
             metadata=configDict['metadata'],
