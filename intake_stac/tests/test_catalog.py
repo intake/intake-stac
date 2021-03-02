@@ -1,3 +1,4 @@
+import datetime
 import sys
 
 import intake
@@ -112,6 +113,8 @@ def test_cat_from_collection(pystac_col):
     assert subcat_name in cat
     assert item_name in cat[subcat_name]
     assert 'B04' in cat[subcat_name][item_name]
+    cat._load()
+
 
 
 def test_cat_from_item_collection(pystac_itemcol):
@@ -256,3 +259,23 @@ def test_cat_to_missing_geopandas(pystac_itemcol, monkeypatch):
         with mock.patch.dict(sys.modules, {'geopandas': None}):
             cat = StacItemCollection(pystac_itemcol)
             _ = cat.to_geopandas()
+
+    
+def test_collection_of_collection():
+    space = pystac.SpatialExtent([[0, 1, 2, 3]])
+    time = pystac.TemporalExtent([datetime.datetime(2000, 1, 1),
+                                  datetime.datetime(2000, 1, 1)])
+    child = pystac.Collection(
+        "child",
+        "child-description",
+        extent=pystac.Extent(space, time)
+    )
+    parent = pystac.Collection(
+        "parent",
+        "parent-description",
+        extent=pystac.Extent(space, time),
+    )
+    parent.add_child(child)
+
+    result = StacCollection(parent)
+    result._load()

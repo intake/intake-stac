@@ -63,10 +63,12 @@ class AbstractStacCatalog(Catalog):
             raise ValueError('Expected %s instance, got: %s' % (self._stac_cls, type(stac_obj)))
 
         metadata = self._get_metadata(**kwargs.pop('metadata', {}))
-
         try:
             name = kwargs.pop('name', self._stac_obj.id)
         except AttributeError:
+            # Not currently tested.
+            # ItemCollection does not require an id
+            # Unclear what the state of ItemCollection is.
             name = str(type(self._stac_obj))
 
         super().__init__(name=name, metadata=metadata, **kwargs)
@@ -114,7 +116,7 @@ class StacCatalog(AbstractStacCatalog):
         Load the STAC Catalog.
         """
         for subcatalog in self._stac_obj.get_children():
-            assert isinstance(subcatalog, (pystac.Catalog, pystac.StacCollection))
+            assert isinstance(subcatalog, (pystac.Catalog, pystac.Collection))
             if isinstance(subcatalog, pystac.Catalog):
                 driver = StacCatalog
             else:
