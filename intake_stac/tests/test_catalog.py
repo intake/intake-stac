@@ -199,7 +199,8 @@ def test_asset_missing_type(pystac_item):
     key = 'B1'
     asset = pystac_item.assets.get('B1')
     asset.media_type = ''
-    entry = StacAsset(key, asset)
+    with pytest.warns(Warning, match="STAC Asset"):
+        entry = StacAsset(key, asset)
     d = entry.describe()
 
     assert d['name'] == key

@@ -439,7 +439,6 @@ class StacAsset(LocalCatalogEntry):
                     f'STAC Asset "type" missing, assuming default type={default_type}:\n{asset}'  # noqa: E501
                 )
             entry_type = asset.media_type
-            print(entry_type)
 
         # if mimetype not registered try rasterio driver
         driver = drivers.get(entry_type, default_driver)
