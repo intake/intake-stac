@@ -50,8 +50,8 @@ class AbstractStacCatalog(Catalog):
 
         Parameters
         ----------
-        stac_obj: stastac.Thing
-            A pystac.Thing pointing to a STAC object
+        stac_obj: stastac.STACObject
+            A pystac.STACObject pointing to a STAC object
         kwargs : dict, optional
             Passed to intake.Catalog.__init__
         """
@@ -63,10 +63,12 @@ class AbstractStacCatalog(Catalog):
             raise ValueError('Expected %s instance, got: %s' % (self._stac_cls, type(stac_obj)))
 
         metadata = self._get_metadata(**kwargs.pop('metadata', {}))
-
         try:
             name = kwargs.pop('name', self._stac_obj.id)
         except AttributeError:
+            # Not currently tested.
+            # ItemCollection does not require an id
+            # Unclear what the state of ItemCollection is.
             name = str(type(self._stac_obj))
 
         super().__init__(name=name, metadata=metadata, **kwargs)
@@ -114,10 +116,11 @@ class StacCatalog(AbstractStacCatalog):
         Load the STAC Catalog.
         """
         for subcatalog in self._stac_obj.get_children():
-            if isinstance(subcatalog, pystac.Catalog):
-                driver = StacCatalog
-            elif isinstance(subcatalog, pystac.Collection):
+            if isinstance(subcatalog, pystac.Collection):
+                # Collection subclasses Catalog, so check it first
                 driver = StacCollection
+            else:
+                driver = StacCatalog
 
             self._entries[subcatalog.id] = LocalCatalogEntry(
                 name=subcatalog.id,
@@ -327,7 +330,6 @@ class StacItem(AbstractStacCatalog):
             titles.append(band)
             types.append(asset.media_type)
             hrefs.append(asset.href)
-            # metadata.update(asset.to_dict())
 
         unique_types = set(types)
         if len(unique_types) != 1:
@@ -439,7 +441,6 @@ class StacAsset(LocalCatalogEntry):
                     f'STAC Asset "type" missing, assuming default type={default_type}:\n{asset}'  # noqa: E501
                 )
             entry_type = asset.media_type
-            print(entry_type)
 
         # if mimetype not registered try rasterio driver
         driver = drivers.get(entry_type, default_driver)
