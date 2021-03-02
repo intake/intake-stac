@@ -330,7 +330,6 @@ class StacItem(AbstractStacCatalog):
             titles.append(band)
             types.append(asset.media_type)
             hrefs.append(asset.href)
-            # metadata.update(asset.to_dict())
 
         unique_types = set(types)
         if len(unique_types) != 1:
