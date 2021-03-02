@@ -114,9 +114,10 @@ class StacCatalog(AbstractStacCatalog):
         Load the STAC Catalog.
         """
         for subcatalog in self._stac_obj.get_children():
+            assert isinstance(subcatalog, (pystac.Catalog, pystac.StacCollection))
             if isinstance(subcatalog, pystac.Catalog):
                 driver = StacCatalog
-            elif isinstance(subcatalog, pystac.Collection):
+            else:
                 driver = StacCollection
 
             self._entries[subcatalog.id] = LocalCatalogEntry(
