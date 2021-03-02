@@ -50,8 +50,8 @@ class AbstractStacCatalog(Catalog):
 
         Parameters
         ----------
-        stac_obj: stastac.Thing
-            A pystac.Thing pointing to a STAC object
+        stac_obj: stastac.STACObject
+            A pystac.STACObject pointing to a STAC object
         kwargs : dict, optional
             Passed to intake.Catalog.__init__
         """
