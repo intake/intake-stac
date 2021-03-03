@@ -18,3 +18,4 @@ coverage:
 ignore:
   - "**/tests"
   - "**/_version.py"
+  - "setup.py"
