@@ -42,7 +42,7 @@ jobs:
       - name: Run Tests
         shell: bash -l {0}
         run: |
-          python -m pytest -n auto --cov=./ --cov-report=xml --verbose
+          python -m pytest --cov=./ --cov-report=xml --verbose
 
       - name: Upload code coverage to Codecov
         uses: codecov/codecov-action@v1
