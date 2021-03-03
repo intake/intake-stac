@@ -149,14 +149,14 @@ class StacCatalog(AbstractStacCatalog):
         return metadata
 
 
-# NOTE: not sure we need a standalone collection?
-# what methods would be here that couldn't just be in StacCatalog?
 class StacCollection(StacCatalog):
     """
     Maps Intake Catalog to a STAC Collection
     https://pystac.readthedocs.io/en/latest/api.html#collection-spec
 
-    A Collection extends the Catalog spec with additional metadata that helps enable discovery.
+    Collections have a number of properties that Catalogs do not, most notably
+    the spatial and temporal extents. This is currently a placeholder for
+    future Collection-specific attributes and methods.
     """
 
     name = 'stac_catalog'
@@ -180,7 +180,7 @@ class StacItemCollection(AbstractStacCatalog):
         Load the STAC Item Collection.
         """
         if not self._stac_obj.ext.implements('single-file-stac'):
-            raise AttributeError(" StacItemCollection requires 'single-file-stac' extension")
+            raise ValueError("StacItemCollection requires 'single-file-stac' extension")
         for feature in self._stac_obj.ext['single-file-stac'].features:
             self._entries[feature.id] = LocalCatalogEntry(
                 name=feature.id,
@@ -262,12 +262,12 @@ class StacItem(AbstractStacCatalog):
                 band_info.append(band.to_dict())
         finally:
             if not band_info:
-                raise AttributeError(
+                raise ValueError(
                     'Unable to parse "eo:bands" information from STAC Collection or Item Assets'
                 )
         return band_info
 
-    def stack_bands(self, bands, path_as_pattern=None):
+    def stack_bands(self, bands, path_as_pattern=None, concat_dim='band'):
         """
         Stack the listed bands over the ``band`` dimension.
 
@@ -298,12 +298,12 @@ class StacItem(AbstractStacCatalog):
         stack = item.stack_bands(['B4','B5'], path_as_pattern='{band}.TIF')
         da = stack(chunks=dict(band=1, x=2048, y=2048)).to_dask()
         """
-
         if 'eo' not in self._stac_obj.stac_extensions:
-            raise AttributeError('STAC Item must implement "eo" extension to use this method')
+            raise ValueError('STAC Item must implement "eo" extension to use this method')
 
         band_info = self._get_band_info()
         configDict = {}
+        metadatas = {}
         titles = []
         hrefs = []
         types = []
@@ -327,6 +327,7 @@ class StacItem(AbstractStacCatalog):
                     f'Valid values: {sorted(list(set(valid_band_names)))}'
                 )
             asset = assets.get(band)
+            metadatas[band] = asset.to_dict()
             titles.append(band)
             types.append(asset.media_type)
             hrefs.append(asset.href)
@@ -340,9 +341,9 @@ class StacItem(AbstractStacCatalog):
         configDict['name'] = '_'.join(bands)
         configDict['description'] = ', '.join(titles)
         configDict['args'] = dict(
-            chunks={}, concat_dim='band', path_as_pattern=path_as_pattern, urlpath=hrefs
+            chunks={}, concat_dim=concat_dim, path_as_pattern=path_as_pattern, urlpath=hrefs
         )
-        configDict['metadata'] = {}  # blank for now, make union of assets ?
+        configDict['metadata'] = metadatas
 
         return CombinedAssets(configDict)
 

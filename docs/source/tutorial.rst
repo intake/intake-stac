@@ -50,17 +50,17 @@ initialization:
         f'{root_url}/eo/landsat-8-l1/item.json'
     )
 
-Intake-Stac uses `sat-stac <https://github.com/sat-utils/sat-stac>`_ to parse
-STAC objects. You can also pass ``satstac`` objects (e.g.
-``satstac.Collection``) directly to the Intake-stac constructors:
+Intake-Stac uses `pystac <https://github.com/stac-utils/pystac>`_ to parse
+STAC objects. You can also pass ``pystac`` objects (e.g.
+``pystac.Catalog``) directly to the Intake-stac constructors:
 
 .. ipython:: python
     :verbatim:
 
-    import satstac
+    import pystac
 
-    col = satstac.Collection.open(f'{root_url}/catalog.json')
-    collection_cat = intake.open_stac_collection(col)
+    pystac_cat = pystac.read_file(f'{root_url}/catalog.json')
+    cat = intake.open_stac_catalog(pystac_cat)
 
 Using the catalog
 -----------------
@@ -132,19 +132,25 @@ using `sat-search`:
 
     import satsearch
     print(satsearch.__version__)
+
+    bbox = [35.48, -3.24, 35.58, -3.14]
+    dates = '2020-07-01/2020-08-15'
     URL='https://earth-search.aws.element84.com/v0'
-    results = satsearch.Search.search(
-        url=URL,
-        collections=['landsat-8-l1-c1'],
-        bbox=[43.16, -11.32, 43.54, -11.96]
-    )
+    results = satsearch.Search.search(url=URL,
+                                      collections=['sentinel-s2-l2a-cogs'],
+                                      datetime=dates,
+                                      bbox=bbox,
+                                      sort=['-properties.datetime'])
+
+    # 18 items found
     items = results.items()
-    items
+    print(len(items))
+    items.save('single-file-stac.json')
 
 In the code section above, `items` is a `satstac.ItemsCollection` object.
 Intake-stac can turn this object into an Intake catalog:
 
 .. ipython:: python
 
-    catalog = intake.open_stac_item_collection(items)
+    catalog = intake.open_stac_item_collection('single-file-stac.json')
     list(catalog)

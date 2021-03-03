@@ -1,4 +1,5 @@
 import datetime
+import os.path
 import sys
 
 import intake
@@ -9,6 +10,8 @@ from intake.catalog.local import LocalCatalogEntry
 
 from intake_stac import StacCatalog, StacCollection, StacItem, StacItemCollection
 from intake_stac.catalog import CombinedAssets, StacAsset
+
+here = os.path.dirname(__file__)
 
 # sat-stac examples
 # -----
@@ -113,8 +116,6 @@ def test_cat_from_collection(pystac_col):
     assert subcat_name in cat
     assert item_name in cat[subcat_name]
     assert 'B04' in cat[subcat_name][item_name]
-    cat._load()
-
 
 
 def test_cat_from_item_collection(pystac_itemcol):
@@ -137,8 +138,6 @@ def test_cat_item_stacking(pystac_item):
     assert new_entry.name == 'B1_B2'
     new_da = new_entry().to_dask()
     assert sorted([dim for dim in new_da.dims]) == ['band', 'x', 'y']
-    # relies on path_as_pattern in intake_xarray
-    # assert (new_da.band == list_of_bands).all()
 
 
 def test_cat_item_stacking_using_common_name(pystac_item):
@@ -150,8 +149,15 @@ def test_cat_item_stacking_using_common_name(pystac_item):
     assert new_entry.name == 'coastal_blue'
     new_da = new_entry().to_dask()
     assert sorted([dim for dim in new_da.dims]) == ['band', 'x', 'y']
-    # relies on path_as_pattern in intake_xarray
-    # assert (new_da.band == ['B1', 'B2']).all()
+
+
+def test_cat_item_stacking_path_as_pattern(pystac_item):
+    item = StacItem(pystac_item)
+    list_of_bands = ['B1', 'B2']
+    new_entry = item.stack_bands(list_of_bands, path_as_pattern='{}{band:2}.TIF')
+    assert isinstance(new_entry, CombinedAssets)
+    new_da = new_entry().to_dask()
+    assert (new_da.band == ['B1', 'B2']).all()
 
 
 def test_cat_item_stacking_dims_of_different_type_raises_error(pystac_item):
@@ -179,14 +185,12 @@ def test_cat_item_stacking_dims_of_different_size_regrids(pystac_item):
     new_da = new_entry().to_dask()
     assert new_da.shape == (2, 15581, 15301)
     assert sorted([dim for dim in new_da.dims]) == ['band', 'x', 'y']
-    # relies on path_as_pattern in intake_xarray
-    # assert (new_da.band == list_of_bands).all()
 
 
 def test_asset_describe(pystac_item):
     item = StacItem(pystac_item)
     key = 'B1'
-    asset = item[key]  # gets cataog_dir
+    asset = item[key]
     d = asset.describe()
 
     assert d['name'] == key
@@ -194,7 +198,7 @@ def test_asset_describe(pystac_item):
     assert d['plugin'] == ['rasterio']
     assert d['args']['urlpath'] == asset.urlpath
     assert d['description'] == asset.description
-    # NOTE: note sure why asset.metadata has 'catalog_dir' key
+    # NOTE: note sure why asset.metadata has 'catalog_dir' key ?
     # assert d['metadata'] == asset.metadata
 
 
@@ -202,7 +206,7 @@ def test_asset_missing_type(pystac_item):
     key = 'B1'
     asset = pystac_item.assets.get('B1')
     asset.media_type = ''
-    with pytest.warns(Warning, match="STAC Asset"):
+    with pytest.warns(Warning, match='STAC Asset'):
         entry = StacAsset(key, asset)
     d = entry.describe()
 
@@ -260,21 +264,19 @@ def test_cat_to_missing_geopandas(pystac_itemcol, monkeypatch):
             cat = StacItemCollection(pystac_itemcol)
             _ = cat.to_geopandas()
 
-    
+
+def test_load_satsearch_results(pystac_itemcol):
+    test_file = os.path.join(here, 'data/1.0.0beta2/earthsearch/single-file-stac.json')
+    catalog = intake.open_stac_item_collection(test_file)
+    assert isinstance(catalog, StacItemCollection)
+    assert len(catalog) == 18
+
+
 def test_collection_of_collection():
     space = pystac.SpatialExtent([[0, 1, 2, 3]])
-    time = pystac.TemporalExtent([datetime.datetime(2000, 1, 1),
-                                  datetime.datetime(2000, 1, 1)])
-    child = pystac.Collection(
-        "child",
-        "child-description",
-        extent=pystac.Extent(space, time)
-    )
-    parent = pystac.Collection(
-        "parent",
-        "parent-description",
-        extent=pystac.Extent(space, time),
-    )
+    time = pystac.TemporalExtent([datetime.datetime(2000, 1, 1), datetime.datetime(2000, 1, 1)])
+    child = pystac.Collection('child', 'child-description', extent=pystac.Extent(space, time))
+    parent = pystac.Collection('parent', 'parent-description', extent=pystac.Extent(space, time),)
     parent.add_child(child)
 
     result = StacCollection(parent)
