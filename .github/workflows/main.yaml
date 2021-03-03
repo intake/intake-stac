@@ -42,10 +42,13 @@ jobs:
       - name: Run Tests
         shell: bash -l {0}
         run: |
-          pytest --verbose --junitxml=test-reports/junit.xml --cov=intake_stac --cov-config ci/.coveragerc --cov-report term-missing
+          python -m pytest -n auto --cov=./ --cov-report=xml --verbose
 
-      - name: Upload coverage to Codecov
+      - name: Upload code coverage to Codecov
         uses: codecov/codecov-action@v1
         with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          file: test-reports/junit.xml
+          file: ./coverage.xml
+          flags: unittests
+          env_vars: OS,PYTHON
+          name: codecov-umbrella
+          fail_ci_if_error: false
