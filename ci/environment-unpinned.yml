@@ -7,7 +7,7 @@ dependencies:
   - geopandas
   - intake
   - intake-xarray
+  - pystac
   - pytest-cov
   - rasterio
-  - sat-stac
   - xarray

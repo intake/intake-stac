@@ -1,7 +1,6 @@
-#readthedocs uses defaults rather than conda-forge
 name: intake-stac
 channels:
-  - defaults
+  - conda-forge
 dependencies:
   - python=3.7
   - aiohttp
@@ -11,17 +10,17 @@ dependencies:
   - intake-xarray
   - ipython
   - mock
+  - nbsphinx
   - numpydoc
   - pillow
   - pip
+  - pystac
   - pytest-cov
   - rasterio
+  - sat-search
   - scikit-image
   - sphinx
   - sphinx_rtd_theme
   - xarray
   - pip:
-      - nbsphinx
-      - sat-search
-      - sat-stac
-      - .. #installs intake-stac from root folder
+      - ../ #installs intake-stac from root folder
