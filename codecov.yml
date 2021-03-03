@@ -1,6 +1,6 @@
 codecov:
   max_report_age: off
-  token: 56e408e0-25e7-4cc1-b03c-39a8ba42e658
+  require_ci_to_pass: no
 
 comment: false
 
@@ -12,14 +12,8 @@ coverage:
       default:
         threshold: 0.2
         if_not_found: success
-    patch:
-      default:
-        enabled: no
-        if_not_found: success
-    changes:
-      default:
-        enabled: no
-        if_not_found: success
+    patch: off
+    changes: off
 
 ignore:
   - "**/tests"
