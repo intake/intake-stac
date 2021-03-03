@@ -1,5 +1,6 @@
 codecov:
   max_report_age: off
+  token: 56e408e0-25e7-4cc1-b03c-39a8ba42e658
 
 comment: false
 
