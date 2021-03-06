@@ -11,7 +11,7 @@ __version__ = get_distribution('intake_stac').version
 # STAC catalog asset 'type' determines intake driver:
 # https://github.com/radiantearth/stac-spec/blob/master/item-spec/item-spec.md#media-types
 default_type = 'application/rasterio'
-default_driver = 'rasterio'
+default_driver = 'rioxarray'
 
 drivers = {
     'application/netcdf': 'netcdf',
@@ -20,13 +20,13 @@ drivers = {
     'application/x-parquet': 'parquet',
     'application/x-hdf': 'netcdf',
     'application/x-hdf5': 'netcdf',
-    'application/rasterio': 'rasterio',
-    'image/vnd.stac.geotiff': 'rasterio',
-    'image/vnd.stac.geotiff; cloud-optimized=true': 'rasterio',
-    'image/x.geotiff': 'rasterio',
-    'image/tiff; application=geotiff': 'rasterio',
-    'image/tiff; application=geotiff; profile=cloud-optimized': 'rasterio',  # noqa: E501
-    'image/jp2': 'rasterio',
+    'application/rasterio': 'rioxarray',
+    'image/vnd.stac.geotiff': 'rioxarray',
+    'image/vnd.stac.geotiff; cloud-optimized=true': 'rioxarray',
+    'image/x.geotiff': 'rioxarray',
+    'image/tiff; application=geotiff': 'rioxarray',
+    'image/tiff; application=geotiff; profile=cloud-optimized': 'rioxarray',  # noqa: E501
+    'image/jp2': 'rioxarray',
     'image/png': 'xarray_image',
     'image/jpg': 'xarray_image',
     'image/jpeg': 'xarray_image',
@@ -101,6 +101,60 @@ class AbstractStacCatalog(Catalog):
         """
         return self.yaml()
 
+    def stack_items(
+        self, items, bands, path_as_pattern=None, concat_dim='band', override_coords=None
+    ):
+        """
+        Experimental. create an xarray dataarray from a bunch of items
+
+        currently not aware of CRS
+
+        Get time coordinate from:
+        item._stac_obj.datetime
+        item.metadata['datetime']
+
+        probably not very efficient / doesn't scale b/c opens files to read metadata in serial
+        """
+        # 1. iterate over items, call stack_bands()
+        # 2. merge datasets
+        # common name mapping from first item
+        common2band = self[items[0]]._get_band_name_mapping(bands)
+        hrefs = []
+        for item in items:
+            # NOTE: how to speed up this iteration?
+            # https://github.com/intake/intake-stac/issues/66
+            # print(self[item].metadata['proj:epsg'])
+            # source = self[item].stack_bands(bands=bands)
+            # call to_dask() within function and xarray merge?
+            assets = self[item]._stac_obj.assets
+            for band in bands:
+                # same as stack_bands
+                if band in assets:
+                    asset = assets.get(band)
+                elif band in common2band:
+                    asset = assets.get(common2band[band])
+                else:
+                    raise ValueError(
+                        f'Band "{band}" not found in asset ids\n({common2band.values()})\n \
+                        or common_names\n({common2band.keys()})'
+                    )
+                print(asset.href)
+                hrefs.append(asset.href)
+
+        configDict = {}
+        configDict['name'] = 'stack'
+        configDict['description'] = 'stack of assets from multiple items'
+        configDict['args'] = dict(
+            chunks={},
+            concat_dim=concat_dim,
+            path_as_pattern=path_as_pattern,
+            urlpath=hrefs,
+            override_coords=override_coords,
+        )
+        configDict['metadata'] = {'items': items, 'bands': bands}
+
+        return CombinedAssets(configDict)
+
 
 class StacCatalog(AbstractStacCatalog):
     """
@@ -108,6 +162,7 @@ class StacCatalog(AbstractStacCatalog):
     https://pystac.readthedocs.io/en/latest/api.html?#catalog-spec
     """
 
+    # NOTE: name must match driver in setup.py entrypoints
     name = 'stac_catalog'
     _stac_cls = pystac.Catalog
 
@@ -172,7 +227,7 @@ class StacItemCollection(AbstractStacCatalog):
     https://pystac.readthedocs.io/en/latest/api.html?#single-file-stac-extension
     """
 
-    name = 'stac_itemcollection'
+    name = 'stac_item_collection'
     _stac_cls = pystac.Catalog
 
     def _load(self):
@@ -241,33 +296,35 @@ class StacItem(AbstractStacCatalog):
         metadata.update(kwargs)
         return metadata
 
-    def _get_band_info(self):
+    def _get_band_name_mapping(self, bands):
         """
-        Return list of band info dictionaries (name, common_name, etc.)...
+        Return dictionary mapping common name to asset name
+        eo:bands extension has [{'name': 'B01', 'common_name': 'coastal']
+        return {'coastal':'B01'}
         """
-        band_info = []
-        try:
-            # NOTE: ensure we test these scenarios
-            # FileNotFoundError: [Errno 2] No such file or directory: '/catalog.json'
+        common2band = {}
+        # 1. try to get directly from item metadata
+        if 'eo' in self._stac_obj.stac_extensions:
+            eo = self._stac_obj.ext['eo']
+            for band in eo.bands:
+                common2band[band.common_name] = band.name
+
+        # 2. go a level up to collection metadata
+        if common2band == {}:
             collection = self._stac_obj.get_collection()
-            if 'item-assets' in collection.stac_extensions:
-                for val in collection.ext['item_assets']:
-                    if 'eo:bands' in val:
-                        band_info.append(val.get('eo:bands')[0])
-            else:
-                band_info = collection.summaries['eo:bands']
+            # Can simplify after item-assets extension implemented in Pystac
+            # https://github.com/stac-utils/pystac/issues/132
+            for asset, meta in collection.extra_fields['item_assets'].items():
+                eo = meta.get('eo:bands')
+                if eo:
+                    for entry in eo:
+                        common_name = entry.get('common_name')
+                        if common_name:
+                            common2band[common_name] = asset
 
-        except Exception:
-            for band in self._stac_obj.ext['eo'].get_bands():
-                band_info.append(band.to_dict())
-        finally:
-            if not band_info:
-                raise ValueError(
-                    'Unable to parse "eo:bands" information from STAC Collection or Item Assets'
-                )
-        return band_info
+        return common2band
 
-    def stack_bands(self, bands, path_as_pattern=None, concat_dim='band'):
+    def stack_bands(self, bands, path_as_pattern=None, concat_dim='band', override_coords=None):
         """
         Stack the listed bands over the ``band`` dimension.
 
@@ -284,7 +341,7 @@ class StacItem(AbstractStacCatalog):
         Parameters
         ----------
         bands : list of strings representing the different bands
-        (e.g. ['B4', B5'], ['red', 'nir']).
+        (assset id or eo:bands "common_name" e.g. ['B4', B5'], ['red', 'nir'])
 
         Returns
         -------
@@ -298,50 +355,37 @@ class StacItem(AbstractStacCatalog):
         stack = item.stack_bands(['B4','B5'], path_as_pattern='{band}.TIF')
         da = stack(chunks=dict(band=1, x=2048, y=2048)).to_dask()
         """
-        if 'eo' not in self._stac_obj.stac_extensions:
-            raise ValueError('STAC Item must implement "eo" extension to use this method')
-
-        band_info = self._get_band_info()
         configDict = {}
         metadatas = {}
-        titles = []
+        item_metadata = self._stac_obj.properties
         hrefs = []
-        types = []
+        common2band = self._get_band_name_mapping(bands)
         assets = self._stac_obj.assets
         for band in bands:
-            # band can be band id, name or common_name
             if band in assets:
-                info = next((b for b in band_info if b.get('id', b.get('name')) == band), None,)
+                asset = assets.get(band)
+            elif band in common2band:
+                asset = assets.get(common2band[band])
             else:
-                info = next((b for b in band_info if b.get('common_name') == band), None)
-                if info is not None:
-                    band = info.get('id', info.get('name'))
-
-            if band not in assets or info is None:
-                valid_band_names = []
-                for b in band_info:
-                    valid_band_names.append(b.get('id', b.get('name')))
-                    valid_band_names.append(b.get('common_name'))
                 raise ValueError(
-                    f'{band} not found in list of eo:bands in collection.'
-                    f'Valid values: {sorted(list(set(valid_band_names)))}'
+                    f'Band "{band}" not found in asset ids\n({common2band.values()})\n \
+                    or common_names\n({common2band.keys()})'
                 )
-            asset = assets.get(band)
-            metadatas[band] = asset.to_dict()
-            titles.append(band)
-            types.append(asset.media_type)
+
+            # map *HREF* to metadata to do fancy things when opening it
+            asset_metadata = asset.properties
+            metadatas[asset.href] = {**item_metadata, **asset_metadata}
             hrefs.append(asset.href)
 
-        unique_types = set(types)
-        if len(unique_types) != 1:
-            raise ValueError(
-                f'Stacking failed: bands must have type, multiple found: {unique_types}'
-            )
-
         configDict['name'] = '_'.join(bands)
-        configDict['description'] = ', '.join(titles)
+        configDict['description'] = ', '.join(bands)
+        # NOTE: these are args for driver __init__ method
         configDict['args'] = dict(
-            chunks={}, concat_dim=concat_dim, path_as_pattern=path_as_pattern, urlpath=hrefs
+            chunks={},
+            concat_dim=concat_dim,
+            path_as_pattern=path_as_pattern,
+            urlpath=hrefs,
+            override_coords=override_coords,
         )
         configDict['metadata'] = metadatas
 
@@ -443,7 +487,7 @@ class StacAsset(LocalCatalogEntry):
                 )
             entry_type = asset.media_type
 
-        # if mimetype not registered try rasterio driver
+        # if mimetype not registered try rioxarray driver
         driver = drivers.get(entry_type, default_driver)
 
         return driver
@@ -453,7 +497,7 @@ class StacAsset(LocalCatalogEntry):
         Optional keyword arguments to pass to intake driver
         """
         args = {'urlpath': asset.href}
-        if driver in ['netcdf', 'rasterio', 'xarray_image']:
+        if driver in ['netcdf', 'rasterio', 'rioxarray', 'xarray_image']:
             # NOTE: force using dask?
             args.update(chunks={})
 
@@ -472,7 +516,7 @@ class CombinedAssets(LocalCatalogEntry):
         super().__init__(
             name=configDict['name'],
             description=configDict['description'],
-            driver='rasterio',  # stack_bands only relevant to rasterio driver?
+            driver='rioxarray',
             direct_access=True,
             args=configDict['args'],
             metadata=configDict['metadata'],
