@@ -11,7 +11,7 @@ dependencies:
   - pystac
   - pytest-cov
   - rasterio
-  - xarray
+  - rioxarray
   - pip:
       - git+https://github.com/intake/filesystem_spec.git
       - git+https://github.com/stac-utils/pystac.git
@@ -20,3 +20,4 @@ dependencies:
       - git+https://github.com/intake/intake-xarray.git
       - git+https://github.com/intake/intake_geopandas.git
       - git+https://github.com/intake/intake-parquet.git
+      - git+https://github.com/pydata/xarray.git

@@ -56,6 +56,7 @@ class RioxarraySource(DataSource, PatternMixin):
         self.override_coords = override_coords
         self._kwargs = xarray_kwargs or {}
         self._ds = None
+        print(self._kwargs)
         # if isinstance(self.urlpath, list):
         #    self._can_be_local = fsspec.utils.can_be_local(self.urlpath[0])
         # else:

@@ -17,6 +17,7 @@ dependencies:
   - pystac
   - pytest-cov
   - rasterio
+  - rioxarray
   - sat-search
   - scikit-image
   - sphinx
