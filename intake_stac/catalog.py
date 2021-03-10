@@ -102,47 +102,55 @@ class AbstractStacCatalog(Catalog):
         return self.yaml()
 
     def stack_items(
-        self, items, bands, path_as_pattern=None, concat_dim='band', override_coords=None
+        self, items, assets, path_as_pattern=None, concat_dim='band', override_coords=None
     ):
         """
-        Experimental. create an xarray dataarray from a bunch of items
+        Experimental. Create an xarray.DataArray from a bunch of STAC Items
 
-        currently not aware of CRS
+        Parameters
+        ----------
+        items: list of STAC item id strings
+        assets : list of strings representing the different assets
+        (assset key or eo:bands "common_name" e.g. ['B4', B5'], ['red', 'nir'])
+        path_as_pattern : pattern string to extract coordinates from asset href
+        concat_dim : name of concatenation dimension for xarray.DataArray
+        override_coords : list of custom coordinate names
 
-        Get time coordinate from:
-        item._stac_obj.datetime
-        item.metadata['datetime']
+        Returns
+        -------
+        CombinedAssets instance with mapping of asset names to xarray coordinates
 
-        probably not very efficient / doesn't scale b/c opens files to read metadata in serial
+        Examples
+        -------
+        source = cat.stack_items(['S2A_36MYB_20200814_0_L2A','S2A_36MYB_20200811_0_L2A'],
+                                 ['red', 'nir'])
+        da = stack().to_dask()
         """
-        # 1. iterate over items, call stack_bands()
-        # 2. merge datasets
-        # common name mapping from first item
-        common2band = self[items[0]]._get_band_name_mapping(bands)
+        common2band = self[items[0]]._get_band_name_mapping()
+        metadatas = {'items': {}}
         hrefs = []
         for item in items:
-            # NOTE: how to speed up this iteration?
-            # https://github.com/intake/intake-stac/issues/66
-            # print(self[item].metadata['proj:epsg'])
-            # source = self[item].stack_bands(bands=bands)
-            # call to_dask() within function and xarray merge?
-            assets = self[item]._stac_obj.assets
-            for band in bands:
-                # same as stack_bands
-                if band in assets:
-                    asset = assets.get(band)
-                elif band in common2band:
-                    asset = assets.get(common2band[band])
+            metadatas['items'][item] = {'STAC': self[item].metadata, 'assets': {}}
+            stac_assets = self[item]._stac_obj.assets
+            for key in assets:
+
+                if key in stac_assets:
+                    asset = stac_assets.get(key)
+                elif key in common2band:
+                    asset = stac_assets.get(common2band[key])
                 else:
                     raise ValueError(
-                        f'Band "{band}" not found in asset ids\n({common2band.values()})\n \
-                        or common_names\n({common2band.keys()})'
+                        f'Asset "{key}" not found in asset keys {list(common2band.values())}'
+                        f' or eo:bands common_names {list(common2band.keys())}'
                     )
-                print(asset.href)
+
+                asset_metadata = asset.properties
+                asset_metadata['key'] = key
+                metadatas['items'][item]['assets'][asset.href] = asset_metadata
                 hrefs.append(asset.href)
 
         configDict = {}
-        configDict['name'] = 'stack'
+        configDict['name'] = 'item_stack'
         configDict['description'] = 'stack of assets from multiple items'
         configDict['args'] = dict(
             chunks={},
@@ -151,9 +159,11 @@ class AbstractStacCatalog(Catalog):
             urlpath=hrefs,
             override_coords=override_coords,
         )
-        configDict['metadata'] = {'items': items, 'bands': bands}
+        configDict['metadata'] = metadatas
 
-        return CombinedAssets(configDict)
+        stack = CombinedAssets(configDict)
+
+        return stack
 
 
 class StacCatalog(AbstractStacCatalog):
@@ -296,12 +306,13 @@ class StacItem(AbstractStacCatalog):
         metadata.update(kwargs)
         return metadata
 
-    def _get_band_name_mapping(self, bands):
+    def _get_band_name_mapping(self):
         """
         Return dictionary mapping common name to asset name
         eo:bands extension has [{'name': 'B01', 'common_name': 'coastal']
         return {'coastal':'B01'}
         """
+        # NOTE: maybe return entire dataframe w/ central_wavelength etc?
         common2band = {}
         # 1. try to get directly from item metadata
         if 'eo' in self._stac_obj.stac_extensions:
@@ -324,61 +335,63 @@ class StacItem(AbstractStacCatalog):
 
         return common2band
 
-    def stack_bands(self, bands, path_as_pattern=None, concat_dim='band', override_coords=None):
+    def stack_assets(self, assets, path_as_pattern=None, concat_dim='band', override_coords=None):
         """
-        Stack the listed bands over the ``band`` dimension.
+        Stack the listed assets over the ``band`` dimension.
 
-        This method only works for STAC Items using the 'eo' Extension
-        https://github.com/radiantearth/stac-spec/tree/master/extensions/eo
-
-        NOTE: This method is not aware of geotransform information. It *assumes*
-        bands for a given STAC Item have the same coordinate reference system (CRS).
+        WARNING: This method is not aware of geotransform information. It *assumes*
+        assets for a given STAC Item have the same coordinate reference system (CRS).
         This is usually the case for a given multi-band satellite acquisition.
-        Coordinate alignment is performed automatically upon calling the
-        `to_dask()` method to load into an Xarray DataArray if bands have diffent
-        ground sample distance (gsd) or array shapes.
+
+        See the following documentation for dealing with different CRS or GSD:
+        http://xarray.pydata.org/en/stable/interpolation.html
+        https://corteva.github.io/rioxarray/stable/examples/reproject_match.html
 
         Parameters
         ----------
-        bands : list of strings representing the different bands
-        (assset id or eo:bands "common_name" e.g. ['B4', B5'], ['red', 'nir'])
+        assets : list of strings representing the different assets
+        (assset key or eo:bands "common_name" e.g. ['B4', B5'], ['red', 'nir'])
+        path_as_pattern : pattern string to extract coordinates from asset href
+        concat_dim : name of concatenation dimension for xarray.DataArray
+        override_coords : list of custom coordinate names
 
         Returns
         -------
-        StacAsset with mapping of Asset names to Xarray bands
+        CombinedAssets instance with mapping of asset names to xarray coordinates
 
         Examples
         -------
-        stack = item.stack_bands(['nir','red'])
-        da = stack(chunks=dict(band=1, x=2048, y=2048)).to_dask()
+        stack = item.stack_assets(['nir','red'])
+        da = stack(chunks=True).to_dask()
 
-        stack = item.stack_bands(['B4','B5'], path_as_pattern='{band}.TIF')
+        stack = item.stack_assets(['B4','B5'], path_as_pattern='{band}.TIF')
         da = stack(chunks=dict(band=1, x=2048, y=2048)).to_dask()
         """
         configDict = {}
-        metadatas = {}
-        item_metadata = self._stac_obj.properties
+        metadatas = {'items': {self.name: {'STAC': self.metadata, 'assets': {}}}}
         hrefs = []
-        common2band = self._get_band_name_mapping(bands)
-        assets = self._stac_obj.assets
-        for band in bands:
-            if band in assets:
-                asset = assets.get(band)
-            elif band in common2band:
-                asset = assets.get(common2band[band])
+        common2band = self._get_band_name_mapping()
+        stac_assets = self._stac_obj.assets
+        for key in assets:
+            if key in stac_assets:
+                asset = stac_assets.get(key)
+            elif key in common2band:
+                asset = stac_assets.get(common2band[key])
             else:
                 raise ValueError(
-                    f'Band "{band}" not found in asset ids\n({common2band.values()})\n \
-                    or common_names\n({common2band.keys()})'
+                    f'Asset "{key}" not found in asset keys {list(common2band.values())}'
+                    f' or eo:bands common_names {list(common2band.keys())}'
                 )
 
             # map *HREF* to metadata to do fancy things when opening it
             asset_metadata = asset.properties
-            metadatas[asset.href] = {**item_metadata, **asset_metadata}
+            asset_metadata['key'] = key
+            asset_metadata['item'] = self.name
+            metadatas['items'][self.name]['assets'][asset.href] = asset_metadata
             hrefs.append(asset.href)
 
-        configDict['name'] = '_'.join(bands)
-        configDict['description'] = ', '.join(bands)
+        configDict['name'] = self.name
+        configDict['description'] = ', '.join(assets)
         # NOTE: these are args for driver __init__ method
         configDict['args'] = dict(
             chunks={},
@@ -389,7 +402,10 @@ class StacItem(AbstractStacCatalog):
         )
         configDict['metadata'] = metadatas
 
-        return CombinedAssets(configDict)
+        # instantiate to allow item.stack_assets(['red','nir']).to_dask() ?
+        stack = CombinedAssets(configDict)
+
+        return stack
 
 
 class StacAsset(LocalCatalogEntry):
@@ -509,9 +525,11 @@ class CombinedAssets(LocalCatalogEntry):
     Maps multiple STAC Item Assets to 1 Intake Catalog Entry
     """
 
+    _stac_cls = None
+
     def __init__(self, configDict):
         """
-        configDict = intake Entry dictionary from stack_bands() method
+        configDict = intake Entry intialization dictionary
         """
         super().__init__(
             name=configDict['name'],

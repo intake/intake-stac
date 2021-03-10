@@ -64,34 +64,57 @@ class RioxarraySource(DataSource, PatternMixin):
         # Why is this necessary?
         super(RioxarraySource, self).__init__(metadata=metadata)
 
-    def _open_files(self, files):
+    def _open_items(self):
         """
-        basically open_mfrasterio()
+        Use STAC metadata to intelligently concatenate multiple items
         """
+        import xarray as xr
+
+        data_arrays = []
+        for item_id in self.metadata['items'].keys():
+            files = self.metadata['items'][item_id]['assets'].keys()
+            data_arrays.append(self._open_assets(files, item_id))
+
+        # by default concatenate items in time
+        ds = xr.concat(data_arrays, dim='item').swap_dims({'item': 'time'})
+        ds.name = None
+
+        return ds
+
+    def _open_assets(self, files, item_id=None):
+        """
+        use STAC metadata to intelligently concatenate multiple assets
+        """
+
         import rioxarray
         import xarray as xr
 
+        # Re-arranged metadata from intake-stac CombinedAssets
+        metadata = self.metadata['items'][item_id]
+
         # not metadata-aware, so this assigns band=1 regardless of true band#
+        # Note: wrap with dask.delayed for parallel loading?
         das = [rioxarray.open_rasterio(f, chunks=self.chunks, **self._kwargs) for f in files]
         out = xr.concat(das, dim=self.dim)
 
-        # by default map band names to coordinates instead of band=1,1,1
-        coords = {}
-        # NOTE very robust, and requires potentially really long names
-        # coords = {self.dim: self.name.split('_')}
-        # band = 1,2,3 instead of band=1,1,1
-        # coords = {self.dim: range(1, len(out.coords[self.dim])+1)}
-        # NOTE that we have all the STAC metadata at our disposal here:
-        # coords = dict(time = ('time', [self.metadata[f]['datetime'] for f in files]))
+        # NOTE: no time zone conversion logic (assume UTC)
+        coords = {'item': item_id, 'time': metadata['STAC']['datetime'].replace(tzinfo=None)}
+
+        # by default assign asset keys as coordinate values
+        coords[self.dim] = [metadata['assets'][f]['key'] for f in files]
 
         if self.pattern:
             pattern_matches = reverse_formats(self.pattern, files)
-            coords = {self.dim: pattern_matches[self.dim]}
+            coords[self.dim] = pattern_matches[self.dim]
 
         if self.override_coords:
-            coords = {self.dim: self.override_coords}
+            coords[self.dim] = self.override_coords
 
-        return out.assign_coords(**coords).chunk(self.chunks)
+        # copy item property metadata as attribute ?
+        # self._ds.attrs['STAC'] = self.metadata
+        out.name = item_id
+
+        return out.assign_coords(**coords)
 
     def _open_dataset(self):
         import rioxarray
@@ -102,14 +125,15 @@ class RioxarraySource(DataSource, PatternMixin):
         # pass URLs to delegate remote opening to rasterio library
         #    files = self.urlpath
         # files = fsspec.open(self.urlpath, **self.storage_options).open()
-        files = self.urlpath
-        if isinstance(files, list):
-            self._ds = self._open_files(files)
+        if isinstance(self.urlpath, list):
+            if self.name == 'item_stack':
+                self._ds = self._open_items()
+            else:
+                self._ds = self._open_assets(self.urlpath, item_id=self.name)
         else:
-            self._ds = rioxarray.open_rasterio(files, chunks=self.chunks, **self._kwargs)
+            self._ds = rioxarray.open_rasterio(self.urlpath, chunks=self.chunks, **self._kwargs)
 
-    # NOTE:  don't know what's going on here
-    # seems overly complicated...
+    # NOTE:  don't know what's going on here...
     # https://github.com/intake/intake-xarray/issues/20#issuecomment-432782846
     def _get_schema(self):
         """Make schema object, which embeds xarray object and some details"""

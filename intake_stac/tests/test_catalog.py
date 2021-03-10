@@ -1,5 +1,5 @@
 import datetime
-import os.path
+import os
 import sys
 
 import intake
@@ -12,6 +12,11 @@ from intake_stac import StacCatalog, StacCollection, StacItem, StacItemCollectio
 from intake_stac.catalog import CombinedAssets, StacAsset
 
 here = os.path.dirname(__file__)
+import os
+
+# Set environment variables for network tests
+os.environ['GDAL_DISABLE_READDIR_ON_OPEN'] = 'EMPTY_DIR'
+os.environ['AWS_NO_SIGN_REQUEST'] = 'YES'
 
 # sat-stac examples
 # -----
@@ -129,59 +134,61 @@ def test_cat_from_item(pystac_item):
     assert 'B5' in cat
 
 
-def test_cat_item_stacking(pystac_item):
+def test_stack_assets(pystac_item):
     item = StacItem(pystac_item)
     list_of_bands = ['B1', 'B2']
-    new_entry = item.stack_bands(list_of_bands)
+    new_entry = item.stack_assets(list_of_bands)
     assert isinstance(new_entry, CombinedAssets)
     assert new_entry._description == 'B1, B2'
-    assert new_entry.name == 'B1_B2'
+    assert new_entry.name == 'LC08_L1TP_152038_20200611_20200611_01_RT'
     new_da = new_entry().to_dask()
     assert sorted([dim for dim in new_da.dims]) == ['band', 'x', 'y']
 
 
-def test_cat_item_stacking_using_common_name(pystac_item):
+def test_stack_assets_using_common_name(pystac_item):
     item = StacItem(pystac_item)
     list_of_bands = ['coastal', 'blue']
-    new_entry = item.stack_bands(list_of_bands)
+    new_entry = item.stack_assets(list_of_bands)
     assert isinstance(new_entry, CombinedAssets)
-    assert new_entry._description == 'B1, B2'
-    assert new_entry.name == 'coastal_blue'
+    assert new_entry._description == 'coastal, blue'
+    assert new_entry.name == 'LC08_L1TP_152038_20200611_20200611_01_RT'
     new_da = new_entry().to_dask()
     assert sorted([dim for dim in new_da.dims]) == ['band', 'x', 'y']
 
 
-def test_cat_item_stacking_path_as_pattern(pystac_item):
+def test_stack_assets_path_as_pattern(pystac_item):
     item = StacItem(pystac_item)
     list_of_bands = ['B1', 'B2']
-    new_entry = item.stack_bands(list_of_bands, path_as_pattern='{}{band:2}.TIF')
+    new_entry = item.stack_assets(list_of_bands, path_as_pattern='{}{band:2}.TIF')
     assert isinstance(new_entry, CombinedAssets)
     new_da = new_entry().to_dask()
     assert (new_da.band == ['B1', 'B2']).all()
 
 
-def test_cat_item_stacking_dims_of_different_type_raises_error(pystac_item):
-    item = StacItem(pystac_item)
-    list_of_bands = ['B1', 'ANG']
-    with pytest.raises(ValueError, match=('ANG not found in list of eo:bands in collection')):
-        item.stack_bands(list_of_bands)
+# reconsider this test b/c you could have types= 'image/x.geotiff', 'image/tiff'
+# def test_cat_item_stacking_dims_of_different_type_raises_error(pystac_item):
+#    item = StacItem(pystac_item)
+#    list_of_bands = ['B1', 'ANG']
+#    with pytest.raises(ValueError, match=('ANG not found in list of eo:bands in collection')):
+#        item.stack_bands(list_of_bands)
 
 
-def test_cat_item_stacking_dims_with_nonexistent_band_raises_error(pystac_item,):  # noqa: E501
+def test_stack_assets_dims_with_nonexistent_band_raises_error(pystac_item):  # noqa: E501
     item = StacItem(pystac_item)
     list_of_bands = ['B1', 'foo']
-    with pytest.raises(ValueError, match="'B8', 'B9', 'blue', 'cirrus'"):
-        item.stack_bands(list_of_bands)
+    with pytest.raises(ValueError, match='Asset "foo" not found in asset keys'):
+        item.stack_assets(list_of_bands)
 
 
-def test_cat_item_stacking_dims_of_different_size_regrids(pystac_item):
+# NOTE: this only works b/c CRS and grids are aligned!
+def test_stack_assets_dims_of_different_size_regrids(pystac_item):
     item = StacItem(pystac_item)
     list_of_bands = ['B1', 'B8']
     B1_da = item.B1.to_dask()
     assert B1_da.shape == (1, 7791, 7651)
     B8_da = item.B8.to_dask()
     assert B8_da.shape == (1, 15581, 15301)
-    new_entry = item.stack_bands(list_of_bands)
+    new_entry = item.stack_assets(list_of_bands)
     new_da = new_entry().to_dask()
     assert new_da.shape == (2, 15581, 15301)
     assert sorted([dim for dim in new_da.dims]) == ['band', 'x', 'y']
@@ -195,7 +202,7 @@ def test_asset_describe(pystac_item):
 
     assert d['name'] == key
     assert d['container'] == 'xarray'
-    assert d['plugin'] == ['rasterio']
+    assert d['plugin'] == ['rioxarray']
     assert d['args']['urlpath'] == asset.urlpath
     assert d['description'] == asset.description
     # NOTE: note sure why asset.metadata has 'catalog_dir' key ?
@@ -213,7 +220,7 @@ def test_asset_missing_type(pystac_item):
     assert d['name'] == key
     assert d['metadata']['type'] == 'application/rasterio'  # default_type
     assert d['container'] == 'xarray'
-    assert d['plugin'] == ['rasterio']
+    assert d['plugin'] == ['rioxarray']
 
 
 def test_asset_unknown_type(pystac_item):
@@ -226,7 +233,7 @@ def test_asset_unknown_type(pystac_item):
     assert d['name'] == key
     assert d['metadata']['type'] == 'unrecognized'
     assert d['container'] == 'xarray'
-    assert d['plugin'] == ['rasterio']
+    assert d['plugin'] == ['rioxarray']
 
 
 def test_cat_to_geopandas(pystac_itemcol):
@@ -281,3 +288,35 @@ def test_collection_of_collection():
 
     result = StacCollection(parent)
     result._load()
+
+
+def test_stack_items():
+    test_file = os.path.join(here, 'data/1.0.0beta2/earthsearch/single-file-stac.json')
+    cat = intake.open_stac_item_collection(test_file)
+    items = ['S2A_36MYB_20200814_0_L2A', 'S2A_36MYB_20200811_0_L2A']
+    assets = ['B04', 'B08']
+    source = cat.stack_items(items, assets)
+    assert isinstance(source, CombinedAssets)
+    assert source.name == 'item_stack'
+    da = source().to_dask()
+    assert hasattr(da, 'rio')
+    assert (da.band == assets).all()
+    coords = ['band', 'y', 'x', 'spatial_ref', 'item', 'time']
+    assert set(coords) == set(list(da.coords))
+    assert sorted([dim for dim in da.dims]) == ['band', 'time', 'x', 'y']
+
+
+def test_stack_items_using_common_name():
+    test_file = os.path.join(here, 'data/1.0.0beta2/earthsearch/single-file-stac.json')
+    cat = intake.open_stac_item_collection(test_file)
+    items = ['S2A_36MYB_20200814_0_L2A', 'S2A_36MYB_20200811_0_L2A']
+    assets = ['red', 'nir']
+    source = cat.stack_items(items, assets)
+    assert isinstance(source, CombinedAssets)
+    assert source.name == 'item_stack'
+    da = source().to_dask()
+    assert hasattr(da, 'rio')
+    assert len(da.coords['time']) == 2
+    assert len(da.coords['item']) == 2
+    assert len(da.coords['band']) == 2
+    assert (da.band == assets).all()
