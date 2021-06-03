@@ -180,7 +180,7 @@ class StacCatalog(AbstractStacCatalog):
             assets = self._stac_obj.assets
 
         if len(assets) == 0:
-            raise ValueError(f"Catalog {self.id} does not have any assets with media type 'application/vnd+zarr'.")
+            raise ValueError(f"Catalog {self_stac_obj.id} does not have any assets with media type 'application/vnd+zarr'.")
         else:
             try:
                 asset = assets[asset]

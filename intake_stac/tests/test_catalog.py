@@ -281,3 +281,25 @@ def test_collection_of_collection():
 
     result = StacCollection(parent)
     result._load()
+
+
+def test_collection_level_assets():
+    import fsspec
+    import xarray as xr
+    import numpy as np
+
+    data = xr.DataArray(np.ones((5, 5, 5)), dims=("time", "y", "x"))
+    ds = xr.Dataset({"data": data})
+    store = fsspec.filesystem("memory").get_mapper("data.zarr")
+    ds.to_zarr(store, mode="w")
+
+    extent = pystac.Extent(spatial=pystac.SpatialExtent([[]]), temporal=pystac.TemporalExtent([[None, None]]))
+    collection = pystac.Collection(
+        id="id", description="description", license="license", extent=extent
+    )
+    collection.add_asset("data", pystac.Asset(href="memory://data.zarr", media_type="application/vnd+zarr"))
+
+    # test
+    intake_collection = StacCollection(collection)
+    result = intake_collection.to_xarray("data")
+    xr.testing.assert_equal(result, ds)
