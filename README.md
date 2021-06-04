@@ -41,7 +41,7 @@ The [examples/](examples/) directory contains several Jupyter Notebooks illustra
 
 #### Versions
 
-To install a specific versions of intake-stac, specify the version in the install command
+To install a specific version of intake-stac, specify the version in the install command
 
 ```bash
 pip install intake-stac==0.4.0
