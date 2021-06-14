@@ -177,10 +177,14 @@ class StacCollection(StacCatalog):
             Additional keyword options are provided to the loader, for example ``consolidated=True``
             to pass to :meth:`xarray.open_zarr`.
 
+        Notes
+        -----
+        The Media Type of the asset will be used to determine how to load the data.
+
         Returns
         -------
-        xarray.Dataset
-            The Zarr dataset located at `asset` loaded into an xarray Dataset.
+        xarray.Dataset, pandas.DataFrame 
+            The dataset described by the asset loaded into a dask-backed object.
         """
         try:
             asset_ = self._stac_obj.assets[asset]
