@@ -172,10 +172,10 @@ class StacCollection(StacCatalog):
         asset : str, optional
             The asset key to use if multiple Zarr assets are provided.
         storage_options : dict, optional
-            Additional storage opens to use in :meth:`xarray.open_zarr`. Merged with
-            ``self.storage_options``
+            Additional arguments for the backend fsspec filesystem. Merged with ``self.storage_options``.
         **kwargs
-            Additional keyword options are provided to :class:`intake_xarray.ZarrSource`.
+            Additional keyword options are provided to the loader, for example ``consolidated=True``
+            to pass to :meth:`xarray.open_zarr`.
 
         Returns
         -------
