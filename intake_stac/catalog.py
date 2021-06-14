@@ -6,37 +6,37 @@ from intake.catalog import Catalog
 from intake.catalog.local import LocalCatalogEntry
 from pkg_resources import get_distribution
 
-__version__ = get_distribution("intake_stac").version
+__version__ = get_distribution('intake_stac').version
 
 # STAC catalog asset 'type' determines intake driver:
 # https://github.com/radiantearth/stac-spec/blob/master/item-spec/item-spec.md#media-types
-default_type = "application/rasterio"
-default_driver = "rasterio"
+default_type = 'application/rasterio'
+default_driver = 'rasterio'
 
 drivers = {
-    "application/netcdf": "netcdf",
-    "application/x-netcdf": "netcdf",
-    "application/parquet": "parquet",
-    "application/x-parquet": "parquet",
-    "application/x-hdf": "netcdf",
-    "application/x-hdf5": "netcdf",
-    "application/rasterio": "rasterio",
-    "image/vnd.stac.geotiff": "rasterio",
-    "image/vnd.stac.geotiff; cloud-optimized=true": "rasterio",
-    "image/x.geotiff": "rasterio",
-    "image/tiff; application=geotiff": "rasterio",
-    "image/tiff; application=geotiff; profile=cloud-optimized": "rasterio",  # noqa: E501
-    "image/jp2": "rasterio",
-    "image/png": "xarray_image",
-    "image/jpg": "xarray_image",
-    "image/jpeg": "xarray_image",
-    "text/xml": "textfiles",
-    "text/plain": "textfiles",
-    "text/html": "textfiles",
-    "application/json": "textfiles",
-    "application/geo+json": "geopandas",
-    "application/geopackage+sqlite3": "geopandas",
-    "application/vnd+zarr": "zarr",
+    'application/netcdf': 'netcdf',
+    'application/x-netcdf': 'netcdf',
+    'application/parquet': 'parquet',
+    'application/x-parquet': 'parquet',
+    'application/x-hdf': 'netcdf',
+    'application/x-hdf5': 'netcdf',
+    'application/rasterio': 'rasterio',
+    'image/vnd.stac.geotiff': 'rasterio',
+    'image/vnd.stac.geotiff; cloud-optimized=true': 'rasterio',
+    'image/x.geotiff': 'rasterio',
+    'image/tiff; application=geotiff': 'rasterio',
+    'image/tiff; application=geotiff; profile=cloud-optimized': 'rasterio',  # noqa: E501
+    'image/jp2': 'rasterio',
+    'image/png': 'xarray_image',
+    'image/jpg': 'xarray_image',
+    'image/jpeg': 'xarray_image',
+    'text/xml': 'textfiles',
+    'text/plain': 'textfiles',
+    'text/html': 'textfiles',
+    'application/json': 'textfiles',
+    'application/geo+json': 'geopandas',
+    'application/geopackage+sqlite3': 'geopandas',
+    'application/vnd+zarr': 'zarr',
 }
 
 
@@ -61,14 +61,11 @@ class AbstractStacCatalog(Catalog):
         elif isinstance(stac_obj, str):
             self._stac_obj = self._stac_cls.from_file(stac_obj)
         else:
-            raise ValueError(
-                "Expected %s instance, got: %s"
-                % (self._stac_cls, type(stac_obj))
-            )
+            raise ValueError('Expected %s instance, got: %s' % (self._stac_cls, type(stac_obj)))
 
-        metadata = self._get_metadata(**kwargs.pop("metadata", {}))
+        metadata = self._get_metadata(**kwargs.pop('metadata', {}))
         try:
-            name = kwargs.pop("name", self._stac_obj.id)
+            name = kwargs.pop('name', self._stac_obj.id)
         except AttributeError:
             # Not currently tested.
             # ItemCollection does not require an id
@@ -112,7 +109,7 @@ class StacCatalog(AbstractStacCatalog):
     https://pystac.readthedocs.io/en/latest/api.html?#catalog-spec
     """
 
-    name = "stac_catalog"
+    name = 'stac_catalog'
     _stac_cls = pystac.Catalog
 
     def _load(self):
@@ -131,16 +128,16 @@ class StacCatalog(AbstractStacCatalog):
                 description=subcatalog.description,
                 driver=driver,  # recursive
                 catalog=self,
-                args={"stac_obj": subcatalog.get_self_href()},
+                args={'stac_obj': subcatalog.get_self_href()},
             )
 
         for item in self._stac_obj.get_items():
             self._entries[item.id] = LocalCatalogEntry(
                 name=item.id,
-                description="",
+                description='',
                 driver=StacItem,
                 catalog=self,
-                args={"stac_obj": item},
+                args={'stac_obj': item},
             )
 
     def _get_metadata(self, **kwargs):
@@ -149,7 +146,7 @@ class StacCatalog(AbstractStacCatalog):
         """
         # NOTE: why not links?
         metadata = self._stac_obj.to_dict()
-        del metadata["links"]
+        del metadata['links']
         return metadata
 
 
@@ -163,7 +160,7 @@ class StacCollection(StacCatalog):
     future Collection-specific attributes and methods.
     """
 
-    name = "stac_catalog"
+    name = 'stac_catalog'
     _stac_cls = pystac.Collection
 
     def to_dask(self, asset, storage_options=None, **kwargs):
@@ -173,12 +170,12 @@ class StacCollection(StacCatalog):
         Parameters
         ----------
         asset : str, optional
-            The asset key to load.
+            The asset key to use if multiple Zarr assets are provided.
         storage_options : dict, optional
-            Additional arguments for the backend fsspec filesystem. Merged with ``self.storage_options``.
+            Additional storage opens to use in :meth:`xarray.open_zarr`. Merged with
+            ``self.storage_options``
         **kwargs
-            Additional keyword options are provided to the loader, for example ``consolidated=True``
-            to pass to :meth:`xarray.open_zarr`.
+            Additional keyword options are provided to :class:`intake_xarray.ZarrSource`.
 
         Returns
         -------
@@ -189,16 +186,11 @@ class StacCollection(StacCatalog):
             asset_ = self._stac_obj.assets[asset]
         except KeyError:
             raise KeyError(
-                f"No asset named {asset}. Should be one of {list(self._stac_obj.assets)}"
+                f'No asset named {asset}. Should be one of {list(self._stac_obj.assets)}'
             ) from None
 
-        storage_options = {
-            **(self.storage_options or {}),
-            **(storage_options or {}),
-        }
-        return StacAsset(asset, asset_)(
-            storage_options=storage_options, **kwargs
-        ).to_dask()
+        storage_options = {**(self.storage_options or {}), **(storage_options or {})}
+        return StacAsset(asset, asset_)(storage_options=storage_options, **kwargs).to_dask()
 
 
 class StacItemCollection(AbstractStacCatalog):
@@ -210,24 +202,22 @@ class StacItemCollection(AbstractStacCatalog):
     https://pystac.readthedocs.io/en/latest/api.html?#single-file-stac-extension
     """
 
-    name = "stac_itemcollection"
+    name = 'stac_itemcollection'
     _stac_cls = pystac.Catalog
 
     def _load(self):
         """
         Load the STAC Item Collection.
         """
-        if not self._stac_obj.ext.implements("single-file-stac"):
-            raise ValueError(
-                "StacItemCollection requires 'single-file-stac' extension"
-            )
-        for feature in self._stac_obj.ext["single-file-stac"].features:
+        if not self._stac_obj.ext.implements('single-file-stac'):
+            raise ValueError("StacItemCollection requires 'single-file-stac' extension")
+        for feature in self._stac_obj.ext['single-file-stac'].features:
             self._entries[feature.id] = LocalCatalogEntry(
                 name=feature.id,
-                description="",
+                description='',
                 driver=StacItem,
                 catalog=self,
-                args={"stac_obj": feature},
+                args={'stac_obj': feature},
             )
 
     def to_geopandas(self, crs=None):
@@ -248,12 +238,12 @@ class StacItemCollection(AbstractStacCatalog):
             import geopandas as gpd
         except ImportError:
             raise ImportError(
-                "Using to_geopandas requires the `geopandas` package."
-                "You can install it via Pip or Conda."
+                'Using to_geopandas requires the `geopandas` package.'
+                'You can install it via Pip or Conda.'
             )
 
         if crs is None:
-            crs = "epsg:4326"
+            crs = 'epsg:4326'
         gf = gpd.GeoDataFrame.from_features(self._stac_obj.to_dict(), crs=crs)
         return gf
 
@@ -264,7 +254,7 @@ class StacItem(AbstractStacCatalog):
     https://pystac.readthedocs.io/en/latest/api.html#item-spec
     """
 
-    name = "stac_item"
+    name = 'stac_item'
     _stac_cls = pystac.Item
 
     def _load(self):
@@ -276,7 +266,7 @@ class StacItem(AbstractStacCatalog):
 
     def _get_metadata(self, **kwargs):
         metadata = self._stac_obj.properties.copy()
-        for attr in ["bbox", "geometry", "datetime", "date"]:
+        for attr in ['bbox', 'geometry', 'datetime', 'date']:
             metadata[attr] = getattr(self._stac_obj, attr, None)
         metadata.update(kwargs)
         return metadata
@@ -290,15 +280,15 @@ class StacItem(AbstractStacCatalog):
             # NOTE: ensure we test these scenarios
             # FileNotFoundError: [Errno 2] No such file or directory: '/catalog.json'
             collection = self._stac_obj.get_collection()
-            if "item-assets" in collection.stac_extensions:
-                for val in collection.ext["item_assets"]:
-                    if "eo:bands" in val:
-                        band_info.append(val.get("eo:bands")[0])
+            if 'item-assets' in collection.stac_extensions:
+                for val in collection.ext['item_assets']:
+                    if 'eo:bands' in val:
+                        band_info.append(val.get('eo:bands')[0])
             else:
-                band_info = collection.summaries["eo:bands"]
+                band_info = collection.summaries['eo:bands']
 
         except Exception:
-            for band in self._stac_obj.ext["eo"].get_bands():
+            for band in self._stac_obj.ext['eo'].get_bands():
                 band_info.append(band.to_dict())
         finally:
             if not band_info:
@@ -307,7 +297,7 @@ class StacItem(AbstractStacCatalog):
                 )
         return band_info
 
-    def stack_bands(self, bands, path_as_pattern=None, concat_dim="band"):
+    def stack_bands(self, bands, path_as_pattern=None, concat_dim='band'):
         """
         Stack the listed bands over the ``band`` dimension.
 
@@ -338,10 +328,8 @@ class StacItem(AbstractStacCatalog):
         stack = item.stack_bands(['B4','B5'], path_as_pattern='{band}.TIF')
         da = stack(chunks=dict(band=1, x=2048, y=2048)).to_dask()
         """
-        if "eo" not in self._stac_obj.stac_extensions:
-            raise ValueError(
-                'STAC Item must implement "eo" extension to use this method'
-            )
+        if 'eo' not in self._stac_obj.stac_extensions:
+            raise ValueError('STAC Item must implement "eo" extension to use this method')
 
         band_info = self._get_band_info()
         configDict = {}
@@ -353,29 +341,20 @@ class StacItem(AbstractStacCatalog):
         for band in bands:
             # band can be band id, name or common_name
             if band in assets:
-                info = next(
-                    (
-                        b
-                        for b in band_info
-                        if b.get("id", b.get("name")) == band
-                    ),
-                    None,
-                )
+                info = next((b for b in band_info if b.get('id', b.get('name')) == band), None,)
             else:
-                info = next(
-                    (b for b in band_info if b.get("common_name") == band), None
-                )
+                info = next((b for b in band_info if b.get('common_name') == band), None)
                 if info is not None:
-                    band = info.get("id", info.get("name"))
+                    band = info.get('id', info.get('name'))
 
             if band not in assets or info is None:
                 valid_band_names = []
                 for b in band_info:
-                    valid_band_names.append(b.get("id", b.get("name")))
-                    valid_band_names.append(b.get("common_name"))
+                    valid_band_names.append(b.get('id', b.get('name')))
+                    valid_band_names.append(b.get('common_name'))
                 raise ValueError(
-                    f"{band} not found in list of eo:bands in collection."
-                    f"Valid values: {sorted(list(set(valid_band_names)))}"
+                    f'{band} not found in list of eo:bands in collection.'
+                    f'Valid values: {sorted(list(set(valid_band_names)))}'
                 )
             asset = assets.get(band)
             metadatas[band] = asset.to_dict()
@@ -386,18 +365,15 @@ class StacItem(AbstractStacCatalog):
         unique_types = set(types)
         if len(unique_types) != 1:
             raise ValueError(
-                f"Stacking failed: bands must have type, multiple found: {unique_types}"
+                f'Stacking failed: bands must have type, multiple found: {unique_types}'
             )
 
-        configDict["name"] = "_".join(bands)
-        configDict["description"] = ", ".join(titles)
-        configDict["args"] = dict(
-            chunks={},
-            concat_dim=concat_dim,
-            path_as_pattern=path_as_pattern,
-            urlpath=hrefs,
+        configDict['name'] = '_'.join(bands)
+        configDict['description'] = ', '.join(titles)
+        configDict['args'] = dict(
+            chunks={}, concat_dim=concat_dim, path_as_pattern=path_as_pattern, urlpath=hrefs
         )
-        configDict["metadata"] = metadatas
+        configDict['metadata'] = metadatas
 
         return CombinedAssets(configDict)
 
@@ -408,7 +384,7 @@ class StacAsset(LocalCatalogEntry):
     https://pystac.readthedocs.io/en/latest/api.html#asset
     """
 
-    name = "stac_asset"
+    name = 'stac_asset'
     _stac_cls = pystac.item.Asset
 
     def __init__(self, key, asset):
@@ -434,7 +410,7 @@ class StacAsset(LocalCatalogEntry):
         metadata = asset.to_dict()
         default_plot = self._get_plot(asset)
         if default_plot:
-            metadata["plots"] = default_plot
+            metadata['plots'] = default_plot
 
         return metadata
 
@@ -446,13 +422,13 @@ class StacAsset(LocalCatalogEntry):
         default_plot = None
         type = asset.media_type
         if type:
-            if type in ["image/jpeg", "image/jpg", "image/png"]:
+            if type in ['image/jpeg', 'image/jpg', 'image/png']:
                 default_plot = dict(
                     thumbnail=dict(
-                        kind="rgb",
-                        x="x",
-                        y="y",
-                        bands="channel",
+                        kind='rgb',
+                        x='x',
+                        y='y',
+                        bands='channel',
                         data_aspect=1,
                         flip_yaxis=True,
                         xaxis=False,
@@ -460,17 +436,17 @@ class StacAsset(LocalCatalogEntry):
                     )
                 )
 
-            elif "tiff" in type:
+            elif 'tiff' in type:
                 default_plot = dict(
                     geotiff=dict(
-                        kind="image",
-                        x="x",
-                        y="y",
+                        kind='image',
+                        x='x',
+                        y='y',
                         frame_width=500,
                         data_aspect=1,
                         rasterize=True,
                         dynamic=True,
-                        cmap="viridis",
+                        cmap='viridis',
                     )
                 )
 
@@ -482,11 +458,11 @@ class StacAsset(LocalCatalogEntry):
         """
         entry_type = asset.media_type
 
-        if entry_type in ["", "null", None]:
+        if entry_type in ['', 'null', None]:
 
             suffix = os.path.splitext(asset.media_type)[-1]
-            if suffix in [".nc", ".h5", ".hdf"]:
-                asset.media_type = "application/netcdf"
+            if suffix in ['.nc', '.h5', '.hdf']:
+                asset.media_type = 'application/netcdf'
                 warnings.warn(
                     f'STAC Asset "type" missing, assigning {entry_type} based on href suffix {suffix}:\n{asset.media_type}'  # noqa: E501
                 )
@@ -506,8 +482,8 @@ class StacAsset(LocalCatalogEntry):
         """
         Optional keyword arguments to pass to intake driver
         """
-        args = {"urlpath": asset.href}
-        if driver in ["netcdf", "rasterio", "xarray_image"]:
+        args = {'urlpath': asset.href}
+        if driver in ['netcdf', 'rasterio', 'xarray_image']:
             # NOTE: force using dask?
             args.update(chunks={})
 
@@ -524,10 +500,10 @@ class CombinedAssets(LocalCatalogEntry):
         configDict = intake Entry dictionary from stack_bands() method
         """
         super().__init__(
-            name=configDict["name"],
-            description=configDict["description"],
-            driver="rasterio",  # stack_bands only relevant to rasterio driver?
+            name=configDict['name'],
+            description=configDict['description'],
+            driver='rasterio',  # stack_bands only relevant to rasterio driver?
             direct_access=True,
-            args=configDict["args"],
-            metadata=configDict["metadata"],
+            args=configDict['args'],
+            metadata=configDict['metadata'],
         )
