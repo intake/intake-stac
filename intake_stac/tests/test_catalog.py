@@ -8,13 +8,11 @@ import numpy as np
 import pystac
 import pytest
 import xarray as xr
-
 from intake.catalog import Catalog
 from intake.catalog.local import LocalCatalogEntry
 
 from intake_stac import StacCatalog, StacCollection, StacItem, StacItemCollection
 from intake_stac.catalog import CombinedAssets, StacAsset
-
 
 here = os.path.dirname(__file__)
 
@@ -289,18 +287,22 @@ def test_collection_of_collection():
 
 
 def test_collection_level_assets():
-    data = xr.DataArray(np.ones((5, 5, 5)), dims=("time", "y", "x"))
-    ds = xr.Dataset({"data": data})
-    store = fsspec.filesystem("memory").get_mapper("data.zarr")
-    ds.to_zarr(store, mode="w")
+    data = xr.DataArray(np.ones((5, 5, 5)), dims=('time', 'y', 'x'))
+    ds = xr.Dataset({'data': data})
+    store = fsspec.filesystem('memory').get_mapper('data.zarr')
+    ds.to_zarr(store, mode='w')
 
-    extent = pystac.Extent(spatial=pystac.SpatialExtent([[]]), temporal=pystac.TemporalExtent([[None, None]]))
-    collection = pystac.Collection(
-        id="id", description="description", license="license", extent=extent
+    extent = pystac.Extent(
+        spatial=pystac.SpatialExtent([[]]), temporal=pystac.TemporalExtent([[None, None]])
     )
-    collection.add_asset("data", pystac.Asset(href="memory://data.zarr", media_type="application/vnd+zarr"))
+    collection = pystac.Collection(
+        id='id', description='description', license='license', extent=extent
+    )
+    collection.add_asset(
+        'data', pystac.Asset(href='memory://data.zarr', media_type='application/vnd+zarr')
+    )
 
     # test
     intake_collection = StacCollection(collection)
-    result = intake_collection.to_dask("data")
+    result = intake_collection.to_dask('data')
     xr.testing.assert_equal(result, ds)

@@ -2,8 +2,6 @@ import os.path
 import warnings
 
 import pystac
-import intake_xarray
-import intake
 from intake.catalog import Catalog
 from intake.catalog.local import LocalCatalogEntry
 from pkg_resources import get_distribution
@@ -38,7 +36,7 @@ drivers = {
     'application/json': 'textfiles',
     'application/geo+json': 'geopandas',
     'application/geopackage+sqlite3': 'geopandas',
-    'application/vnd+zarr': "zarr",
+    'application/vnd+zarr': 'zarr',
 }
 
 
@@ -187,7 +185,9 @@ class StacCollection(StacCatalog):
         try:
             asset_ = self._stac_obj.assets[asset]
         except KeyError:
-            raise KeyError(f'No asset named {asset}. Should be one of {list(self._stac_obj.assets)}') from None
+            raise KeyError(
+                f'No asset named {asset}. Should be one of {list(self._stac_obj.assets)}'
+            ) from None
 
         storage_options = {**(self.storage_options or {}), **(storage_options or {})}
         return StacAsset(asset, asset_)(storage_options=storage_options, **kwargs).to_dask()
