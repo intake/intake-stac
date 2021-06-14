@@ -2,14 +2,19 @@ import datetime
 import os.path
 import sys
 
+import fsspec
 import intake
+import numpy as np
 import pystac
 import pytest
+import xarray as xr
+
 from intake.catalog import Catalog
 from intake.catalog.local import LocalCatalogEntry
 
 from intake_stac import StacCatalog, StacCollection, StacItem, StacItemCollection
 from intake_stac.catalog import CombinedAssets, StacAsset
+
 
 here = os.path.dirname(__file__)
 
@@ -284,10 +289,6 @@ def test_collection_of_collection():
 
 
 def test_collection_level_assets():
-    import fsspec
-    import xarray as xr
-    import numpy as np
-
     data = xr.DataArray(np.ones((5, 5, 5)), dims=("time", "y", "x"))
     ds = xr.Dataset({"data": data})
     store = fsspec.filesystem("memory").get_mapper("data.zarr")
@@ -301,5 +302,5 @@ def test_collection_level_assets():
 
     # test
     intake_collection = StacCollection(collection)
-    result = intake_collection.to_xarray("data")
+    result = intake_collection.to_dask("data")
     xr.testing.assert_equal(result, ds)

@@ -3,6 +3,7 @@ import warnings
 
 import pystac
 import intake_xarray
+import intake
 from intake.catalog import Catalog
 from intake.catalog.local import LocalCatalogEntry
 from pkg_resources import get_distribution
@@ -150,45 +151,6 @@ class StacCatalog(AbstractStacCatalog):
         del metadata['links']
         return metadata
 
-    def to_xarray(self, asset, media_type="application/vnd+zarr", storage_options=None, **kwargs):
-        r"""
-        Load a collection with Zarr assets as an Xarray Dataset.
-
-        Parameters
-        ----------
-        asset : str, optional
-            The asset key to use if multiple Zarr assets are provided.
-        media_type : str, default "application/vnd+zarr"
-            The Asset media type to look for.
-        storage_options : dict, optional
-            Additional storage opens to use in :meth:`xarray.open_zarr`. Merged with
-            ``self.storage_options``
-        **kwargs
-            Additional keyword options are provided to :class:`intake_xarray.ZarrSource`.
-
-        Returns
-        -------
-        xarray.Dataset
-            The Zarr dataset located at `asset` loaded into an xarray Dataset.
-        """
-        if media_type:
-            assets = {
-                k: v for k, v in self._stac_obj.assets.items()
-                if v.media_type == media_type
-            }
-        else:
-            assets = self._stac_obj.assets
-
-        if len(assets) == 0:
-            raise ValueError(f"Catalog {self_stac_obj.id} does not have any assets with media type 'application/vnd+zarr'.")
-        else:
-            try:
-                asset = assets[asset]
-            except KeyError:
-                raise KeyError(f'No asset named {asset}. Should be one of {list(assets)}') from None
-        storage_options = {**(self.storage_options or {}), **(storage_options or {})}
-        return intake_xarray.ZarrSource(asset.href, storage_options=storage_options, **kwargs).to_dask()
-
 
 class StacCollection(StacCatalog):
     """
@@ -202,6 +164,33 @@ class StacCollection(StacCatalog):
 
     name = 'stac_catalog'
     _stac_cls = pystac.Collection
+
+    def to_dask(self, asset, storage_options=None, **kwargs):
+        r"""
+        Load a collection-level asset to a Dask-backed object.
+
+        Parameters
+        ----------
+        asset : str, optional
+            The asset key to use if multiple Zarr assets are provided.
+        storage_options : dict, optional
+            Additional storage opens to use in :meth:`xarray.open_zarr`. Merged with
+            ``self.storage_options``
+        **kwargs
+            Additional keyword options are provided to :class:`intake_xarray.ZarrSource`.
+
+        Returns
+        -------
+        xarray.Dataset
+            The Zarr dataset located at `asset` loaded into an xarray Dataset.
+        """
+        try:
+            asset_ = self._stac_obj.assets[asset]
+        except KeyError:
+            raise KeyError(f'No asset named {asset}. Should be one of {list(self._stac_obj.assets)}') from None
+
+        storage_options = {**(self.storage_options or {}), **(storage_options or {})}
+        return StacAsset(asset, asset_)(storage_options=storage_options, **kwargs).to_dask()
 
 
 class StacItemCollection(AbstractStacCatalog):
