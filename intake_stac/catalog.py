@@ -430,7 +430,9 @@ class StacAsset(LocalCatalogEntry):
 
         if entry_type in ['', 'null', None]:
 
-            suffix = os.path.splitext(asset.media_type)[-1]
+            suffix = '.tif'
+            if asset.media_type:
+                suffix = os.path.splitext(asset.media_type)[-1]
             if suffix in ['.nc', '.h5', '.hdf']:
                 asset.media_type = 'application/netcdf'
                 warnings.warn(
