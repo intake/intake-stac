@@ -5,6 +5,8 @@ import pystac
 from intake.catalog import Catalog
 from intake.catalog.local import LocalCatalogEntry
 from pkg_resources import get_distribution
+from pystac.extensions.eo import EOExtension
+from pystac.extensions.item_assets import ItemAssetsExtension
 
 __version__ = get_distribution('intake_stac').version
 
@@ -173,21 +175,21 @@ class StacItemCollection(AbstractStacCatalog):
     """
 
     name = 'stac_itemcollection'
-    _stac_cls = pystac.Catalog
+    _stac_cls = pystac.ItemCollection
 
     def _load(self):
         """
         Load the STAC Item Collection.
         """
-        if not self._stac_obj.ext.implements('single-file-stac'):
-            raise ValueError("StacItemCollection requires 'single-file-stac' extension")
-        for feature in self._stac_obj.ext['single-file-stac'].features:
-            self._entries[feature.id] = LocalCatalogEntry(
-                name=feature.id,
+        # if not self._stac_obj.ext.implements('single-file-stac'):
+        #     raise ValueError("StacItemCollection requires 'single-file-stac' extension")
+        for item in self._stac_obj.items:
+            self._entries[item.id] = LocalCatalogEntry(
+                name=item.id,
                 description='',
                 driver=StacItem,
                 catalog=self,
-                args={'stac_obj': feature},
+                args={'stac_obj': item},
             )
 
     def to_geopandas(self, crs=None):
@@ -250,15 +252,16 @@ class StacItem(AbstractStacCatalog):
             # NOTE: ensure we test these scenarios
             # FileNotFoundError: [Errno 2] No such file or directory: '/catalog.json'
             collection = self._stac_obj.get_collection()
-            if 'item-assets' in collection.stac_extensions:
-                for val in collection.ext['item_assets']:
-                    if 'eo:bands' in val:
-                        band_info.append(val.get('eo:bands')[0])
+            if ItemAssetsExtension.has_extension(collection):
+                item_assets = ItemAssetsExtension(collection)
+                for asset in item_assets:
+                    if 'eo:bands' in asset:
+                        band_info.append(asset.get('eo:bands')[0])
             else:
                 band_info = collection.summaries['eo:bands']
 
         except Exception:
-            for band in self._stac_obj.ext['eo'].get_bands():
+            for band in EOExtension(self._stac_obj).bands:
                 band_info.append(band.to_dict())
         finally:
             if not band_info:
@@ -298,7 +301,7 @@ class StacItem(AbstractStacCatalog):
         stack = item.stack_bands(['B4','B5'], path_as_pattern='{band}.TIF')
         da = stack(chunks=dict(band=1, x=2048, y=2048)).to_dask()
         """
-        if 'eo' not in self._stac_obj.stac_extensions:
+        if not EOExtension.has_extension(self._stac_obj):
             raise ValueError('STAC Item must implement "eo" extension to use this method')
 
         band_info = self._get_band_info()

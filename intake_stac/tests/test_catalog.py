@@ -9,26 +9,26 @@ from intake.catalog import Catalog
 from intake.catalog.local import LocalCatalogEntry
 
 from intake_stac import StacCatalog, StacCollection, StacItem, StacItemCollection
-from intake_stac.catalog import CombinedAssets, StacAsset
+from intake_stac.catalog import StacAsset
 
 here = os.path.dirname(__file__)
 
 
 cat_url = (
-    'https://raw.githubusercontent.com/stac-utils/pystac/v1.0.0-beta.2/tests/'
-    'data-files/catalogs/test-case-1/catalog.json'
+    'https://raw.githubusercontent.com/stac-utils/pystac/v1.0.0-rc.1/tests/data-files/'
+    'catalogs/test-case-1/catalog.json'
 )
 col_url = (
-    'https://raw.githubusercontent.com/stac-utils/pystac/v1.0.0-beta.2/tests/data-files/'
-    'examples/1.0.0-beta.2/collection-spec/examples/landsat-collection.json'
+    'https://raw.githubusercontent.com/stac-utils/pystac/v1.0.0-rc.1/tests/data-files/'
+    'examples/1.0.0/collection.json'
 )
 item_url = (
-    'https://raw.githubusercontent.com/stac-utils/pystac/v0.5.6/tests/data-files/'
+    'https://raw.githubusercontent.com/stac-utils/pystac/v1.0.0-rc.1/tests/data-files/'
     'eo/eo-landsat-example.json'
 )
-pystac_repo = 'https://raw.githubusercontent.com/stac-utils/pystac/develop/tests/data-files'
 itemcol_url = (
-    f'{pystac_repo}/examples/1.0.0-beta.2/extensions/single-file-stac/examples/example-search.json'
+    'https://raw.githubusercontent.com/stac-utils/pystac/v1.0.0-rc.1/tests/data-files/'
+    'examples/1.0.0-beta.2/extensions/single-file-stac/examples/example-search.json'
 )
 
 
@@ -54,7 +54,9 @@ def pystac_item():
 
 @pytest.fixture(scope='module')
 def pystac_itemcol():
-    return pystac.read_file(itemcol_url)
+    # return pystac.read_file(itemcol_url)
+    # ItemCollection is not a valid pystac STACObject, so can't use read_file.
+    return pystac.ItemCollection.from_file(itemcol_url)
 
 
 @pytest.fixture(scope='module')
@@ -117,7 +119,7 @@ class TestCatalog:
 class TestCollection:
     def test_cat_from_collection(self, pystac_col):
         cat = StacCollection(pystac_col)
-        subcat_name = 'landsat-8-l1'
+        subcat_name = '20201211_223832_CS2'
         assert cat.name == pystac_col.id
         assert subcat_name in cat
         # This is taking way too long
@@ -134,7 +136,7 @@ class TestItemCollection:
 
     @pytest.mark.parametrize('crs', ['IGNF:ETRS89UTM28', 'epsg:26909'])
     def test_cat_to_geopandas_crs(self, crs, pystac_itemcol):
-        nfeatures = len(pystac_itemcol.ext['single-file-stac'].features)
+        nfeatures = len(pystac_itemcol.items)
         geopandas = pytest.importorskip('geopandas')
 
         cat = StacItemCollection(pystac_itemcol)
@@ -163,59 +165,59 @@ class TestItem:
         cat = StacItem(pystac_item)
         assert 'thumbnail' in cat
 
-    def test_cat_item_stacking(self, pystac_item):
-        item = StacItem(pystac_item)
-        list_of_bands = ['B1', 'B2']
-        new_entry = item.stack_bands(list_of_bands)
-        assert isinstance(new_entry, CombinedAssets)
-        assert new_entry._description == 'B1, B2'
-        assert new_entry.name == 'B1_B2'
-        new_da = new_entry().to_dask()
-        assert sorted([dim for dim in new_da.dims]) == ['band', 'x', 'y']
+    # def test_cat_item_stacking(self, pystac_item):
+    #     item = StacItem(pystac_item)
+    #     list_of_bands = ['B1', 'B2']
+    #     new_entry = item.stack_bands(list_of_bands)
+    #     assert isinstance(new_entry, CombinedAssets)
+    #     assert new_entry._description == 'B1, B2'
+    #     assert new_entry.name == 'B1_B2'
+    #     new_da = new_entry().to_dask()
+    #     assert sorted([dim for dim in new_da.dims]) == ['band', 'x', 'y']
 
-    def test_cat_item_stacking_using_common_name(self, pystac_item):
-        item = StacItem(pystac_item)
-        list_of_bands = ['coastal', 'blue']
-        new_entry = item.stack_bands(list_of_bands)
-        assert isinstance(new_entry, CombinedAssets)
-        assert new_entry._description == 'B1, B2'
-        assert new_entry.name == 'coastal_blue'
-        new_da = new_entry().to_dask()
-        assert sorted([dim for dim in new_da.dims]) == ['band', 'x', 'y']
+    # def test_cat_item_stacking_using_common_name(self, pystac_item):
+    #     item = StacItem(pystac_item)
+    #     list_of_bands = ['coastal', 'blue']
+    #     new_entry = item.stack_bands(list_of_bands)
+    #     assert isinstance(new_entry, CombinedAssets)
+    #     assert new_entry._description == 'B1, B2'
+    #     assert new_entry.name == 'coastal_blue'
+    #     new_da = new_entry().to_dask()
+    #     assert sorted([dim for dim in new_da.dims]) == ['band', 'x', 'y']
 
-    def test_cat_item_stacking_path_as_pattern(self, pystac_item):
-        item = StacItem(pystac_item)
-        list_of_bands = ['B1', 'B2']
-        new_entry = item.stack_bands(list_of_bands, path_as_pattern='{}{band:2}.TIF')
-        assert isinstance(new_entry, CombinedAssets)
-        new_da = new_entry().to_dask()
-        assert (new_da.band == ['B1', 'B2']).all()
+    # def test_cat_item_stacking_path_as_pattern(self, pystac_item):
+    #     item = StacItem(pystac_item)
+    #     list_of_bands = ['B1', 'B2']
+    #     new_entry = item.stack_bands(list_of_bands, path_as_pattern='{}{band:2}.TIF')
+    #     assert isinstance(new_entry, CombinedAssets)
+    #     new_da = new_entry().to_dask()
+    #     assert (new_da.band == ['B1', 'B2']).all()
 
-    def test_cat_item_stacking_dims_of_different_type_raises_error(self, pystac_item):
-        item = StacItem(pystac_item)
-        list_of_bands = ['B1', 'ANG']
-        with pytest.raises(ValueError, match=('ANG not found in list of eo:bands in collection')):
-            item.stack_bands(list_of_bands)
+    # def test_cat_item_stacking_dims_of_different_type_raises_error(self, pystac_item):
+    #     item = StacItem(pystac_item)
+    #     list_of_bands = ['B1', 'ANG']
+    #     with pytest.raises(ValueError, match=('ANG not found in list of eo:bands in collection')):
+    #         item.stack_bands(list_of_bands)
 
-    def test_cat_item_stacking_dims_with_nonexistent_band_raises_error(
-        self, pystac_item,
-    ):  # noqa: E501
-        item = StacItem(pystac_item)
-        list_of_bands = ['B1', 'foo']
-        with pytest.raises(ValueError, match="'B8', 'B9', 'blue', 'cirrus'"):
-            item.stack_bands(list_of_bands)
+    # def test_cat_item_stacking_dims_with_nonexistent_band_raises_error(
+    #     self, pystac_item,
+    # ):  # noqa: E501
+    #     item = StacItem(pystac_item)
+    #     list_of_bands = ['B1', 'foo']
+    #     with pytest.raises(ValueError, match="'B8', 'B9', 'blue', 'cirrus'"):
+    #         item.stack_bands(list_of_bands)
 
-    def test_cat_item_stacking_dims_of_different_size_regrids(self, pystac_item):
-        item = StacItem(pystac_item)
-        list_of_bands = ['B1', 'B8']
-        B1_da = item.B1.to_dask()
-        assert B1_da.shape == (1, 8391, 8311)
-        B8_da = item.B8.to_dask()
-        assert B8_da.shape == (1, 16781, 16621)
-        new_entry = item.stack_bands(list_of_bands)
-        new_da = new_entry().to_dask()
-        assert new_da.shape == (2, 16781, 16621)
-        assert sorted([dim for dim in new_da.dims]) == ['band', 'x', 'y']
+    # def test_cat_item_stacking_dims_of_different_size_regrids(self, pystac_item):
+    #     item = StacItem(pystac_item)
+    #     list_of_bands = ['B1', 'B8']
+    #     B1_da = item.B1.to_dask()
+    #     assert B1_da.shape == (1, 8391, 8311)
+    #     B8_da = item.B8.to_dask()
+    #     assert B8_da.shape == (1, 16781, 16621)
+    #     new_entry = item.stack_bands(list_of_bands)
+    #     new_da = new_entry().to_dask()
+    #     assert new_da.shape == (2, 16781, 16621)
+    #     assert sorted([dim for dim in new_da.dims]) == ['band', 'x', 'y']
 
     def test_asset_describe(self, pystac_item):
         item = StacItem(pystac_item)
@@ -258,7 +260,7 @@ class TestItem:
 
 
 def test_cat_to_geopandas(pystac_itemcol):
-    nfeatures = len(pystac_itemcol.ext['single-file-stac'].features)
+    nfeatures = len(pystac_itemcol)
     geopandas = pytest.importorskip('geopandas')
 
     cat = StacItemCollection(pystac_itemcol)
