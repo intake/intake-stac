@@ -29,10 +29,6 @@ def pystac_cat():
 @pytest.fixture(scope='module')
 def pystac_col():
     col = pystac.Collection.from_file(col_url)
-    # fix some linkrot
-    for link in col.links:
-        if link.rel == 'child':
-            link.target = 'https://landsat-stac.s3.amazonaws.com/landsat-8-l1/catalog.json'
     return col
 
 
