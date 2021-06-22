@@ -18,10 +18,7 @@ here = Path(__file__).parent
 cat_url = str(here / 'data/1.0.0/catalog/catalog.json')
 col_url = str(here / 'data/1.0.0/collection/collection.json')
 item_url = str(here / 'data/1.0.0/collection/simple-item.json')
-itemcol_url = (
-    'https://raw.githubusercontent.com/stac-utils/pystac/v1.0.0-rc.1/tests/data-files/'
-    'examples/1.0.0-beta.2/extensions/single-file-stac/examples/example-search.json'
-)
+itemcol_url = str(here / 'data/1.0.0/itemcollection/example-search.json')
 
 
 @pytest.fixture(scope='module')

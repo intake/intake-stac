@@ -1,6 +1,8 @@
 {
   "stac_version": "1.0.0",
-  "stac_extensions": ["eo"],
+  "stac_extensions": [
+    "https://stac-extensions.github.io/projection/v1.0.0/schema.json"
+  ],
   "type": "Feature",
   "id": "S2B_MSIL2A_20171227T160459_N0212_R054_T17QLA_20201014T165101",
   "bbox": [
