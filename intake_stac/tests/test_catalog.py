@@ -1,6 +1,7 @@
 import datetime
 import os.path
 import sys
+from pathlib import Path
 
 import intake
 import pystac
@@ -11,21 +12,12 @@ from intake.catalog.local import LocalCatalogEntry
 from intake_stac import StacCatalog, StacCollection, StacItem, StacItemCollection
 from intake_stac.catalog import StacAsset
 
-here = os.path.dirname(__file__)
+here = Path(__file__).parent
 
 
-cat_url = (
-    'https://raw.githubusercontent.com/stac-utils/pystac/v1.0.0-rc.1/tests/data-files/'
-    'catalogs/test-case-1/catalog.json'
-)
-col_url = (
-    'https://raw.githubusercontent.com/stac-utils/pystac/v1.0.0-rc.1/tests/data-files/'
-    'examples/1.0.0/collection.json'
-)
-item_url = (
-    'https://raw.githubusercontent.com/stac-utils/pystac/v1.0.0-rc.1/tests/data-files/'
-    'eo/eo-landsat-example.json'
-)
+cat_url = str(here / 'data/1.0.0/catalog/catalog.json')
+col_url = str(here / 'data/1.0.0/collection/collection.json')
+item_url = str(here / 'data/1.0.0/collection/simple-item.json')
 itemcol_url = (
     'https://raw.githubusercontent.com/stac-utils/pystac/v1.0.0-rc.1/tests/data-files/'
     'examples/1.0.0-beta.2/extensions/single-file-stac/examples/example-search.json'
@@ -119,7 +111,7 @@ class TestCatalog:
 class TestCollection:
     def test_cat_from_collection(self, pystac_col):
         cat = StacCollection(pystac_col)
-        subcat_name = '20201211_223832_CS2'
+        subcat_name = 'S2B_MSIL2A_20171227T160459_N0212_R054_T17QLA_20201014T165101'
         assert cat.name == pystac_col.id
         assert subcat_name in cat
         # This is taking way too long
@@ -163,7 +155,7 @@ class TestItemCollection:
 class TestItem:
     def test_cat_from_item(self, pystac_item):
         cat = StacItem(pystac_item)
-        assert 'thumbnail' in cat
+        assert 'B02' in cat
 
     # def test_cat_item_stacking(self, pystac_item):
     #     item = StacItem(pystac_item)
@@ -221,7 +213,7 @@ class TestItem:
 
     def test_asset_describe(self, pystac_item):
         item = StacItem(pystac_item)
-        key = 'B1'
+        key = 'B02'
         asset = item[key]
         d = asset.describe()
 
@@ -234,8 +226,8 @@ class TestItem:
         # assert d['metadata'] == asset.metadata
 
     def test_asset_missing_type(self, pystac_item):
-        key = 'B1'
-        asset = pystac_item.assets.get('B1')
+        key = 'B02'
+        asset = pystac_item.assets.get('B02')
         asset.media_type = ''
         with pytest.warns(Warning, match='STAC Asset'):
             entry = StacAsset(key, asset)
@@ -247,8 +239,8 @@ class TestItem:
         assert d['plugin'] == ['rasterio']
 
     def test_asset_unknown_type(self, pystac_item):
-        key = 'B1'
-        asset = pystac_item.assets.get('B1')
+        key = 'B02'
+        asset = pystac_item.assets.get('B02')
         asset.media_type = 'unrecognized'
         entry = StacAsset(key, asset)
         d = entry.describe()
