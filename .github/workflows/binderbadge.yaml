@@ -1,7 +1,7 @@
 # create a mybinder badge issue comment for testing PRs
 name: AddBinderBadge
 on:
-  pull_request:
+  pull_request_target:
     types: [opened, reopened]
 jobs:
   build-image-without-pushing:

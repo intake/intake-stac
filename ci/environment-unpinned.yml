@@ -10,4 +10,5 @@ dependencies:
   - pystac
   - pytest-cov
   - rasterio
+  - rioxarray
   - xarray

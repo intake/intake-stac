@@ -47,6 +47,7 @@ dependencies:
   - pytoml
   - pyyaml
   - rasterio
+  - rioxarray
   - recommonmark
   - requests
   - sat-search>=0.3

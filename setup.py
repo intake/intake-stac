@@ -21,6 +21,7 @@ if needs_pytest:
 TESTS_REQUIRE = ['pytest >= 2.7.1']
 ENTRY_POINTS = {
     'intake.drivers': [
+        'rioxarray = intake_stac.drivers:RioxarraySource',
         'stac_catalog = intake_stac.catalog:StacCatalog',
         'stac_collection = intake_stac.catalog:StacCollection',
         'stac_item_collection = intake_stac.catalog:StacItemCollection',
