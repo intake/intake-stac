@@ -54,6 +54,7 @@ The table below shows the corresponding versions between intake-stac and STAC:
 | 0.2.x       | 0.6.x       |
 | 0.3.x       | 1.0.0-betaX |
 | 0.4.x       | 1.0.0-betaX |
+| 1.0.0       | 1.0.0       |
 
 ## About
 
