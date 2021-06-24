@@ -6,7 +6,6 @@ from intake.catalog import Catalog
 from intake.catalog.local import LocalCatalogEntry
 from pkg_resources import get_distribution
 from pystac.extensions.eo import EOExtension
-from pystac.extensions.item_assets import ItemAssetsExtension
 
 __version__ = get_distribution('intake_stac').version
 
@@ -248,26 +247,8 @@ class StacItem(AbstractStacCatalog):
         Return list of band info dictionaries (name, common_name, etc.)...
         """
         band_info = []
-        try:
-            # NOTE: ensure we test these scenarios
-            # FileNotFoundError: [Errno 2] No such file or directory: '/catalog.json'
-            collection = self._stac_obj.get_collection()
-            if ItemAssetsExtension.has_extension(collection):
-                item_assets = ItemAssetsExtension(collection)
-                for asset in item_assets:
-                    if 'eo:bands' in asset:
-                        band_info.append(asset.get('eo:bands')[0])
-            else:
-                band_info = collection.summaries['eo:bands']
-
-        except Exception:
-            for band in EOExtension(self._stac_obj).bands:
-                band_info.append(band.to_dict())
-        finally:
-            if not band_info:
-                raise ValueError(
-                    'Unable to parse "eo:bands" information from STAC Collection or Item Assets'
-                )
+        for band in EOExtension.ext(self._stac_obj).bands:
+            band_info.append(band.to_dict())
         return band_info
 
     def stack_bands(self, bands, path_as_pattern=None, concat_dim='band'):

@@ -10,7 +10,7 @@ from intake.catalog import Catalog
 from intake.catalog.local import LocalCatalogEntry
 
 from intake_stac import StacCatalog, StacCollection, StacItem, StacItemCollection
-from intake_stac.catalog import StacAsset
+from intake_stac.catalog import CombinedAssets, StacAsset
 
 here = Path(__file__).parent
 
@@ -150,47 +150,41 @@ class TestItem:
         cat = StacItem(pystac_item)
         assert 'B02' in cat
 
-    # def test_cat_item_stacking(self, pystac_item):
-    #     item = StacItem(pystac_item)
-    #     list_of_bands = ['B1', 'B2']
-    #     new_entry = item.stack_bands(list_of_bands)
-    #     assert isinstance(new_entry, CombinedAssets)
-    #     assert new_entry._description == 'B1, B2'
-    #     assert new_entry.name == 'B1_B2'
-    #     new_da = new_entry().to_dask()
-    #     assert sorted([dim for dim in new_da.dims]) == ['band', 'x', 'y']
+    def test_cat_item_stacking(self, pystac_item):
+        item = StacItem(pystac_item)
+        list_of_bands = ['B02', 'B03']
+        new_entry = item.stack_bands(list_of_bands)
+        assert isinstance(new_entry, CombinedAssets)
+        assert new_entry._description == 'B02, B03'
+        assert new_entry.name == 'B02_B03'
 
-    # def test_cat_item_stacking_using_common_name(self, pystac_item):
-    #     item = StacItem(pystac_item)
-    #     list_of_bands = ['coastal', 'blue']
-    #     new_entry = item.stack_bands(list_of_bands)
-    #     assert isinstance(new_entry, CombinedAssets)
-    #     assert new_entry._description == 'B1, B2'
-    #     assert new_entry.name == 'coastal_blue'
-    #     new_da = new_entry().to_dask()
-    #     assert sorted([dim for dim in new_da.dims]) == ['band', 'x', 'y']
+    def test_cat_item_stacking_common_name(self, pystac_item):
+        item = StacItem(pystac_item)
+        list_of_bands = ['blue', 'green']
+        new_entry = item.stack_bands(list_of_bands)
+        assert isinstance(new_entry, CombinedAssets)
+        assert new_entry._description == 'B02, B03'
+        assert new_entry.name == 'blue_green'
 
-    # def test_cat_item_stacking_path_as_pattern(self, pystac_item):
-    #     item = StacItem(pystac_item)
-    #     list_of_bands = ['B1', 'B2']
-    #     new_entry = item.stack_bands(list_of_bands, path_as_pattern='{}{band:2}.TIF')
-    #     assert isinstance(new_entry, CombinedAssets)
-    #     new_da = new_entry().to_dask()
-    #     assert (new_da.band == ['B1', 'B2']).all()
+    def test_cat_item_stacking_path_as_pattern(self, pystac_item):
+        item = StacItem(pystac_item)
+        list_of_bands = ['B02', 'B03']
+        new_entry = item.stack_bands(list_of_bands, path_as_pattern='{}{band:2}.TIF')
+        assert isinstance(new_entry, CombinedAssets)
 
-    # def test_cat_item_stacking_dims_of_different_type_raises_error(self, pystac_item):
-    #     item = StacItem(pystac_item)
-    #     list_of_bands = ['B1', 'ANG']
-    #     with pytest.raises(ValueError, match=('ANG not found in list of eo:bands in collection')):
-    #         item.stack_bands(list_of_bands)
+    def test_cat_item_stacking_dims_of_different_type_raises_error(self, pystac_item):
+        item = StacItem(pystac_item)
+        list_of_bands = ['B02', 'ANG']
+        with pytest.raises(ValueError, match=('ANG not found in list of eo:bands in collection')):
+            item.stack_bands(list_of_bands)
 
-    # def test_cat_item_stacking_dims_with_nonexistent_band_raises_error(
-    #     self, pystac_item,
-    # ):  # noqa: E501
-    #     item = StacItem(pystac_item)
-    #     list_of_bands = ['B1', 'foo']
-    #     with pytest.raises(ValueError, match="'B8', 'B9', 'blue', 'cirrus'"):
-    #         item.stack_bands(list_of_bands)
+    def test_cat_item_stacking_dims_with_nonexistent_band_raises_error(
+        self, pystac_item,
+    ):  # noqa: E501
+        item = StacItem(pystac_item)
+        list_of_bands = ['B01', 'foo']
+        with pytest.raises(ValueError, match="'B02', 'B03', 'blue', 'green'"):
+            item.stack_bands(list_of_bands)
 
     # def test_cat_item_stacking_dims_of_different_size_regrids(self, pystac_item):
     #     item = StacItem(pystac_item)
