@@ -36,6 +36,7 @@ drivers = {
     'application/json': 'textfiles',
     'application/geo+json': 'geopandas',
     'application/geopackage+sqlite3': 'geopandas',
+    'application/xml': 'textfiles',
 }
 
 
