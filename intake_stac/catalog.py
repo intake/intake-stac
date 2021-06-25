@@ -173,7 +173,7 @@ class StacCollection(StacCatalog):
         asset : str, optional
             The asset key to use if multiple Zarr assets are provided.
         storage_options : dict, optional
-            Additional arguments for the backend fsspec filesystem. Merged with ``self.storage_options``.
+            Additional arguments for the backend fsspec filesystem.
         **kwargs
             Additional keyword options are provided to the loader, for example ``consolidated=True``
             to pass to :meth:`xarray.open_zarr`.
@@ -184,7 +184,7 @@ class StacCollection(StacCatalog):
 
         Returns
         -------
-        xarray.Dataset, pandas.DataFrame 
+        xarray.Dataset, pandas.DataFrame
             The dataset described by the asset loaded into a dask-backed object.
         """
         try:
@@ -194,7 +194,7 @@ class StacCollection(StacCatalog):
                 f'No asset named {asset}. Should be one of {list(self._stac_obj.assets)}'
             ) from None
 
-        storage_options = {**(self.storage_options or {}), **(storage_options or {})}
+        storage_options = storage_options or {}
         return StacAsset(asset, asset_)(storage_options=storage_options, **kwargs).to_dask()
 
 
