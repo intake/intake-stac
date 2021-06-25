@@ -1,6 +1,7 @@
 import datetime
 import os.path
 import sys
+from pathlib import Path
 
 import intake
 import pystac
@@ -11,21 +12,13 @@ from intake.catalog.local import LocalCatalogEntry
 from intake_stac import StacCatalog, StacCollection, StacItem, StacItemCollection
 from intake_stac.catalog import CombinedAssets, StacAsset
 
-here = os.path.dirname(__file__)
+here = Path(__file__).parent
 
-# sat-stac examples
-# -----
-sat_stac_repo = 'https://raw.githubusercontent.com/sat-utils/sat-stac/master'
-cat_url = f'{sat_stac_repo}/test/catalog/catalog.json'
-col_url = f'{sat_stac_repo}/test/catalog/eo/sentinel-2-l1c/catalog.json'
-item_url = f'{sat_stac_repo}/test/catalog/eo/landsat-8-l1/item.json'
 
-# pystac examples
-# -----
-pystac_repo = 'https://raw.githubusercontent.com/stac-utils/pystac/develop/tests/data-files'
-itemcol_url = (
-    f'{pystac_repo}/examples/1.0.0-beta.2/extensions/single-file-stac/examples/example-search.json'
-)
+cat_url = str(here / 'data/1.0.0/catalog/catalog.json')
+col_url = str(here / 'data/1.0.0/collection/collection.json')
+item_url = str(here / 'data/1.0.0/collection/simple-item.json')
+itemcol_url = str(here / 'data/1.0.0/itemcollection/example-search.json')
 
 
 @pytest.fixture(scope='module')
@@ -35,7 +28,8 @@ def pystac_cat():
 
 @pytest.fixture(scope='module')
 def pystac_col():
-    return pystac.Collection.from_file(col_url)
+    col = pystac.Collection.from_file(col_url)
+    return col
 
 
 @pytest.fixture(scope='module')
@@ -45,7 +39,9 @@ def pystac_item():
 
 @pytest.fixture(scope='module')
 def pystac_itemcol():
-    return pystac.read_file(itemcol_url)
+    # return pystac.read_file(itemcol_url)
+    # ItemCollection is not a valid pystac STACObject, so can't use read_file.
+    return pystac.ItemCollection.from_file(itemcol_url)
 
 
 @pytest.fixture(scope='module')
@@ -53,184 +49,197 @@ def intake_stac_cat():
     return StacCatalog.from_url(cat_url)
 
 
-def test_init_catalog_from_url():
-    cat = StacCatalog(cat_url)
-    assert isinstance(cat, intake.catalog.Catalog)
-    assert cat.name == 'stac-catalog'
-    assert cat.discover()['container'] == 'catalog'
-    assert int(cat.metadata['stac_version'][0]) >= 1
+class TestCatalog:
+    def test_init_catalog_from_url(self):
+        cat = StacCatalog(cat_url)
+        assert isinstance(cat, intake.catalog.Catalog)
+        assert cat.name == 'test'
+        assert cat.discover()['container'] == 'catalog'
+        assert int(cat.metadata['stac_version'][0]) >= 1
 
-    cat = StacCatalog.from_url(cat_url)
-    assert isinstance(cat, intake.catalog.Catalog)
-    assert cat.name == 'stac-catalog'
-    assert cat.discover()['container'] == 'catalog'
-    assert int(cat.metadata['stac_version'][0]) >= 1
+        cat = StacCatalog.from_url(cat_url)
+        assert isinstance(cat, intake.catalog.Catalog)
+        assert cat.name == 'test'
+        assert cat.discover()['container'] == 'catalog'
+        assert int(cat.metadata['stac_version'][0]) >= 1
 
-    # test kwargs are passed through
-    cat = StacCatalog.from_url(cat_url, name='intake-stac-test')
-    assert 'intake-stac-test' == cat.name
+        # test kwargs are passed through
+        cat = StacCatalog.from_url(cat_url, name='intake-stac-test')
+        assert 'intake-stac-test' == cat.name
 
+    def test_init_catalog_from_pystac_obj(self, pystac_cat):
+        cat = StacCatalog(pystac_cat)
+        assert isinstance(cat, intake.catalog.Catalog)
+        assert cat.discover()['container'] == 'catalog'
+        assert cat.name == 'test'
+        assert cat.name == pystac_cat.id
 
-def test_init_catalog_from_pystac_obj(pystac_cat):
-    cat = StacCatalog(pystac_cat)
-    assert isinstance(cat, intake.catalog.Catalog)
-    assert cat.discover()['container'] == 'catalog'
-    assert cat.name == 'stac-catalog'
-    assert cat.name == pystac_cat.id
+        # test kwargs are passed through
+        cat = StacCatalog(pystac_cat, name='intake-stac-test')
+        assert 'intake-stac-test' == cat.name
 
-    # test kwargs are passed through
-    cat = StacCatalog(pystac_cat, name='intake-stac-test')
-    assert 'intake-stac-test' == cat.name
+    def test_init_catalog_with_wrong_type_raises(self, pystac_cat):
+        with pytest.raises(ValueError):
+            StacCollection(pystac_cat)
 
+    def test_init_catalog_with_bad_url_raises(self):
+        # json.decoder.JSONDecodeError or FileNotFoundError
+        with pytest.raises(Exception):
+            StacCatalog('https://raw.githubusercontent.com/')
 
-def test_init_catalog_with_wrong_type_raises(pystac_cat):
-    with pytest.raises(ValueError):
-        StacCollection(pystac_cat)
+    def test_serialize(self, intake_stac_cat):
+        cat_str = intake_stac_cat.serialize()
+        assert isinstance(cat_str, str)
 
+    def test_cat_entries(self, intake_stac_cat):
+        assert list(intake_stac_cat)
+        assert all(
+            [isinstance(v, (LocalCatalogEntry, Catalog)) for _, v in intake_stac_cat.items()]
+        )
 
-def test_init_catalog_with_bad_url_raises():
-    # json.decoder.JSONDecodeError or FileNotFoundError
-    with pytest.raises(Exception):
-        StacCatalog('https://raw.githubusercontent.com/')
-
-
-def test_serialize(intake_stac_cat):
-    cat_str = intake_stac_cat.serialize()
-    assert isinstance(cat_str, str)
-
-
-def test_cat_entries(intake_stac_cat):
-    assert list(intake_stac_cat)
-    assert all([isinstance(v, (LocalCatalogEntry, Catalog)) for _, v in intake_stac_cat.items()])
-
-
-def test_cat_name_from_pystac_catalog_id(intake_stac_cat):
-    assert intake_stac_cat.name == 'stac-catalog'
+    def test_cat_name_from_pystac_catalog_id(self, intake_stac_cat):
+        assert intake_stac_cat.name == 'test'
 
 
-def test_cat_from_collection(pystac_col):
-    cat = StacCollection(pystac_col)
-    subcat_name = 'sentinel-2a-catalog'
-    item_name = 'S2B_25WFU_20200610_0_L1C'
-    assert cat.name == pystac_col.id
-    assert subcat_name in cat
-    assert item_name in cat[subcat_name]
-    assert 'B04' in cat[subcat_name][item_name]
+class TestCollection:
+    def test_cat_from_collection(self, pystac_col):
+        cat = StacCollection(pystac_col)
+        subcat_name = 'S2B_MSIL2A_20171227T160459_N0212_R054_T17QLA_20201014T165101'
+        assert cat.name == pystac_col.id
+        assert subcat_name in cat
+        # This is taking way too long
+        # item_name = 'S2B_25WFU_20200610_0_L1C'
+        # assert item_name in cat[subcat_name]
+        # assert 'B04' in cat[subcat_name][item_name]
 
 
-def test_cat_from_item_collection(pystac_itemcol):
-    cat = StacItemCollection(pystac_itemcol)
-    assert 'LC80340332018034LGN00' in cat
-    assert 'B5' in cat.LC80340332018034LGN00
+class TestItemCollection:
+    def test_cat_from_item_collection(self, pystac_itemcol):
+        cat = StacItemCollection(pystac_itemcol)
+        assert 'LC80340332018034LGN00' in cat
+        assert 'B5' in cat.LC80340332018034LGN00
+
+    @pytest.mark.parametrize('crs', ['IGNF:ETRS89UTM28', 'epsg:26909'])
+    def test_cat_to_geopandas_crs(self, crs, pystac_itemcol):
+        nfeatures = len(pystac_itemcol.items)
+        geopandas = pytest.importorskip('geopandas')
+
+        cat = StacItemCollection(pystac_itemcol)
+        df = cat.to_geopandas(crs=crs)
+        assert isinstance(df, geopandas.GeoDataFrame)
+        assert len(df) == nfeatures
+        assert df.crs == crs
+
+    def test_cat_to_missing_geopandas(self, pystac_itemcol, monkeypatch):
+        from unittest import mock
+
+        with pytest.raises(ImportError):
+            with mock.patch.dict(sys.modules, {'geopandas': None}):
+                cat = StacItemCollection(pystac_itemcol)
+                _ = cat.to_geopandas()
+
+    def test_load_satsearch_results(self, pystac_itemcol):
+        test_file = os.path.join(here, 'data/1.0.0beta2/earthsearch/single-file-stac.json')
+        catalog = intake.open_stac_item_collection(test_file)
+        assert isinstance(catalog, StacItemCollection)
+        assert len(catalog) == 18
 
 
-def test_cat_from_item(pystac_item):
-    cat = StacItem(pystac_item)
-    assert 'B5' in cat
+class TestItem:
+    def test_cat_from_item(self, pystac_item):
+        cat = StacItem(pystac_item)
+        assert 'B02' in cat
 
+    def test_cat_item_stacking(self, pystac_item):
+        item = StacItem(pystac_item)
+        list_of_bands = ['B02', 'B03']
+        new_entry = item.stack_bands(list_of_bands)
+        assert isinstance(new_entry, CombinedAssets)
+        assert new_entry._description == 'B02, B03'
+        assert new_entry.name == 'B02_B03'
 
-def test_cat_item_stacking(pystac_item):
-    item = StacItem(pystac_item)
-    list_of_bands = ['B1', 'B2']
-    new_entry = item.stack_bands(list_of_bands)
-    assert isinstance(new_entry, CombinedAssets)
-    assert new_entry._description == 'B1, B2'
-    assert new_entry.name == 'B1_B2'
-    new_da = new_entry().to_dask()
-    assert sorted([dim for dim in new_da.dims]) == ['band', 'x', 'y']
+    def test_cat_item_stacking_common_name(self, pystac_item):
+        item = StacItem(pystac_item)
+        list_of_bands = ['blue', 'green']
+        new_entry = item.stack_bands(list_of_bands)
+        assert isinstance(new_entry, CombinedAssets)
+        assert new_entry._description == 'B02, B03'
+        assert new_entry.name == 'blue_green'
 
+    def test_cat_item_stacking_path_as_pattern(self, pystac_item):
+        item = StacItem(pystac_item)
+        list_of_bands = ['B02', 'B03']
+        new_entry = item.stack_bands(list_of_bands, path_as_pattern='{}{band:2}.TIF')
+        assert isinstance(new_entry, CombinedAssets)
 
-def test_cat_item_stacking_using_common_name(pystac_item):
-    item = StacItem(pystac_item)
-    list_of_bands = ['coastal', 'blue']
-    new_entry = item.stack_bands(list_of_bands)
-    assert isinstance(new_entry, CombinedAssets)
-    assert new_entry._description == 'B1, B2'
-    assert new_entry.name == 'coastal_blue'
-    new_da = new_entry().to_dask()
-    assert sorted([dim for dim in new_da.dims]) == ['band', 'x', 'y']
+    def test_cat_item_stacking_dims_of_different_type_raises_error(self, pystac_item):
+        item = StacItem(pystac_item)
+        list_of_bands = ['B02', 'ANG']
+        with pytest.raises(ValueError, match=('ANG not found in list of eo:bands in collection')):
+            item.stack_bands(list_of_bands)
 
+    def test_cat_item_stacking_dims_with_nonexistent_band_raises_error(
+        self, pystac_item,
+    ):  # noqa: E501
+        item = StacItem(pystac_item)
+        list_of_bands = ['B01', 'foo']
+        with pytest.raises(ValueError, match="'B02', 'B03', 'blue', 'green'"):
+            item.stack_bands(list_of_bands)
 
-def test_cat_item_stacking_path_as_pattern(pystac_item):
-    item = StacItem(pystac_item)
-    list_of_bands = ['B1', 'B2']
-    new_entry = item.stack_bands(list_of_bands, path_as_pattern='{}{band:2}.TIF')
-    assert isinstance(new_entry, CombinedAssets)
-    new_da = new_entry().to_dask()
-    assert (new_da.band == ['B1', 'B2']).all()
+    # def test_cat_item_stacking_dims_of_different_size_regrids(self, pystac_item):
+    #     item = StacItem(pystac_item)
+    #     list_of_bands = ['B1', 'B8']
+    #     B1_da = item.B1.to_dask()
+    #     assert B1_da.shape == (1, 8391, 8311)
+    #     B8_da = item.B8.to_dask()
+    #     assert B8_da.shape == (1, 16781, 16621)
+    #     new_entry = item.stack_bands(list_of_bands)
+    #     new_da = new_entry().to_dask()
+    #     assert new_da.shape == (2, 16781, 16621)
+    #     assert sorted([dim for dim in new_da.dims]) == ['band', 'x', 'y']
 
+    def test_asset_describe(self, pystac_item):
+        item = StacItem(pystac_item)
+        key = 'B02'
+        asset = item[key]
+        d = asset.describe()
 
-def test_cat_item_stacking_dims_of_different_type_raises_error(pystac_item):
-    item = StacItem(pystac_item)
-    list_of_bands = ['B1', 'ANG']
-    with pytest.raises(ValueError, match=('ANG not found in list of eo:bands in collection')):
-        item.stack_bands(list_of_bands)
+        assert d['name'] == key
+        assert d['container'] == 'xarray'
+        assert d['plugin'] == ['rasterio']
+        assert d['args']['urlpath'] == asset.urlpath
+        assert d['description'] == asset.description
+        # NOTE: note sure why asset.metadata has 'catalog_dir' key ?
+        # assert d['metadata'] == asset.metadata
 
+    def test_asset_missing_type(self, pystac_item):
+        key = 'B02'
+        asset = pystac_item.assets.get('B02')
+        asset.media_type = ''
+        with pytest.warns(Warning, match='STAC Asset'):
+            entry = StacAsset(key, asset)
+        d = entry.describe()
 
-def test_cat_item_stacking_dims_with_nonexistent_band_raises_error(pystac_item,):  # noqa: E501
-    item = StacItem(pystac_item)
-    list_of_bands = ['B1', 'foo']
-    with pytest.raises(ValueError, match="'B8', 'B9', 'blue', 'cirrus'"):
-        item.stack_bands(list_of_bands)
+        assert d['name'] == key
+        assert d['metadata']['type'] == 'application/rasterio'  # default_type
+        assert d['container'] == 'xarray'
+        assert d['plugin'] == ['rasterio']
 
-
-def test_cat_item_stacking_dims_of_different_size_regrids(pystac_item):
-    item = StacItem(pystac_item)
-    list_of_bands = ['B1', 'B8']
-    B1_da = item.B1.to_dask()
-    assert B1_da.shape == (1, 7791, 7651)
-    B8_da = item.B8.to_dask()
-    assert B8_da.shape == (1, 15581, 15301)
-    new_entry = item.stack_bands(list_of_bands)
-    new_da = new_entry().to_dask()
-    assert new_da.shape == (2, 15581, 15301)
-    assert sorted([dim for dim in new_da.dims]) == ['band', 'x', 'y']
-
-
-def test_asset_describe(pystac_item):
-    item = StacItem(pystac_item)
-    key = 'B1'
-    asset = item[key]
-    d = asset.describe()
-
-    assert d['name'] == key
-    assert d['container'] == 'xarray'
-    assert d['plugin'] == ['rasterio']
-    assert d['args']['urlpath'] == asset.urlpath
-    assert d['description'] == asset.description
-    # NOTE: note sure why asset.metadata has 'catalog_dir' key ?
-    # assert d['metadata'] == asset.metadata
-
-
-def test_asset_missing_type(pystac_item):
-    key = 'B1'
-    asset = pystac_item.assets.get('B1')
-    asset.media_type = ''
-    with pytest.warns(Warning, match='STAC Asset'):
+    def test_asset_unknown_type(self, pystac_item):
+        key = 'B02'
+        asset = pystac_item.assets.get('B02')
+        asset.media_type = 'unrecognized'
         entry = StacAsset(key, asset)
-    d = entry.describe()
+        d = entry.describe()
 
-    assert d['name'] == key
-    assert d['metadata']['type'] == 'application/rasterio'  # default_type
-    assert d['container'] == 'xarray'
-    assert d['plugin'] == ['rasterio']
-
-
-def test_asset_unknown_type(pystac_item):
-    key = 'B1'
-    asset = pystac_item.assets.get('B1')
-    asset.media_type = 'unrecognized'
-    entry = StacAsset(key, asset)
-    d = entry.describe()
-
-    assert d['name'] == key
-    assert d['metadata']['type'] == 'unrecognized'
-    assert d['container'] == 'xarray'
-    assert d['plugin'] == ['rasterio']
+        assert d['name'] == key
+        assert d['metadata']['type'] == 'unrecognized'
+        assert d['container'] == 'xarray'
+        assert d['plugin'] == ['rasterio']
 
 
 def test_cat_to_geopandas(pystac_itemcol):
-    nfeatures = len(pystac_itemcol.ext['single-file-stac'].features)
+    nfeatures = len(pystac_itemcol)
     geopandas = pytest.importorskip('geopandas')
 
     cat = StacItemCollection(pystac_itemcol)
@@ -242,34 +251,6 @@ def test_cat_to_geopandas(pystac_itemcol):
     assert isinstance(df.geometry.dtype, geopandas.array.GeometryDtype)
     epsg = df.crs.to_epsg()
     assert epsg == 4326
-
-
-@pytest.mark.parametrize('crs', ['IGNF:ETRS89UTM28', 'epsg:26909'])
-def test_cat_to_geopandas_crs(crs, pystac_itemcol):
-    nfeatures = len(pystac_itemcol.ext['single-file-stac'].features)
-    geopandas = pytest.importorskip('geopandas')
-
-    cat = StacItemCollection(pystac_itemcol)
-    df = cat.to_geopandas(crs=crs)
-    assert isinstance(df, geopandas.GeoDataFrame)
-    assert len(df) == nfeatures
-    assert df.crs == crs
-
-
-def test_cat_to_missing_geopandas(pystac_itemcol, monkeypatch):
-    from unittest import mock
-
-    with pytest.raises(ImportError):
-        with mock.patch.dict(sys.modules, {'geopandas': None}):
-            cat = StacItemCollection(pystac_itemcol)
-            _ = cat.to_geopandas()
-
-
-def test_load_satsearch_results(pystac_itemcol):
-    test_file = os.path.join(here, 'data/1.0.0beta2/earthsearch/single-file-stac.json')
-    catalog = intake.open_stac_item_collection(test_file)
-    assert isinstance(catalog, StacItemCollection)
-    assert len(catalog) == 18
 
 
 def test_collection_of_collection():
