@@ -1,4 +1,4 @@
 fsspec>=0.8.4
 intake>=0.5.1
 intake-xarray>=0.4
-pystac>=0.5.*
+pystac>=1.0.0rc1

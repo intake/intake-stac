@@ -28,7 +28,7 @@ Catalog:
 
 .. ipython:: python
 
-    url = 'https://raw.githubusercontent.com/cholmes/sample-stac/master/stac/catalog.json'
+    url = 'https://raw.githubusercontent.com/radiantearth/stac-spec/master/examples/catalog.json'
     catalog = intake.open_stac_catalog(url)
     list(catalog)
 
@@ -71,10 +71,10 @@ contents:
 .. ipython:: python
 
     print(list(catalog))
-    cat = catalog['hurricane-harvey']
+    cat = catalog['extensions-collection']
 
     print(list(cat))
-    subcat = cat['hurricane-harvey-0831']
+    subcat = cat['proj-example']
 
     items = list(subcat)
     print(items)
@@ -85,28 +85,9 @@ When you locate an item of interest, you have access to metadata and methods to 
 
 .. ipython:: python
 
-    item = subcat['Houston-East-20170831-103f-100d-0f4f-RGB']
+    item = subcat['B1']
     print(type(item))
     print(item.metadata)
-
-    assets = list(item)
-    print(assets)
-
-    asset = item['thumbnail']
-    print(type(asset))
-    print(asset.urlpath)
-
-
-If the catalog has too many entries to comfortably print all at once,
-you can narrow it by searching for a term (e.g. 'thumbnail'):
-
-.. ipython:: python
-
-    for id, entry in subcat.search('thumbnail').items():
-        print(id)
-
-    asset = subcat['Houston-East-20170831-103f-100d-0f4f-RGB.thumbnail']
-    print(asset.urlpath)
 
 
 Loading a dataset
@@ -117,7 +98,7 @@ using Intake's `to_dask()` method. This reads only metadata, and streams values 
 
 .. ipython:: python
 
-    da = asset.to_dask()
+    da = item.to_dask()
     display(da)
 
 

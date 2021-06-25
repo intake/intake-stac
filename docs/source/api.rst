@@ -29,4 +29,3 @@ Catalog Objects
    StacCollection
    StacItemCollection
    StacItem
-   catalog.StacEntry
