@@ -10,7 +10,7 @@ from intake.catalog import Catalog
 from intake.catalog.local import LocalCatalogEntry
 
 from intake_stac import StacCatalog, StacCollection, StacItem, StacItemCollection
-from intake_stac.catalog import CombinedAssets, StacAsset
+from intake_stac.catalog import CombinedAssets, StacAsset, drivers
 
 here = Path(__file__).parent
 
@@ -236,6 +236,19 @@ class TestItem:
         assert d['metadata']['type'] == 'unrecognized'
         assert d['container'] == 'xarray'
         assert d['plugin'] == ['rasterio']
+
+
+class TestDrivers:
+    def test_drivers_include_all_pystac_media_types(self):
+        for media_type in pystac.MediaType:
+            assert media_type in drivers
+
+    def test_drivers_can_open_all_earthsearch_sentinel_s2_l2a_cogs_assets(self):
+        test_file = os.path.join(here, 'data/1.0.0beta2/earthsearch/single-file-stac.json')
+        catalog = intake.open_stac_item_collection(test_file)
+        _, item = next(catalog.items())
+        for _, asset in item.items():
+            assert asset.metadata['type'] in drivers
 
 
 def test_cat_to_geopandas(pystac_itemcol):

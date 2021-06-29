@@ -27,6 +27,7 @@ drivers = {
     'image/x.geotiff': 'rasterio',
     'image/tiff; application=geotiff': 'rasterio',
     'image/tiff; application=geotiff; profile=cloud-optimized': 'rasterio',  # noqa: E501
+    'image/tiff': 'rasterio',
     'image/jp2': 'rasterio',
     'image/png': 'xarray_image',
     'image/jpg': 'xarray_image',
@@ -37,6 +38,7 @@ drivers = {
     'application/json': 'textfiles',
     'application/geo+json': 'geopandas',
     'application/geopackage+sqlite3': 'geopandas',
+    'application/xml': 'textfiles',
 }
 
 
