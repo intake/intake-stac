@@ -6,6 +6,7 @@ from pathlib import Path
 import intake
 import pystac
 import pytest
+import yaml
 from intake.catalog import Catalog
 from intake.catalog.local import LocalCatalogEntry
 
@@ -236,6 +237,15 @@ class TestItem:
         assert d['metadata']['type'] == 'unrecognized'
         assert d['container'] == 'xarray'
         assert d['plugin'] == ['rasterio']
+
+    def test_cat_item_yaml(self, pystac_item):
+        cat = StacItem(pystac_item).yaml()
+        d = yaml.load(cat)
+
+        for key in ['bbox','date','datetime','geometry','version']:
+            assert key in d['metadata']
+        for key in ['B02','B03']:
+            assert key in d['sources']
 
 
 class TestDrivers:
