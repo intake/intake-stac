@@ -102,7 +102,6 @@ class AbstractStacCatalog(Catalog):
         -------
         A string with the yaml-formatted catalog (just top-level).
         """
-        
         return self.yaml()
 
 
