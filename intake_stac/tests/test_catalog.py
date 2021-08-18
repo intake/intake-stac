@@ -248,15 +248,18 @@ class TestItem:
             assert key in d['sources']
 
     def test_cat_item_yaml_roundtrip(self, pystac_item, tmp_path):
-        cat_str = StacItem(pystac_item).yaml()
+        cat1 = StacItem(pystac_item)
+        cat_str = cat1.yaml()
 
         temp_file = tmp_path/'temp.yaml'
-
         with open(temp_file, 'w') as f:
             f.write(cat_str)
 
-        cat = intake.open_catalog(temp_file)
-        assert cat['B02']
+        cat2 = intake.open_catalog(temp_file)
+
+        for key in ['B02','B03']:
+            assert key in cat2
+        #assert cat1.walk() == cat2.walk()
 
 
 class TestDrivers:
