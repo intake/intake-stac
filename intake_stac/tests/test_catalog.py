@@ -239,13 +239,24 @@ class TestItem:
         assert d['plugin'] == ['rasterio']
 
     def test_cat_item_yaml(self, pystac_item):
-        cat = StacItem(pystac_item).yaml()
-        d = yaml.load(cat)
+        cat_str = StacItem(pystac_item).yaml()
+        d = yaml.load(cat_str)
 
         for key in ['bbox','date','datetime','geometry','version']:
             assert key in d['metadata']
         for key in ['B02','B03']:
             assert key in d['sources']
+
+    def test_cat_item_yaml_roundtrip(self, pystac_item, tmp_path):
+        cat_str = StacItem(pystac_item).yaml()
+
+        temp_file = tmp_path/'temp.yaml'
+
+        with open(temp_file, 'w') as f:
+            f.write(cat_str)
+
+        cat = intake.open_catalog(temp_file)
+        assert cat['B02']
 
 
 class TestDrivers:
