@@ -102,14 +102,8 @@ class AbstractStacCatalog(Catalog):
         -------
         A string with the yaml-formatted catalog (just top-level).
         """
-        if self isinstance intake_stac.catalog.StacItem:
-            data = {'metadata':{'version':1}, 'sources':{}}
-            for key, source in self.items():
-                data['sources'][key] = source._yaml()['sources']['stac_asset']
-            return data
         
-        else:
-            return self.yaml()
+        return self.yaml()
 
 
 class StacCatalog(AbstractStacCatalog):
@@ -337,9 +331,15 @@ class StacItem(AbstractStacCatalog):
             chunks={}, concat_dim=concat_dim, path_as_pattern=path_as_pattern, urlpath=hrefs
         )
         configDict['metadata'] = metadatas
-
+        
         return CombinedAssets(configDict)
 
+    def _yaml(self):
+        data = {'metadata':{'version':1}, 'sources':{}}
+        data['metadata'].update(self.metadata)
+        for key, source in self.items():
+            data['sources'][key] = source._yaml()['sources']['stac_asset']
+        return data
 
 class StacAsset(LocalCatalogEntry):
     """
