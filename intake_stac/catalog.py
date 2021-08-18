@@ -102,7 +102,14 @@ class AbstractStacCatalog(Catalog):
         -------
         A string with the yaml-formatted catalog (just top-level).
         """
-        return self.yaml()
+        if self isinstance intake_stac.catalog.StacItem:
+            data = {'metadata':{'version':1}, 'sources':{}}
+            for key, source in self.items():
+                data['sources'][key] = source._yaml()['sources']['stac_asset']
+            return data
+        
+        else:
+            return self.yaml()
 
 
 class StacCatalog(AbstractStacCatalog):
