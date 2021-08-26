@@ -32,6 +32,7 @@ drivers = {
     'image/png': 'xarray_image',
     'image/jpg': 'xarray_image',
     'image/jpeg': 'xarray_image',
+    'text/csv': 'csv',
     'text/xml': 'textfiles',
     'text/plain': 'textfiles',
     'text/html': 'textfiles',
