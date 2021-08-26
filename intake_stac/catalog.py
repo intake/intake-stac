@@ -17,6 +17,7 @@ default_driver = 'rasterio'
 drivers = {
     'application/netcdf': 'netcdf',
     'application/x-netcdf': 'netcdf',
+    'application/opendap': 'opendap',
     'application/parquet': 'parquet',
     'application/x-parquet': 'parquet',
     'application/x-hdf': 'netcdf',
