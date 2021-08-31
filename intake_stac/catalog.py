@@ -339,6 +339,7 @@ class StacItem(AbstractStacCatalog):
         for key, source in self.items():
             data['sources'][key] = source._yaml()['sources']['stac_asset']
             data['sources'][key]['direct_access'] = 'allow'
+            data['sources'][key]['metadata'].pop('catalog_dir', None)
         return data
 
 class StacAsset(LocalCatalogEntry):
