@@ -259,7 +259,8 @@ class TestItem:
 
         for key in ['B02','B03']:
             assert key in cat2
-        #assert cat1.walk() == cat2.walk()
+        
+        assert cat1.walk() == cat2.walk(), print(cat1.walk()['B02'].describe()['direct_access'], cat2.walk()['B02'].describe()['direct_access'])
 
 
 class TestDrivers:

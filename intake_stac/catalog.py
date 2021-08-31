@@ -338,6 +338,7 @@ class StacItem(AbstractStacCatalog):
         data['metadata'].update(self.metadata)
         for key, source in self.items():
             data['sources'][key] = source._yaml()['sources']['stac_asset']
+            data['sources'][key]['direct_access'] = 'allow'
         return data
 
 class StacAsset(LocalCatalogEntry):
@@ -360,7 +361,7 @@ class StacAsset(LocalCatalogEntry):
             name=key,
             description=asset.title,
             driver=driver,
-            direct_access=True,
+            direct_access='allow',
             args=self._get_args(asset, driver),
             metadata=self._get_metadata(asset),
         )
