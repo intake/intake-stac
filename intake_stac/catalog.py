@@ -336,6 +336,7 @@ class StacItem(AbstractStacCatalog):
     def _yaml(self):
         data = {'metadata':{'version':1}, 'sources':{}}
         data['metadata'].update(self.metadata)
+        data['metadata'].pop('version', None)
         for key, source in self.items():
             data['sources'][key] = source._yaml()['sources']['stac_asset']
             data['sources'][key]['direct_access'] = 'allow'
