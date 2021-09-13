@@ -257,10 +257,17 @@ class TestItem:
 
         cat2 = intake.open_catalog(temp_file)
 
-        for key in ['B02','B03']:
-            assert key in cat2
-        
-        assert cat1.walk() == cat2.walk(), print(cat1.walk()['B02'].describe()['metadata'], cat2.walk()['B02'].describe()['metadata'])
+        assert cat1.keys() == cat2.keys()
+        for k in cat1.keys:
+            assert type(cat1[k]) == type(cat2[k])
+            assert cat1[k].metadata == cat2[k].metadata
+
+            for j in cat1[k].describe():
+                assert cat1[k].describe()[j] == cat2[k].describe()[j]
+
+        assert set(cat1.walk()) == set(cat2.walk())
+        for k in set(cat1.walk()):
+            assert cat1.walk()[k] == cat2.walk()[k]
 
 
 class TestDrivers:
