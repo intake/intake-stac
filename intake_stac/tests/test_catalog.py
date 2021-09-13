@@ -242,7 +242,7 @@ class TestItem:
         cat_str = StacItem(pystac_item).yaml()
         d = yaml.load(cat_str)
 
-        for key in ['bbox','date','datetime','geometry','version']:
+        for key in ['bbox','date','datetime','geometry']:
             assert key in d['metadata']
         for key in ['B02','B03']:
             assert key in d['sources']
@@ -257,17 +257,29 @@ class TestItem:
 
         cat2 = intake.open_catalog(temp_file)
 
-        assert cat1.keys() == cat2.keys()
-        for k in cat1.keys:
-            assert type(cat1[k]) == type(cat2[k])
-            assert cat1[k].metadata == cat2[k].metadata
+        assert cat1.metadata == cat2.metadata
+        assert set(cat1.walk()) == set(cat2.walk())
 
-            for j in cat1[k].describe():
+        keys = ['B02', 'B03']
+        for k in keys:
+            assert k in cat1
+            assert k in cat2
+            assert type(cat1[k]) == type(cat2[k])
+            
+            cat2[k].metadata.pop('catalog_dir', None)
+            assert set(cat1[k].metadata) == set(cat2[k].metadata)
+            for j in set(cat1[k].metadata):
+                if j == 'catalog_dir':
+                    continue
+                assert cat1[k].metadata[j] == cat1[k].metadata[j]
+
+            assert set(cat1[k].describe()) == set(cat2[k].describe())
+            for j in set(cat1[k].describe()):
                 assert cat1[k].describe()[j] == cat2[k].describe()[j]
 
-        assert set(cat1.walk()) == set(cat2.walk())
-        for k in set(cat1.walk()):
-            assert cat1.walk()[k] == cat2.walk()[k]
+            assert set(cat1.walk()[k].describe()) == set(cat2.walk()[k].describe())
+            for j in set(cat1.walk()[k].describe()):
+                assert cat1.walk()[k].describe()[j] == cat2.walk()[k].describe()[j]
 
 
 class TestDrivers:
