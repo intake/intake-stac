@@ -266,11 +266,10 @@ class TestItem:
             assert k in cat2
             assert type(cat1[k]) == type(cat2[k])
             
+            # cat1[k] will have no `catalog_dir` key because it is a temp file, so pop this key from cat2[k]
             cat2[k].metadata.pop('catalog_dir', None)
             assert set(cat1[k].metadata) == set(cat2[k].metadata)
             for j in set(cat1[k].metadata):
-                if j == 'catalog_dir':
-                    continue
                 assert cat1[k].metadata[j] == cat1[k].metadata[j]
 
             assert set(cat1[k].describe()) == set(cat2[k].describe())
