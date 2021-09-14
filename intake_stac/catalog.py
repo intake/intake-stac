@@ -330,18 +330,18 @@ class StacItem(AbstractStacCatalog):
             chunks={}, concat_dim=concat_dim, path_as_pattern=path_as_pattern, urlpath=hrefs
         )
         configDict['metadata'] = metadatas
-        
+
         return CombinedAssets(configDict)
 
     def _yaml(self):
-        data = {'metadata':{'version':1}, 'sources':{}}
+        data = {'metadata': {}, 'sources': {}}
         data['metadata'].update(self.metadata)
-        data['metadata'].pop('version', None)
         for key, source in self.items():
             data['sources'][key] = source._yaml()['sources']['stac_asset']
             data['sources'][key]['direct_access'] = 'allow'
             data['sources'][key]['metadata'].pop('catalog_dir', None)
         return data
+
 
 class StacAsset(LocalCatalogEntry):
     """

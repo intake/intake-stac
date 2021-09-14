@@ -4,6 +4,7 @@ import sys
 from pathlib import Path
 
 import intake
+import intake_xarray
 import pystac
 import pytest
 import yaml
@@ -242,16 +243,16 @@ class TestItem:
         cat_str = StacItem(pystac_item).yaml()
         d = yaml.load(cat_str)
 
-        for key in ['bbox','date','datetime','geometry']:
+        for key in ['bbox', 'date', 'datetime', 'geometry']:
             assert key in d['metadata']
-        for key in ['B02','B03']:
+        for key in ['B02', 'B03']:
             assert key in d['sources']
 
     def test_cat_item_yaml_roundtrip(self, pystac_item, tmp_path):
         cat1 = StacItem(pystac_item)
         cat_str = cat1.yaml()
 
-        temp_file = tmp_path/'temp.yaml'
+        temp_file = tmp_path / 'temp.yaml'
         with open(temp_file, 'w') as f:
             f.write(cat_str)
 
@@ -264,9 +265,10 @@ class TestItem:
         for k in keys:
             assert k in cat1
             assert k in cat2
-            assert type(cat1[k]) == type(cat2[k])
-            
-            # cat1[k] will have no `catalog_dir` key because it is a temp file, so pop this key from cat2[k]
+            assert isinstance(cat1[k], intake_xarray.raster.RasterIOSource)
+            assert isinstance(cat2[k], intake_xarray.raster.RasterIOSource)
+
+            # cat1[k] will have no `catalog_dir` key because it is a temp file
             cat2[k].metadata.pop('catalog_dir', None)
             assert set(cat1[k].metadata) == set(cat2[k].metadata)
             for j in set(cat1[k].metadata):
