@@ -237,6 +237,10 @@ class TestItem:
         assert d['container'] == 'xarray'
         assert d['plugin'] == ['rasterio']
 
+    def test_csv_read(self, pystac_item):
+        asset = pystac_item.assets.get('test-csv')
+        print(asset)
+
 
 class TestDrivers:
     def test_drivers_include_all_pystac_media_types(self):
