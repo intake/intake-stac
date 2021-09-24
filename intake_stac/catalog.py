@@ -333,6 +333,15 @@ class StacItem(AbstractStacCatalog):
 
         return CombinedAssets(configDict)
 
+    def _yaml(self):
+        data = {'metadata': {}, 'sources': {}}
+        data['metadata'].update(self.metadata)
+        for key, source in self.items():
+            data['sources'][key] = source._yaml()['sources']['stac_asset']
+            data['sources'][key]['direct_access'] = 'allow'
+            data['sources'][key]['metadata'].pop('catalog_dir', None)
+        return data
+
 
 class StacAsset(LocalCatalogEntry):
     """
@@ -354,7 +363,7 @@ class StacAsset(LocalCatalogEntry):
             name=key,
             description=asset.title,
             driver=driver,
-            direct_access=True,
+            direct_access='allow',
             args=self._get_args(asset, driver),
             metadata=self._get_metadata(asset),
         )
