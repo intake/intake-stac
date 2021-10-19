@@ -241,7 +241,7 @@ class TestItem:
 
     def test_cat_item_yaml(self, pystac_item):
         cat_str = StacItem(pystac_item).yaml()
-        d = yaml.load(cat_str)
+        d = yaml.load(cat_str, Loader=yaml.SafeLoader)
 
         for key in ['bbox', 'date', 'datetime', 'geometry']:
             assert key in d['metadata']
