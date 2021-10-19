@@ -166,7 +166,14 @@ class StacCollection(StacCatalog):
     name = 'stac_catalog'
     _stac_cls = pystac.Collection
 
-    def to_dask(self, asset, storage_options=None, **kwargs):
+    def to_dask(
+        self,
+        asset,
+        storage_options=None,
+        merge_asset_storage_options=True,
+        merge_asset_open_kwargs=True,
+        **kwargs,
+    ):
         r"""
         Load a collection-level asset to a Dask-backed object.
 
@@ -176,6 +183,9 @@ class StacCollection(StacCatalog):
             The asset key to use if multiple Zarr assets are provided.
         storage_options : dict, optional
             Additional arguments for the backend fsspec filesystem.
+        merge_asset_storage_option : bool, default True
+            Whether to merge the storage options provided by the asset under the
+            ``xarray:storage_options`` key with `storage_options`.
         **kwargs
             Additional keyword options are provided to the loader, for example ``consolidated=True``
             to pass to :meth:`xarray.open_zarr`.
@@ -197,6 +207,14 @@ class StacCollection(StacCatalog):
             ) from None
 
         storage_options = storage_options or {}
+        if merge_asset_storage_options:
+            asset_storage_options = asset_.extra_fields.get('xarray:storage_options', {})
+            storage_options.update(asset_storage_options)
+
+        if merge_asset_open_kwargs:
+            asset_open_kwargs = asset_.extra_fields.get('xarray:open_kwargs', {})
+            kwargs.update(asset_open_kwargs)
+
         return StacAsset(asset, asset_)(storage_options=storage_options, **kwargs).to_dask()
 
 
