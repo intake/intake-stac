@@ -169,7 +169,7 @@ class StacCollection(StacCatalog):
 
     def get_asset(
         self,
-        asset,
+        key,
         storage_options=None,
         merge_asset_storage_options=True,
         merge_asset_open_kwargs=True,
@@ -180,13 +180,16 @@ class StacCollection(StacCatalog):
 
         Parameters
         ----------
-        asset : str, optional
+        key : str, optional
             The asset key to use if multiple Zarr assets are provided.
         storage_options : dict, optional
             Additional arguments for the backend fsspec filesystem.
         merge_asset_storage_option : bool, default True
             Whether to merge the storage options provided by the asset under the
             ``xarray:storage_options`` key with `storage_options`.
+        merge_asset_open_kwargs : bool, default True
+            Whether to merge the keywords provided by the asset under the
+            ``xarray:open_kwargs`` key with ``**kwargs``.
         **kwargs
             Additional keyword options are provided to the loader, for example ``consolidated=True``
             to pass to :meth:`xarray.open_zarr`.
@@ -201,22 +204,22 @@ class StacCollection(StacCatalog):
             The dataset described by the asset loaded into a dask-backed object.
         """
         try:
-            asset_ = self._stac_obj.assets[asset]
+            asset = self._stac_obj.assets[key]
         except KeyError:
             raise KeyError(
-                f'No asset named {asset}. Should be one of {list(self._stac_obj.assets)}'
+                f'No asset named {key}. Should be one of {list(self._stac_obj.assets)}'
             ) from None
 
         storage_options = storage_options or {}
         if merge_asset_storage_options:
-            asset_storage_options = asset_.extra_fields.get('xarray:storage_options', {})
+            asset_storage_options = asset.extra_fields.get('xarray:storage_options', {})
             storage_options.update(asset_storage_options)
 
         if merge_asset_open_kwargs:
-            asset_open_kwargs = asset_.extra_fields.get('xarray:open_kwargs', {})
+            asset_open_kwargs = asset.extra_fields.get('xarray:open_kwargs', {})
             kwargs.update(asset_open_kwargs)
 
-        return StacAsset(asset, asset_)(storage_options=storage_options, **kwargs)
+        return StacAsset(asset, asset)(storage_options=storage_options, **kwargs)
 
 
 class StacItemCollection(AbstractStacCatalog):

@@ -141,6 +141,12 @@ Using xarray-assets
 
 Intake-stac uses the `xarray-assets`_ STAC extension to automatically use the appropriate keywords to load a STAC asset into a data container.
 
+Intake-stac will automatically use the keywords from the `xarray-assets`_ STAC extension, if present, when loading data into a container.
+For example, the STAC collection at <https://planetarycomputer.microsoft.com/api/stac/v1/collections/daymet-annual-hi> defines an
+asset ``zarr-https`` with the metadata ``"xarray:open_kwargs": {"consolidated": true}"`` to indicate that this dataset should be
+opened with the ``consolidated=True`` keyword argument. This will be used automatically by ``.to_dask()``
+
+
 .. code-block:: python
 
    >>> collection = intake.open_stac_collection(
@@ -174,8 +180,5 @@ Intake-stac uses the `xarray-assets`_ STAC extension to automatically use the ap
        references:        Please see http://daymet.ornl.gov/ for current informa...
        source:            Daymet Software Version 4.0
        start_year:        1980
-
-In that example, the STAC catalog indicates that the Zarr dataset should be opened with ``consolidated=True``,
-so intake-stac automatically forwards that keyword argument through to xarray.
 
 .. _xarray-assets: https://github.com/stac-extensions/xarray-assets
