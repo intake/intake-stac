@@ -5,15 +5,17 @@ from pathlib import Path
 
 import fsspec
 import intake
+import intake_xarray
 import numpy as np
 import pystac
 import pytest
 import xarray as xr
+import yaml
 from intake.catalog import Catalog
 from intake.catalog.local import LocalCatalogEntry
 
 from intake_stac import StacCatalog, StacCollection, StacItem, StacItemCollection
-from intake_stac.catalog import CombinedAssets, StacAsset
+from intake_stac.catalog import CombinedAssets, StacAsset, drivers
 
 here = Path(__file__).parent
 
@@ -239,6 +241,62 @@ class TestItem:
         assert d['metadata']['type'] == 'unrecognized'
         assert d['container'] == 'xarray'
         assert d['plugin'] == ['rasterio']
+
+    def test_cat_item_yaml(self, pystac_item):
+        cat_str = StacItem(pystac_item).yaml()
+        d = yaml.load(cat_str)
+
+        for key in ['bbox', 'date', 'datetime', 'geometry']:
+            assert key in d['metadata']
+        for key in ['B02', 'B03']:
+            assert key in d['sources']
+
+    def test_cat_item_yaml_roundtrip(self, pystac_item, tmp_path):
+        cat1 = StacItem(pystac_item)
+        cat_str = cat1.yaml()
+
+        temp_file = tmp_path / 'temp.yaml'
+        with open(temp_file, 'w') as f:
+            f.write(cat_str)
+
+        cat2 = intake.open_catalog(temp_file)
+
+        assert cat1.metadata == cat2.metadata
+        assert set(cat1.walk()) == set(cat2.walk())
+
+        keys = ['B02', 'B03']
+        for k in keys:
+            assert k in cat1
+            assert k in cat2
+            assert isinstance(cat1[k], intake_xarray.raster.RasterIOSource)
+            assert isinstance(cat2[k], intake_xarray.raster.RasterIOSource)
+
+            # cat1[k] will have no `catalog_dir` key because it is a temp file
+            cat2[k].metadata.pop('catalog_dir', None)
+            assert set(cat1[k].metadata) == set(cat2[k].metadata)
+            for j in set(cat1[k].metadata):
+                assert cat1[k].metadata[j] == cat1[k].metadata[j]
+
+            assert set(cat1[k].describe()) == set(cat2[k].describe())
+            for j in set(cat1[k].describe()):
+                assert cat1[k].describe()[j] == cat2[k].describe()[j]
+
+            assert set(cat1.walk()[k].describe()) == set(cat2.walk()[k].describe())
+            for j in set(cat1.walk()[k].describe()):
+                assert cat1.walk()[k].describe()[j] == cat2.walk()[k].describe()[j]
+
+
+class TestDrivers:
+    def test_drivers_include_all_pystac_media_types(self):
+        for media_type in pystac.MediaType:
+            assert media_type in drivers
+
+    def test_drivers_can_open_all_earthsearch_sentinel_s2_l2a_cogs_assets(self):
+        test_file = os.path.join(here, 'data/1.0.0beta2/earthsearch/single-file-stac.json')
+        catalog = intake.open_stac_item_collection(test_file)
+        _, item = next(catalog.items())
+        for _, asset in item.items():
+            assert asset.metadata['type'] in drivers
 
 
 def test_cat_to_geopandas(pystac_itemcol):
