@@ -36,7 +36,7 @@ jobs:
       - name: Development Install Intake-STAC
         shell: bash -l {0}
         run: |
-          python -m pip install --no-deps -e .
+          python -m pip install --no-deps -e . --no-build-isolation
           conda list
 
       - name: Run Tests
