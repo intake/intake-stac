@@ -343,12 +343,19 @@ def test_collection_level_assets():
 
     # test
     intake_collection = StacCollection(collection)
-    result = intake_collection.to_dask('data')
+    result = intake_collection.get_asset('data').to_dask()
     xr.testing.assert_equal(result, ds)
 
 
-def test_collection_level_asset_pc_https():
-    collection = intake.open_stac_collection(
-        'https://planetarycomputer.microsoft.com/api/stac/v1/collections/daymet-annual-hi'
-    )
-    collection.to_dask('zarr-https')
+def test_xarray_assets_item():
+    item = intake.open_stac_item(str(here / 'data/1.0.0/item/zarr-item.json'))
+    asset = item['zarr-abfs']
+    assert asset.kwargs == {'consolidated': True}
+    assert asset.storage_options == {'account_name': 'daymeteuwest'}
+
+
+def test_xarray_assets_collection():
+    item = intake.open_stac_collection(str(here / 'data/1.0.0/collection/zarr-collection.json'))
+    asset = item.get_asset('zarr-abfs')
+    assert asset.kwargs == {'consolidated': True}
+    assert asset.storage_options == {'account_name': 'daymeteuwest'}

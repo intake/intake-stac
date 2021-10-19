@@ -167,7 +167,7 @@ class StacCollection(StacCatalog):
     name = 'stac_catalog'
     _stac_cls = pystac.Collection
 
-    def to_dask(
+    def get_asset(
         self,
         asset,
         storage_options=None,
@@ -176,7 +176,7 @@ class StacCollection(StacCatalog):
         **kwargs,
     ):
         r"""
-        Load a collection-level asset to a Dask-backed object.
+        Get a datasource for a collection-level asset.
 
         Parameters
         ----------
@@ -197,7 +197,7 @@ class StacCollection(StacCatalog):
 
         Returns
         -------
-        xarray.Dataset, pandas.DataFrame
+        DataSource
             The dataset described by the asset loaded into a dask-backed object.
         """
         try:
@@ -216,7 +216,7 @@ class StacCollection(StacCatalog):
             asset_open_kwargs = asset_.extra_fields.get('xarray:open_kwargs', {})
             kwargs.update(asset_open_kwargs)
 
-        return StacAsset(asset, asset_)(storage_options=storage_options, **kwargs).to_dask()
+        return StacAsset(asset, asset_)(storage_options=storage_options, **kwargs)
 
 
 class StacItemCollection(AbstractStacCatalog):
