@@ -352,13 +352,3 @@ def test_collection_level_asset_pc_https():
         'https://planetarycomputer.microsoft.com/api/stac/v1/collections/daymet-annual-hi'
     )
     collection.to_dask('zarr-https')
-
-
-@pytest.mark.importorskip('adlfs')
-def test_collection_level_asset_pc_adlfs():
-    collection = intake.open_stac_collection(
-        'https://planetarycomputer.microsoft.com/api/stac/v1/collections/daymet-annual-hi'
-    )
-    collection.to_dask(
-        'zarr-abfs', consolidated=True
-    )  # planetary computer asset is missing consolidated

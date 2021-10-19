@@ -4,6 +4,7 @@ import warnings
 import pystac
 from intake.catalog import Catalog
 from intake.catalog.local import LocalCatalogEntry
+from intake.source import DataSource
 from pkg_resources import get_distribution
 from pystac.extensions.eo import EOExtension
 
@@ -282,6 +283,20 @@ class StacItem(AbstractStacCatalog):
     name = 'stac_item'
     _stac_cls = pystac.Item
 
+    def __getitem__(self, key):
+        result = super().__getitem__(key)
+        # TODO: handle non-string assets?
+        asset = self._entries[key]
+        storage_options = asset._stac_obj.extra_fields.get('xarray:storage_options', {})
+        open_kwargs = asset._stac_obj.extra_fields.get('xarray:open_kwargs', {})
+
+        if isinstance(result, DataSource):
+            kwargs = result._captured_init_kwargs
+            kwargs = {**kwargs, **dict(storage_options=storage_options), **open_kwargs}
+            result = result(*result._captured_init_args, **kwargs)
+
+        return result
+
     def _load(self):
         """
         Load the STAC Item.
@@ -409,6 +424,7 @@ class StacAsset(LocalCatalogEntry):
         Construct an Intake catalog 'Source' from a STAC Item Asset.
         asset = pystac.item.Asset
         """
+        self._stac_obj = asset
         driver = self._get_driver(asset)
 
         super().__init__(
