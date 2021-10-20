@@ -135,3 +135,50 @@ Intake-stac can turn this object into an Intake catalog:
 
     catalog = intake.open_stac_item_collection('single-file-stac.json')
     list(catalog)
+
+Using xarray-assets
+-------------------
+
+Intake-stac uses the `xarray-assets`_ STAC extension to automatically use the appropriate keywords to load a STAC asset into a data container.
+
+Intake-stac will automatically use the keywords from the `xarray-assets`_ STAC extension, if present, when loading data into a container.
+For example, the STAC collection at <https://planetarycomputer.microsoft.com/api/stac/v1/collections/daymet-annual-hi> defines an
+asset ``zarr-https`` with the metadata ``"xarray:open_kwargs": {"consolidated": true}"`` to indicate that this dataset should be
+opened with the ``consolidated=True`` keyword argument. This will be used automatically by ``.to_dask()``
+
+
+.. code-block:: python
+
+   >>> collection = intake.open_stac_collection(
+   ...     "https://planetarycomputer.microsoft.com/api/stac/v1/collections/daymet-annual-hi"
+   ... )
+
+   >>> source = collection.get_asset("zarr-https")
+   >>> source.to_dask()
+   <xarray.Dataset>
+   Dimensions:                  (nv: 2, time: 41, x: 284, y: 584)
+   Coordinates:
+       lat                      (y, x) float32 dask.array<chunksize=(584, 284), meta=np.ndarray>
+       lon                      (y, x) float32 dask.array<chunksize=(584, 284), meta=np.ndarray>
+     * time                     (time) datetime64[ns] 1980-07-01T12:00:00 ... 20...
+     * x                        (x) float32 -5.802e+06 -5.801e+06 ... -5.519e+06
+     * y                        (y) float32 -3.9e+04 -4e+04 ... -6.21e+05 -6.22e+05
+   Dimensions without coordinates: nv
+   Data variables:
+       lambert_conformal_conic  int16 ...
+       prcp                     (time, y, x) float32 dask.array<chunksize=(1, 584, 284), meta=np.ndarray>
+       swe                      (time, y, x) float32 dask.array<chunksize=(1, 584, 284), meta=np.ndarray>
+       time_bnds                (time, nv) datetime64[ns] dask.array<chunksize=(1, 2), meta=np.ndarray>
+       tmax                     (time, y, x) float32 dask.array<chunksize=(1, 584, 284), meta=np.ndarray>
+       tmin                     (time, y, x) float32 dask.array<chunksize=(1, 584, 284), meta=np.ndarray>
+       vp                       (time, y, x) float32 dask.array<chunksize=(1, 584, 284), meta=np.ndarray>
+   Attributes:
+       Conventions:       CF-1.6
+       Version_data:      Daymet Data Version 4.0
+       Version_software:  Daymet Software Version 4.0
+       citation:          Please see http://daymet.ornl.gov/ for current Daymet ...
+       references:        Please see http://daymet.ornl.gov/ for current informa...
+       source:            Daymet Software Version 4.0
+       start_year:        1980
+
+.. _xarray-assets: https://github.com/stac-extensions/xarray-assets

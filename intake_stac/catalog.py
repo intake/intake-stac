@@ -4,6 +4,7 @@ import warnings
 import pystac
 from intake.catalog import Catalog
 from intake.catalog.local import LocalCatalogEntry
+from intake.source import DataSource
 from pkg_resources import get_distribution
 from pystac.extensions.eo import EOExtension
 
@@ -38,6 +39,7 @@ drivers = {
     'application/json': 'textfiles',
     'application/geo+json': 'geopandas',
     'application/geopackage+sqlite3': 'geopandas',
+    'application/vnd+zarr': 'zarr',
     'application/xml': 'textfiles',
 }
 
@@ -165,6 +167,60 @@ class StacCollection(StacCatalog):
     name = 'stac_catalog'
     _stac_cls = pystac.Collection
 
+    def get_asset(
+        self,
+        key,
+        storage_options=None,
+        merge_asset_storage_options=True,
+        merge_asset_open_kwargs=True,
+        **kwargs,
+    ):
+        r"""
+        Get a datasource for a collection-level asset.
+
+        Parameters
+        ----------
+        key : str, optional
+            The asset key to use if multiple Zarr assets are provided.
+        storage_options : dict, optional
+            Additional arguments for the backend fsspec filesystem.
+        merge_asset_storage_option : bool, default True
+            Whether to merge the storage options provided by the asset under the
+            ``xarray:storage_options`` key with `storage_options`.
+        merge_asset_open_kwargs : bool, default True
+            Whether to merge the keywords provided by the asset under the
+            ``xarray:open_kwargs`` key with ``**kwargs``.
+        **kwargs
+            Additional keyword options are provided to the loader, for example ``consolidated=True``
+            to pass to :meth:`xarray.open_zarr`.
+
+        Notes
+        -----
+        The Media Type of the asset will be used to determine how to load the data.
+
+        Returns
+        -------
+        DataSource
+            The dataset described by the asset loaded into a dask-backed object.
+        """
+        try:
+            asset = self._stac_obj.assets[key]
+        except KeyError:
+            raise KeyError(
+                f'No asset named {key}. Should be one of {list(self._stac_obj.assets)}'
+            ) from None
+
+        storage_options = storage_options or {}
+        if merge_asset_storage_options:
+            asset_storage_options = asset.extra_fields.get('xarray:storage_options', {})
+            storage_options.update(asset_storage_options)
+
+        if merge_asset_open_kwargs:
+            asset_open_kwargs = asset.extra_fields.get('xarray:open_kwargs', {})
+            kwargs.update(asset_open_kwargs)
+
+        return StacAsset(key, asset)(storage_options=storage_options, **kwargs)
+
 
 class StacItemCollection(AbstractStacCatalog):
     """
@@ -229,6 +285,20 @@ class StacItem(AbstractStacCatalog):
 
     name = 'stac_item'
     _stac_cls = pystac.Item
+
+    def __getitem__(self, key):
+        result = super().__getitem__(key)
+        # TODO: handle non-string assets?
+        asset = self._entries[key]
+        storage_options = asset._stac_obj.extra_fields.get('xarray:storage_options', {})
+        open_kwargs = asset._stac_obj.extra_fields.get('xarray:open_kwargs', {})
+
+        if isinstance(result, DataSource):
+            kwargs = result._captured_init_kwargs
+            kwargs = {**kwargs, **dict(storage_options=storage_options), **open_kwargs}
+            result = result(*result._captured_init_args, **kwargs)
+
+        return result
 
     def _load(self):
         """
@@ -357,6 +427,7 @@ class StacAsset(LocalCatalogEntry):
         Construct an Intake catalog 'Source' from a STAC Item Asset.
         asset = pystac.item.Asset
         """
+        self._stac_obj = asset
         driver = self._get_driver(asset)
 
         super().__init__(

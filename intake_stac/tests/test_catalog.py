@@ -3,10 +3,13 @@ import os.path
 import sys
 from pathlib import Path
 
+import fsspec
 import intake
 import intake_xarray
+import numpy as np
 import pystac
 import pytest
+import xarray as xr
 import yaml
 from intake.catalog import Catalog
 from intake.catalog.local import LocalCatalogEntry
@@ -320,3 +323,39 @@ def test_collection_of_collection():
 
     result = StacCollection(parent)
     result._load()
+
+
+def test_collection_level_assets():
+    data = xr.DataArray(np.ones((5, 5, 5)), dims=('time', 'y', 'x'))
+    ds = xr.Dataset({'data': data})
+    store = fsspec.filesystem('memory').get_mapper('data.zarr')
+    ds.to_zarr(store, mode='w')
+
+    extent = pystac.Extent(
+        spatial=pystac.SpatialExtent([[]]), temporal=pystac.TemporalExtent([[None, None]])
+    )
+    collection = pystac.Collection(
+        id='id', description='description', license='license', extent=extent
+    )
+    collection.add_asset(
+        'data', pystac.Asset(href='memory://data.zarr', media_type='application/vnd+zarr')
+    )
+
+    # test
+    intake_collection = StacCollection(collection)
+    result = intake_collection.get_asset('data')
+    xr.testing.assert_equal(result.to_dask(), ds)
+
+
+def test_xarray_assets_item():
+    item = intake.open_stac_item(str(here / 'data/1.0.0/item/zarr-item.json'))
+    asset = item['zarr-abfs']
+    assert asset.kwargs == {'consolidated': True}
+    assert asset.storage_options == {'account_name': 'daymeteuwest'}
+
+
+def test_xarray_assets_collection():
+    item = intake.open_stac_collection(str(here / 'data/1.0.0/collection/zarr-collection.json'))
+    asset = item.get_asset('zarr-abfs')
+    assert asset.kwargs == {'consolidated': True}
+    assert asset.storage_options == {'account_name': 'daymeteuwest'}
