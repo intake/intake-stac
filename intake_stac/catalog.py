@@ -219,7 +219,7 @@ class StacCollection(StacCatalog):
             asset_open_kwargs = asset.extra_fields.get('xarray:open_kwargs', {})
             kwargs.update(asset_open_kwargs)
 
-        return StacAsset(asset, asset)(storage_options=storage_options, **kwargs)
+        return StacAsset(key, asset)(storage_options=storage_options, **kwargs)
 
 
 class StacItemCollection(AbstractStacCatalog):

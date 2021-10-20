@@ -343,8 +343,8 @@ def test_collection_level_assets():
 
     # test
     intake_collection = StacCollection(collection)
-    result = intake_collection.get_asset('data').to_dask()
-    xr.testing.assert_equal(result, ds)
+    result = intake_collection.get_asset('data')
+    xr.testing.assert_equal(result.to_dask(), ds)
 
 
 def test_xarray_assets_item():
