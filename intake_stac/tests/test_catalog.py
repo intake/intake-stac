@@ -184,7 +184,8 @@ class TestItem:
             item.stack_bands(list_of_bands)
 
     def test_cat_item_stacking_dims_with_nonexistent_band_raises_error(
-        self, pystac_item,
+        self,
+        pystac_item,
     ):  # noqa: E501
         item = StacItem(pystac_item)
         list_of_bands = ['B01', 'foo']
@@ -318,7 +319,11 @@ def test_collection_of_collection():
     space = pystac.SpatialExtent([[0, 1, 2, 3]])
     time = pystac.TemporalExtent([datetime.datetime(2000, 1, 1), datetime.datetime(2000, 1, 1)])
     child = pystac.Collection('child', 'child-description', extent=pystac.Extent(space, time))
-    parent = pystac.Collection('parent', 'parent-description', extent=pystac.Extent(space, time),)
+    parent = pystac.Collection(
+        'parent',
+        'parent-description',
+        extent=pystac.Extent(space, time),
+    )
     parent.add_child(child)
 
     result = StacCollection(parent)
