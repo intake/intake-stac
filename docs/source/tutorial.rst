@@ -11,8 +11,8 @@ Tutorial
         import pandas
         import xarray
 
-Intake-stac simply provides a thin interface that combines `sat-stac` and
-Intake. It's basic usage is shown below:
+Intake-stac simply provides a thin interface that combines `pystac` and
+`intake`. It's basic usage is shown below:
 
 To begin, import intake:
 
@@ -24,31 +24,13 @@ Loading a catalog
 -----------------
 
 You can load data from a STAC Catalog by providing the URL to valid STAC
-Catalog:
+Catalog (>1.0):
 
 .. ipython:: python
 
-    url = 'https://raw.githubusercontent.com/radiantearth/stac-spec/master/examples/catalog.json'
+    url = 'https://raw.githubusercontent.com/radiantearth/stac-spec/v1.0.0/examples/catalog.json'
     catalog = intake.open_stac_catalog(url)
     list(catalog)
-
-You can also point to STAC Collections or Items. Each constructor returns a
-Intake Catalog with the top level corresponding to the STAC object used for
-initialization:
-
-.. ipython:: python
-    :verbatim:
-
-    root_url = 'https://raw.githubusercontent.com/sat-utils/sat-stac/master/test/catalog'
-    stac_cat = intake.open_stac_catalog(
-        f'{root_url}/catalog.json',
-    )
-    collection_cat = intake.open_stac_collection(
-        f'{root_url}/eo/landsat-8-l1/catalog.json',
-    )
-    items_cat = intake.open_stac_item(
-        f'{root_url}/eo/landsat-8-l1/item.json'
-    )
 
 Intake-Stac uses `pystac <https://github.com/stac-utils/pystac>`_ to parse
 STAC objects. You can also pass ``pystac`` objects (e.g.
@@ -62,6 +44,24 @@ STAC objects. You can also pass ``pystac`` objects (e.g.
     pystac_cat = pystac.read_file(f'{root_url}/catalog.json')
     cat = intake.open_stac_catalog(pystac_cat)
 
+You can also point to STAC Collections or Items. Each constructor returns a
+Intake Catalog with the top level corresponding to the STAC object used for
+initialization:
+
+.. ipython:: python
+    :verbatim:
+
+root_url = 'https://raw.githubusercontent.com/relativeorbit/aws-rtc-12SYJ/main'
+stac_cat = intake.open_stac_catalog(
+    f'{root_url}/catalog.json',
+)
+collection_cat = intake.open_stac_collection(
+    f'{root_url}/sentinel1-rtc-aws/collection.json',
+)
+item_cat = intake.open_stac_item(
+    f'{root_url}/sentinel1-rtc-aws/12SYJ/2021/S1A_20210105_12SYJ_DSC/S1A_20210105_12SYJ_DSC.json'
+)
+
 Using the catalog
 -----------------
 
@@ -70,14 +70,16 @@ contents:
 
 .. ipython:: python
 
-    print(list(catalog))
-    cat = catalog['extensions-collection']
+    print(list(stac_cat))
+    cat = stac_cat['sentinel1-rtc-aws']
 
     print(list(cat))
-    subcat = cat['proj-example']
+    subcat = cat['12SYJ']
 
-    items = list(subcat)
-    print(items)
+    print(list(subcat))
+    subsubcat = subcat['2021']
+
+    print(list(subsubcat)[:3])
 
 
 
@@ -85,9 +87,12 @@ When you locate an item of interest, you have access to metadata and methods to 
 
 .. ipython:: python
 
-    item = subcat['B1']
+    item = subsubcat['S1A_20210105_12SYJ_DSC']
     print(type(item))
     print(item.metadata)
+
+    assets = list(item)
+    print(assets)
 
 
 Loading a dataset
@@ -98,42 +103,37 @@ using Intake's `to_dask()` method. This reads only metadata, and streams values 
 
 .. ipython:: python
 
-    da = item.to_dask()
+    da = item['gamma0_vv'].to_dask()
     display(da)
 
 
-Working with `sat-search`
+Working with `pystac-client`
 -------------------------
 
-Intake-stac integrates with `sat-search` to faciliate dynamic search and
+Intake-stac integrates with `pystac-client` to faciliate dynamic search and
 discovery of assets through a STAC-API. To begin, construct a search query
-using `sat-search`:
+using `pystac-client`:
 
 .. ipython:: python
 
-    import satsearch
-    print(satsearch.__version__)
+    URL = "https://earth-search.aws.element84.com/v0"
+    catalog = pystac_client.Client.open(URL)
 
-    bbox = [35.48, -3.24, 35.58, -3.14]
-    dates = '2020-07-01/2020-08-15'
-    URL='https://earth-search.aws.element84.com/v0'
-    results = satsearch.Search.search(url=URL,
-                                      collections=['sentinel-s2-l2a-cogs'],
-                                      datetime=dates,
-                                      bbox=bbox,
-                                      sort=['-properties.datetime'])
+    results = catalog.search(
+        collections=["sentinel-s2-l2a-cogs"],
+        bbox = [35.48, -3.24, 35.58, -3.14],
+        datetime="2020-07-01/2020-08-15")
 
-    # 18 items found
-    items = results.items()
+    items = results.get_all_items()
     print(len(items))
-    items.save('single-file-stac.json')
+    items
 
-In the code section above, `items` is a `satstac.ItemsCollection` object.
+In the code section above, `items` is a `pystac.ItemsCollection` object.
 Intake-stac can turn this object into an Intake catalog:
 
 .. ipython:: python
 
-    catalog = intake.open_stac_item_collection('single-file-stac.json')
+    catalog = intake.open_stac_item_collection(items)
     list(catalog)
 
 Using xarray-assets

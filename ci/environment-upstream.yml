@@ -2,7 +2,7 @@ name: intake-stac
 channels:
   - conda-forge
 dependencies:
-  - python=3.10
+  - python
   - fsspec
   - geopandas
   - intake

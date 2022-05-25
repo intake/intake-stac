@@ -3,7 +3,7 @@ channels:
   - conda-forge
   - nodefaults
 dependencies:
-  - python=3.9
+  - python
   - aiohttp
   - fsspec
   - geopandas
@@ -16,9 +16,9 @@ dependencies:
   - pillow
   - pip
   - pystac
+  - pystac-client
   - pytest-cov
   - rasterio
-  - sat-search
   - scikit-image
   - sphinx
   - sphinx_rtd_theme
