@@ -347,7 +347,7 @@ class StacItem(AbstractStacCatalog):
         StacAsset with mapping of Asset names to Xarray bands
 
         Examples
-        -------
+        --------
         stack = item.stack_bands(['nir','red'])
         da = stack(chunks=dict(band=1, x=2048, y=2048)).to_dask()
 

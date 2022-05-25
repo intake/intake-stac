@@ -37,10 +37,9 @@ STAC objects. You can also pass ``pystac`` objects (e.g.
 ``pystac.Catalog``) directly to the Intake-stac constructors:
 
 .. ipython:: python
-    :verbatim:
 
     import pystac
-
+    root_url = 'https://raw.githubusercontent.com/relativeorbit/aws-rtc-12SYJ/main'
     pystac_cat = pystac.read_file(f'{root_url}/catalog.json')
     cat = intake.open_stac_catalog(pystac_cat)
 
@@ -49,18 +48,16 @@ Intake Catalog with the top level corresponding to the STAC object used for
 initialization:
 
 .. ipython:: python
-    :verbatim:
 
-root_url = 'https://raw.githubusercontent.com/relativeorbit/aws-rtc-12SYJ/main'
-stac_cat = intake.open_stac_catalog(
-    f'{root_url}/catalog.json',
-)
-collection_cat = intake.open_stac_collection(
-    f'{root_url}/sentinel1-rtc-aws/collection.json',
-)
-item_cat = intake.open_stac_item(
-    f'{root_url}/sentinel1-rtc-aws/12SYJ/2021/S1A_20210105_12SYJ_DSC/S1A_20210105_12SYJ_DSC.json'
-)
+    stac_cat = intake.open_stac_catalog(
+        f'{root_url}/catalog.json',
+    )
+    collection_cat = intake.open_stac_collection(
+        f'{root_url}/sentinel1-rtc-aws/collection.json',
+    )
+    item_cat = intake.open_stac_item(
+        f'{root_url}/sentinel1-rtc-aws/12SYJ/2021/S1A_20210105_12SYJ_DSC/S1A_20210105_12SYJ_DSC.json'
+    )
 
 Using the catalog
 -----------------
@@ -80,7 +77,6 @@ contents:
     subsubcat = subcat['2021']
 
     print(list(subsubcat)[:3])
-
 
 
 When you locate an item of interest, you have access to metadata and methods to load assets into Python objects
@@ -108,7 +104,7 @@ using Intake's `to_dask()` method. This reads only metadata, and streams values 
 
 
 Working with `pystac-client`
--------------------------
+----------------------------
 
 Intake-stac integrates with `pystac-client` to faciliate dynamic search and
 discovery of assets through a STAC-API. To begin, construct a search query
@@ -116,6 +112,7 @@ using `pystac-client`:
 
 .. ipython:: python
 
+    import pystac_client
     URL = "https://earth-search.aws.element84.com/v0"
     catalog = pystac_client.Client.open(URL)
 
@@ -126,7 +123,6 @@ using `pystac-client`:
 
     items = results.get_all_items()
     print(len(items))
-    items
 
 In the code section above, `items` is a `pystac.ItemsCollection` object.
 Intake-stac can turn this object into an Intake catalog:
