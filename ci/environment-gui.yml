@@ -7,7 +7,7 @@ name: intake-stac-gui
 channels:
   - conda-forge
 dependencies:
-  - python =3.7
+  - python =3.9
   - aiohttp
   - autopep8
   - black

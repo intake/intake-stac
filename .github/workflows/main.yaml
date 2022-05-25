@@ -13,7 +13,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        CONDA_ENV: [3.7, 3.8, 3.9, upstream]
+        CONDA_ENV: ["3.8", "3.9", "3.10", "upstream"]
     steps:
       - name: Checkout
         uses: actions/checkout@v2.4.0
