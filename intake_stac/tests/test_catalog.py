@@ -317,7 +317,7 @@ def test_cat_to_geopandas(pystac_itemcol):
 
 def test_collection_of_collection():
     space = pystac.SpatialExtent([[0, 1, 2, 3]])
-    time = pystac.TemporalExtent([datetime.datetime(2000, 1, 1), datetime.datetime(2000, 1, 1)])
+    time = pystac.TemporalExtent([[datetime.datetime(2000, 1, 1), datetime.datetime(2000, 1, 1)]])
     child = pystac.Collection('child', 'child-description', extent=pystac.Extent(space, time))
     parent = pystac.Collection(
         'parent',
