@@ -29,15 +29,22 @@ $ pip install git+https://github.com/intake/intake-stac
 ## Quickstart
 
 ```python
-from intake import open_stac_catalog
-catalog_url = 'https://raw.githubusercontent.com/cholmes/sample-stac/master/stac/catalog.json'
-cat = open_stac_catalog(catalog_url)
-cat['Houston-East-20170831-103f-100d-0f4f-RGB'].metadata
-da = cat['Houston-East-20170831-103f-100d-0f4f-RGB']['thumbnail'].to_dask()
+import intake
+
+catalog_url = 'https://www.planet.com/data/stac/catalog.json'
+cat = intake.open_stac_catalog(catalog_url)
+
+collection = cat['planet-disaster-data']
+subset = collection['hurricane-harvey']['hurricane-harvey-0831']
+item = subset['Houston-East-20170831-103f-100d-0f4f-RGB']
+
+da = item['thumbnail'].to_dask()
 da
 ```
 
 The [examples/](examples/) directory contains several Jupyter Notebooks illustrating common workflows.
+
+[STAC Index](https://stacindex.org/catalogs) is a convenient website for finding datasets with STACs
 
 #### Versions
 
@@ -53,8 +60,7 @@ The table below shows the corresponding versions between intake-stac and STAC:
 | ----------- | ----------- |
 | 0.2.x       | 0.6.x       |
 | 0.3.x       | 1.0.0-betaX |
-| 0.4.x       | 1.0.0-betaX |
-| 1.0.0       | 1.0.0       |
+| 0.4.x       | 1.0.0       |
 
 ## About
 

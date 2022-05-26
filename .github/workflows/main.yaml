@@ -13,18 +13,35 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        CONDA_ENV: [3.7, 3.8, 3.9, upstream]
+        CONDA_ENV: ["3.8", "3.9", "3.10", "upstream"]
     steps:
       - name: Checkout
-        uses: actions/checkout@v2.4.0
+        uses: actions/checkout@v3
 
-      - name: Setup Miniconda
+      - name: Cache Conda Packages
+        uses: actions/cache@v3
+        env:
+          # Increase this value to reset cache if etc/example-environment.yml has not changed
+          CACHE_NUMBER: 0
+        with:
+          path: ~/conda_pkgs_dir
+          key: conda-${{ env.CACHE_NUMBER }}-${{hashFiles(format('ci/environment-{0}.yml',matrix.CONDA_ENV)) }}
+
+      - name: Cache Pip Packages (upstream environment)
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('ci/environment-upstream.yml') }}
+
+      - name: Setup Miniconda (Mambaforge)
         uses: conda-incubator/setup-miniconda@v2.1.1
         with:
-          auto-update-conda: true
-          auto-activate-base: false
+          miniforge-variant: Mambaforge
+          miniforge-version: latest
+          use-mamba: true
           activate-environment: intake-stac
           environment-file: ci/environment-${{ matrix.CONDA_ENV }}.yml
+          use-only-tar-bz2: true # IMPORTANT: This needs to be set for caching to work properly!
 
       - name: Development Install Intake-STAC
         shell: bash -l {0}

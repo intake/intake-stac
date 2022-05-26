@@ -13,7 +13,7 @@ with open('README.md') as f:
     LONG_DESCRIPTION = f.read()
 
 needs_pytest = {'pytest', 'test', 'ptr'}.intersection(sys.argv)
-PYTHON_REQUIRES = '>=3.6'
+PYTHON_REQUIRES = '>=3.8'
 SETUP_REQUIRES = ['setuptools_scm']
 if needs_pytest:
     SETUP_REQUIRES.appen('pytest-runner >= 4.2')

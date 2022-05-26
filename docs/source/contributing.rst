@@ -70,7 +70,7 @@ without using a local copy.  This can be convenient for small fixes.
 
     .. code:: bash
 
-        $ conda env create -f ci/environment-dev.yml
+        $ conda env create -f ci/environment-docs.yml
         $ cd docs
         $ make html
 
@@ -105,7 +105,7 @@ Preparing Pull Requests
 
     $ conda env create -f ci/environment-dev.yml
     $ conda activate intake-stac-dev
-    $ pip install . -e
+    $ pip install -e .
 
 
 #. Install `pre-commit <https://pre-commit.com>`_ and its hook on the intake-stac repo::
