@@ -34,7 +34,7 @@ jobs:
           key: ${{ runner.os }}-pip-${{ hashFiles('ci/environment-upstream.yml') }}
 
       - name: Setup Miniconda (Mambaforge)
-        uses: conda-incubator/setup-miniconda@v2.1.1
+        uses: conda-incubator/setup-miniconda@v2.2.0
         with:
           miniforge-variant: Mambaforge
           miniforge-version: latest
