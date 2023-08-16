@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+- Add STAC item id to GeoDataFrame when calling `to_geopandas()` method (#158)
+
 ## [v0.4.0] - 2021-XX-XX
 
 - Switched from sat-stac to pystac dependency (#72)

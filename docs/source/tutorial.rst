@@ -113,15 +113,15 @@ using `pystac-client`:
 .. ipython:: python
 
     import pystac_client
-    URL = "https://earth-search.aws.element84.com/v0"
+    URL = "https://earth-search.aws.element84.com/v1"
     catalog = pystac_client.Client.open(URL)
 
     results = catalog.search(
-        collections=["sentinel-s2-l2a-cogs"],
+        collections=["sentinel-2-l2a"],
         bbox = [35.48, -3.24, 35.58, -3.14],
         datetime="2020-07-01/2020-08-15")
 
-    items = results.get_all_items()
+    items = results.item_collection()
     print(len(items))
 
 In the code section above, `items` is a `pystac.ItemsCollection` object.

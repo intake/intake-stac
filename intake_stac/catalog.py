@@ -274,6 +274,13 @@ class StacItemCollection(AbstractStacCatalog):
         if crs is None:
             crs = 'epsg:4326'
         gf = gpd.GeoDataFrame.from_features(self._stac_obj.to_dict(), crs=crs)
+
+        # If no id in properties, use the STAC item id
+        if 'id' not in gf.columns:
+            items = self._stac_obj.items
+            item_ids = [item.id for item in items]
+            gf['id'] = item_ids
+
         return gf
 
 
