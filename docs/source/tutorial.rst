@@ -121,7 +121,7 @@ using `pystac-client`:
         bbox = [35.48, -3.24, 35.58, -3.14],
         datetime="2020-07-01/2020-08-15")
 
-    items = results.get_all_items()
+    items = results.item_collection()
     print(len(items))
 
 In the code section above, `items` is a `pystac.ItemsCollection` object.
