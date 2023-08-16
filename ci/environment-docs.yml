@@ -19,6 +19,7 @@ dependencies:
   - pystac-client
   - pytest-cov
   - rasterio
+  - rioxarray
   - scikit-image
   - sphinx
   - sphinx_rtd_theme
