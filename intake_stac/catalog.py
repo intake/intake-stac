@@ -41,6 +41,7 @@ drivers = {
     'application/geopackage+sqlite3': 'geopandas',
     'application/vnd+zarr': 'zarr',
     'application/xml': 'textfiles',
+    'application/yaml': 'yaml_file_cat',
 }
 
 
@@ -524,6 +525,8 @@ class StacAsset(LocalCatalogEntry):
         Optional keyword arguments to pass to intake driver
         """
         args = {'urlpath': asset.href}
+        if driver in ['yaml_file_cat']:
+            args = {'path': asset.href}
         if driver in ['netcdf', 'rasterio', 'xarray_image']:
             # NOTE: force using dask?
             args.update(chunks={})
